@@ -200,7 +200,7 @@ test("website discovery crawls the services page and keeps categories separate",
             exactExcerpt: value,
             confidence: "high",
           })),
-          services: serviceNames.map((value) => ({
+          services: serviceNames.filter((value) => value !== "Ортодонтия").map((value) => ({
             value,
             sourceUrl: "https://totalcharmdent.ge/ru/services",
             exactExcerpt: value,
@@ -222,7 +222,7 @@ test("website discovery crawls the services page and keeps categories separate",
   assert.equal(result.services.length, 16)
   assert.deepEqual(result.serviceCategories, categories)
   assert.equal(result.industry, "Стоматологическая клиника")
-  assert.equal(result.evidence.services.length, 16)
+  assert.equal(result.evidence.services.length, 15)
 })
 
 test("deterministic fallback reads visible offer cards when no API key exists", async () => {

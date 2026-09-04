@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react"
 
+import { ProgressFeedbackModal } from "./feedback-modal"
+
 type MinimumViableBrand = {
   readonly usableOffer: boolean
   readonly contentLanguage: boolean
@@ -62,6 +64,12 @@ const READINESS_ITEMS = [
     title: "საუბრის სტილი",
     description: "გამოვიყენებთ თქვენს ან UNDA-ს უსაფრთხო სტილს",
   },
+] as const
+
+const BRAND_DISCOVERY_STEPS = [
+  "მნიშვნელოვანი გვერდების აღმოჩენა",
+  "ბრენდისა და შეთავაზებების ამოცნობა",
+  "ნაპოვნი ინფორმაციის გადამოწმება",
 ] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -464,6 +472,14 @@ export function OnboardingForm() {
   if (stage === "sources") {
     return (
       <>
+        <ProgressFeedbackModal
+          open={isDiscovering}
+          eyebrow="Brand discovery"
+          title="მიმდინარეობს თქვენი ბრენდის შესწავლა"
+          description="UNDA კითხულობს ვებგვერდის მნიშვნელოვან გვერდებს, აგროვებს ბრენდის იდენტობასა და შეთავაზებებს და თითოეულ ფაქტს წყაროსთან ამოწმებს."
+          steps={BRAND_DISCOVERY_STEPS}
+          footnote="დასრულებისთანავე ავტომატურად გადახვალთ გადასამოწმებელ ფორმაზე."
+        />
         <div className="page-intro">
           <span className="eyebrow">Source-first onboarding</span>
           <h1>მოდით, UNDA-მ ჯერ თავად გაიცნოს თქვენი ბიზნესი</h1>

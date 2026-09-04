@@ -1031,7 +1031,7 @@ function mergedDiscovery(
   const modelServices = extracted?.services.map((item) => item.value) ?? []
   const services = uniqueTextValues(
     modelServices.length > 0
-      ? modelServices
+      ? [...modelServices, ...visibleServices]
       : visibleServices.length >= 5
         ? visibleServices
         : [...structuredServices, ...visibleServices],
