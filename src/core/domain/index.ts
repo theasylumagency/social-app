@@ -1,5 +1,6 @@
 export * from "./primitives"
 export * from "./source"
+export * from "./source-artifact"
 export * from "./evidence-provenance"
 export * from "./evidence"
 export * from "./corpus"

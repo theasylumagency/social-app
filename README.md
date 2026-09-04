@@ -1,38 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UNDA Social Operator
 
-## Getting Started
+UNDA Social Operator is an AI operator that learns how a business communicates,
+plans its social content, prepares publishable posts, routes them through review,
+publishes approved work, and improves the next cycle from feedback and results.
 
-First, run the development server:
+## Product loop
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+Business
+→ Brand Brain
+→ Weekly Strategy
+→ Content
+→ Review
+→ Schedule
+→ Publish
+→ Learn
+→ Next Weekly Cycle
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The first sellable milestone is complete when a business can connect its social
+account, let the Operator understand the brand, approve a weekly plan and its
+content, and have the Operator publish that content automatically.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture boundaries
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/core/` contains operator-agnostic domain rules and mechanisms.
+- `src/blueprints/social/` will contain Social Operator knowledge, policies, and
+  channel-specific behavior.
+- `src/app/` contains the Next.js UI and request surfaces.
+- `worker/` will be the only layer that executes provider and model work.
 
-## Learn More
+The core rule is that language models handle ambiguous semantic reasoning while
+deterministic application code owns IDs, validation, authority, state changes,
+permissions, scheduling, and orchestration.
 
-To learn more about Next.js, take a look at the following resources:
+## Current milestone
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The first version of the Brand Knowledge domain contracts is implemented in
+`src/core/domain`. `src/blueprints/social` defines the initial Social Operator
+registries, policies, defaults, capability requirements, quality configuration,
+and Georgian claim signals. A deterministic structured-source slice covers
+`Source → Snapshot → Evidence → Routing → Knowledge mutation proposals`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+PostgreSQL persistence now stores that complete ingestion graph atomically. It
+keeps immutable Evidence separate from versioned routing, records the Minimum
+Viable Brand result, and rejects a repeated snapshot with the same source and
+content hash. The Georgian onboarding is now source-first: `POST
+/api/onboarding/discover` safely reads public website metadata and JSON-LD,
+prefills editable brand candidates, and falls back to manual entry when a
+website is unavailable. Confirmed details go through `POST /api/onboarding`,
+run the same ingestion pipeline, persist to PostgreSQL, and display the Brand
+Brain readiness state. Connected-social adapters can reuse this pipeline.
 
-## Deploy on Vercel
+The current architecture correction map is in
+`docs/Brand Knowledge Architecture — Amendments & Supersession Map v1.md` and
+takes precedence over older prompt contracts where they conflict.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Local commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# social-app
-# social-app
+```bash
+npm run dev          # Start the local Next.js app
+npm run check        # Type-check the app and domain contracts
+npm test             # Build and run the domain contract tests
+npm run db:up        # Start the project PostgreSQL service
+npm run db:migrate   # Apply pending database migrations
+npm run test:integration # Verify the real PostgreSQL persistence flow
+npm run lint         # Run the project linter
+npm run build        # Create the production Next.js build
+npm run verify       # Run the full local verification pipeline
+```
+
+Generated domain output is written to `dist/` for runtime contract tests and is
+not committed.
+
+For first-time database setup, copy `.env.example` to `.env.local` and replace
+the placeholder local password. Docker stores PostgreSQL data in the dedicated
+`unda-social-operator_unda_social_postgres_data` volume. The service listens only
+on `127.0.0.1:5433`, so it does not collide with a PostgreSQL service on the
+default `5432` port.

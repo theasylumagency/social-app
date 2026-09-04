@@ -5,17 +5,28 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:domain": "tsc -p tsconfig.domain-build.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:migrate": "node --env-file=.env.local scripts/db/migrate.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run check && npm run build:domain && node --test tests/primitives.runtime.test.cjs tests/social-blueprint.runtime.test.cjs tests/ingestion.runtime.test.cjs tests/onboarding.runtime.test.cjs tests/website-discovery.runtime.test.cjs",
+    "test:integration": "npm run build:domain && npm run db:migrate && node --env-file=.env.local --test tests/postgres.integration.test.cjs",
+    "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "next": "16.3.4",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

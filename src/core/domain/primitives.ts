@@ -23,6 +23,7 @@ export type CorpusPatternId = DomainId<"CorpusPatternId">
 export type TaskId = DomainId<"TaskId">
 export type ContentId = DomainId<"ContentId">
 export type ReviewItemId = DomainId<"ReviewItemId">
+export type IngestionRunId = DomainId<"IngestionRunId">
 
 // Time / immutable capture
 export type IsoDate = DomainScalar<string, "IsoDate">
