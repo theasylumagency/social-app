@@ -4,6 +4,22 @@ import { isIP } from "node:net"
 
 import { loadBuffer, type CheerioAPI } from "cheerio"
 
+import {
+  analyzeBrandWebsiteWithModel,
+  type BrandModelAnalysis,
+  type SourcedWebsiteService,
+  type SourcedWebsiteValue,
+  type WebsiteCorpusPage,
+} from "./brand-model-extraction"
+
+export type WebsiteDiscoveryEvidence = {
+  readonly businessName?: SourcedWebsiteValue
+  readonly industry?: SourcedWebsiteValue
+  readonly description?: SourcedWebsiteValue
+  readonly locations: readonly SourcedWebsiteValue[]
+  readonly services: readonly SourcedWebsiteService[]
+}
+
 export type WebsiteDiscovery = {
   readonly requestedUrl: string
   readonly finalUrl: string
@@ -16,6 +32,13 @@ export type WebsiteDiscovery = {
   readonly logoUrl?: string
   readonly facebookPage?: string
   readonly services: readonly string[]
+  readonly serviceCategories: readonly string[]
+  readonly evidence: WebsiteDiscoveryEvidence
+  readonly analysis: {
+    readonly method: "deterministic" | "ai"
+    readonly pagesAnalyzed: number
+    readonly modelsTried: readonly string[]
+  }
   readonly warnings: readonly string[]
 }
 
@@ -41,12 +64,19 @@ export class WebsiteDiscoveryError extends Error {
 export type WebsiteDiscoveryDependencies = {
   readonly fetchPage?: typeof fetch
   readonly resolveAddresses?: (hostname: string) => Promise<readonly string[]>
+  readonly analyzeBrand?: (
+    pages: readonly WebsiteCorpusPage[],
+  ) => Promise<BrandModelAnalysis>
 }
 
 const MAX_RESPONSE_BYTES = 1_000_000
 const MAX_IMAGE_BYTES = 3_000_000
 const MAX_REDIRECTS = 3
 const REQUEST_TIMEOUT_MS = 8_000
+const MAX_CRAWLED_PAGES = 5
+const MAX_CORPUS_PAGE_CHARS = 18_000
+const DISCOVERY_CACHE_TTL_MS = 10 * 60 * 1_000
+const MAX_DISCOVERY_CACHE_ENTRIES = 50
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 const GENERIC_SCHEMA_TYPES = new Set([
   "thing",
@@ -271,11 +301,11 @@ function collectServiceNames(
     add(node.serviceType)
     addNamedValue(node.makesOffer)
     addNamedValue(node.hasOfferCatalog)
-    if (names.size >= 12) {
+    if (names.size >= 50) {
       break
     }
   }
-  return [...names.values()].slice(0, 12)
+  return [...names.values()].slice(0, 50)
 }
 
 function simplifiedTitle(title: string | undefined): string | undefined {
@@ -356,6 +386,13 @@ export function extractWebsiteDiscovery(
       ? {}
       : { facebookPage: discoveredFacebookPage }),
     services,
+    serviceCategories: [],
+    evidence: { locations: [], services: [] },
+    analysis: {
+      method: "deterministic",
+      pagesAnalyzed: 1,
+      modelsTried: [],
+    },
     warnings:
       usefulFieldCount < 2
         ? ["ვებგვერდზე ცოტა სტრუქტურირებული ინფორმაცია ვიპოვეთ"]
@@ -487,6 +524,309 @@ async function readLimitedBody(
   return Buffer.concat(chunks)
 }
 
+type CrawledWebsitePage = WebsiteCorpusPage & {
+  readonly html: Buffer
+}
+
+async function fetchHtmlPage(
+  requested: URL,
+  fetchPage: typeof fetch,
+  resolveAddresses: (hostname: string) => Promise<readonly string[]>,
+): Promise<CrawledWebsitePage> {
+  let current = requested
+
+  for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
+    await assertPublicUrl(current, resolveAddresses)
+    let response: Response
+    try {
+      response = await fetchPage(current, {
+        method: "GET",
+        redirect: "manual",
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        headers: {
+          accept: "text/html,application/xhtml+xml",
+          "user-agent": "UNDA-Social-Operator/0.1 (+brand-discovery)",
+        },
+      })
+    } catch (error) {
+      if (error instanceof WebsiteDiscoveryError) {
+        throw error
+      }
+      throw new WebsiteDiscoveryError("unreachable", "Website could not be reached")
+    }
+
+    if (REDIRECT_STATUSES.has(response.status)) {
+      const location = response.headers.get("location")
+      if (location === null) {
+        throw new WebsiteDiscoveryError("unreachable", "Redirect has no location")
+      }
+      current = normalizeWebsiteUrl(new URL(location, current).toString())
+      continue
+    }
+    if (!response.ok) {
+      throw new WebsiteDiscoveryError("unreachable", `Website returned ${response.status}`)
+    }
+    const contentType = response.headers.get("content-type")?.toLocaleLowerCase("en-US")
+    if (
+      contentType !== undefined &&
+      !contentType.includes("text/html") &&
+      !contentType.includes("application/xhtml+xml")
+    ) {
+      throw new WebsiteDiscoveryError("notHtml", "Website did not return HTML")
+    }
+
+    const html = await readLimitedBody(response)
+    const document = corpusDocument(html, current.toString())
+    return { ...document, html }
+  }
+
+  throw new WebsiteDiscoveryError("tooManyRedirects", "Website redirected too many times")
+}
+
+function corpusDocument(html: Buffer, url: string): WebsiteCorpusPage {
+  const $ = loadBuffer(html, {
+    baseURI: url,
+    encoding: { defaultEncoding: "utf-8" },
+  })
+  $("script,style,noscript,template,svg,[hidden],[aria-hidden='true']").remove()
+  const title = cleanText($("title").first().text(), 200)
+  const blocks: string[] = []
+  const seen = new Set<string>()
+  let size = 0
+  const add = (value: string | undefined) => {
+    const text = cleanText(value, 600)
+    if (text === undefined) {
+      return
+    }
+    const identity = text.toLocaleLowerCase("ka-GE")
+    if (seen.has(identity) || size + text.length + 1 > MAX_CORPUS_PAGE_CHARS) {
+      return
+    }
+    seen.add(identity)
+    blocks.push(text)
+    size += text.length + 1
+  }
+
+  add(title)
+  const scope = $("main").first().length > 0 ? $("main").first() : $("body")
+  scope.find("h1,h2,h3,h4,h5,li,a[href],p").each((_index, element) => {
+    add($(element).text())
+  })
+
+  return {
+    url,
+    ...(title === undefined ? {} : { title }),
+    text: blocks.join("\n"),
+  }
+}
+
+const PRIORITY_LINK_PATTERNS: readonly [RegExp, number][] = [
+  [/services?|service|servicios|servizi|услуг|сервис|მომსახურ|სერვის/iu, 120],
+  [/products?|solutions?|capabilit|expertise|what[-_ ]?we[-_ ]?do|პროდუქტ|გადაწყვეტ/iu, 100],
+  [/about|agency|company|studio|о[-_ ]?нас|компани|ჩვენ[-_ ]?შესახებ|ჩვენს[-_ ]?შესახებ/iu, 60],
+]
+
+const LOW_VALUE_LINK_PATTERN =
+  /blog|news|privacy|terms|cookie|career|vacanc|contact|login|sign[-_ ]?in|cart|checkout/iu
+
+function priorityLinks(html: Buffer, baseUrl: string): readonly URL[] {
+  const $ = loadBuffer(html, {
+    baseURI: baseUrl,
+    encoding: { defaultEncoding: "utf-8" },
+  })
+  const base = new URL(baseUrl)
+  const candidates = new Map<string, { readonly url: URL; readonly score: number }>()
+
+  $("a[href]").each((_index, element) => {
+    const href = $(element).attr("href")
+    if (href === undefined) {
+      return
+    }
+    let url: URL
+    try {
+      url = new URL(href, base)
+    } catch {
+      return
+    }
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      url.hostname.toLocaleLowerCase("en-US") !==
+        base.hostname.toLocaleLowerCase("en-US")
+    ) {
+      return
+    }
+    url.hash = ""
+    for (const key of [...url.searchParams.keys()]) {
+      if (/^(utm_|fbclid|gclid)/iu.test(key)) {
+        url.searchParams.delete(key)
+      }
+    }
+    if (url.toString() === base.toString() || /\.(?:pdf|jpe?g|png|webp|gif|svg|zip)$/iu.test(url.pathname)) {
+      return
+    }
+
+    const label = cleanText($(element).text(), 180) ?? ""
+    const searchable = `${url.pathname} ${label}`
+    let score = 0
+    for (const [pattern, weight] of PRIORITY_LINK_PATTERNS) {
+      if (pattern.test(searchable)) {
+        score = Math.max(score, weight)
+      }
+    }
+    if (score === 0) {
+      return
+    }
+    if (LOW_VALUE_LINK_PATTERN.test(searchable)) {
+      score -= 80
+    }
+    const key = url.toString()
+    const existing = candidates.get(key)
+    if (existing === undefined || score > existing.score) {
+      candidates.set(key, { url, score })
+    }
+  })
+
+  return [...candidates.values()]
+    .sort((left, right) => right.score - left.score || left.url.pathname.length - right.url.pathname.length)
+    .slice(0, MAX_CRAWLED_PAGES - 1)
+    .map((item) => item.url)
+}
+
+const GENERIC_OFFER_LABELS = new Set([
+  "service",
+  "services",
+  "our services",
+  "products",
+  "solutions",
+  "what we do",
+  "what we actually build",
+  "learn more",
+  "read more",
+  "view more",
+  "see all",
+  "услуги",
+  "сервисы",
+  "наши услуги",
+  "все услуги",
+  "смотреть услуги",
+  "смотреть направление",
+  "услуги этого направления",
+  "полный спектр стоматологии",
+  "не знаете, с чего начать?",
+  "что входит",
+  "другие направления",
+  "მომსახურება",
+  "სერვისები",
+  "ჩვენი სერვისები",
+])
+
+function isUsefulOfferLabel(value: string | undefined): value is string {
+  const text = cleanText(value, 160)
+  if (text === undefined || text.length < 3 || text.split(/\s+/u).length > 14) {
+    return false
+  }
+  return !GENERIC_OFFER_LABELS.has(text.toLocaleLowerCase("ka-GE"))
+}
+
+function visibleServiceCandidates(page: CrawledWebsitePage): readonly string[] {
+  const $ = loadBuffer(page.html, {
+    baseURI: page.url,
+    encoding: { defaultEncoding: "utf-8" },
+  })
+  $("script,style,noscript,template,svg,[hidden],[aria-hidden='true'],footer").remove()
+  const pageSignalsOffer = PRIORITY_LINK_PATTERNS.slice(0, 2).some(([pattern]) =>
+    pattern.test(`${new URL(page.url).pathname} ${page.title ?? ""} ${$("h1").first().text()}`),
+  )
+  const candidates = new Map<string, string>()
+  const add = (value: string | undefined) => {
+    if (!isUsefulOfferLabel(value)) {
+      return
+    }
+    const text = cleanText(value, 160)!
+    candidates.set(text.toLocaleLowerCase("ka-GE"), text)
+  }
+
+  const scope = $("main").first().length > 0 ? $("main").first() : $("body")
+  const offerMarker = scope.find("*").filter((_index, element) => {
+    const directText = $(element)
+      .contents()
+      .filter((_childIndex, child) => child.type === "text")
+      .text()
+    return /what we (?:actually )?build|our services|наши услуги|услуги этого направления|ჩვენი სერვისები/iu.test(
+      directText,
+    )
+  }).first()
+  if (offerMarker.length > 0) {
+    let section = offerMarker
+    for (let depth = 0; depth < 5 && section.length > 0; depth += 1) {
+      const headings = section
+        .find("h3")
+        .toArray()
+        .flatMap((element) => {
+          const value = $(element).text()
+          return isUsefulOfferLabel(value) ? [cleanText(value, 160)!] : []
+        })
+      if (headings.length >= 2 && headings.length <= 12) {
+        return uniqueTextValues(headings)
+      }
+      section = section.parent()
+    }
+  }
+  const explicitOfferHeadings = scope
+    .find("h4")
+    .toArray()
+    .flatMap((element) => {
+      const value = $(element).text()
+      return isUsefulOfferLabel(value) ? [cleanText(value, 160)!] : []
+    })
+  if (explicitOfferHeadings.length >= 3) {
+    return uniqueTextValues(explicitOfferHeadings)
+  }
+
+  $("a[href]").each((_index, element) => {
+    const href = $(element).attr("href") ?? ""
+    if (PRIORITY_LINK_PATTERNS.slice(0, 2).some(([pattern]) => pattern.test(href))) {
+      add($(element).text())
+    }
+  })
+  $("[class*='service'],[id*='service'],[class*='product'],[id*='product'],[class*='capabil'],[class*='expertise']")
+    .find("h2,h3,h4,h5,a[href]")
+    .each((_index, element) => add($(element).text()))
+  if (pageSignalsOffer) {
+    scope.find("h2,h3,h4").each((_index, element) => add($(element).text()))
+  }
+  return [...candidates.values()].slice(0, 50)
+}
+
+async function crawlWebsite(
+  requested: URL,
+  fetchPage: typeof fetch,
+  resolveAddresses: (hostname: string) => Promise<readonly string[]>,
+): Promise<readonly CrawledWebsitePage[]> {
+  const root = await fetchHtmlPage(requested, fetchPage, resolveAddresses)
+  const rootHostname = new URL(root.url).hostname.toLocaleLowerCase("en-US")
+  const candidates = priorityLinks(root.html, root.url)
+  const results = await Promise.allSettled(
+    candidates.map((url) => fetchHtmlPage(url, fetchPage, resolveAddresses)),
+  )
+  const pages = [root]
+  const seen = new Set([root.url])
+  for (const result of results) {
+    if (result.status !== "fulfilled") {
+      continue
+    }
+    const page = result.value
+    if (
+      new URL(page.url).hostname.toLocaleLowerCase("en-US") === rootHostname &&
+      !seen.has(page.url)
+    ) {
+      pages.push(page)
+      seen.add(page.url)
+    }
+  }
+  return pages
+}
+
 export type SupportedWebsiteImageMediaType =
   | "image/png"
   | "image/jpeg"
@@ -592,59 +932,200 @@ export async function captureWebsiteImage(
   throw new WebsiteDiscoveryError("tooManyRedirects", "Website image redirected too many times")
 }
 
-export async function discoverWebsite(
-  websiteUrl: string,
-  {
-    fetchPage = fetch,
-    resolveAddresses = defaultResolveAddresses,
-  }: WebsiteDiscoveryDependencies = {},
-): Promise<WebsiteDiscovery> {
-  const requested = normalizeWebsiteUrl(websiteUrl)
-  let current = requested
+type DiscoveryCacheEntry = {
+  readonly expiresAt: number
+  readonly value: WebsiteDiscovery
+}
 
-  for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
-    await assertPublicUrl(current, resolveAddresses)
-    let response: Response
-    try {
-      response = await fetchPage(current, {
-        method: "GET",
-        redirect: "manual",
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        headers: {
-          accept: "text/html,application/xhtml+xml",
-          "user-agent": "UNDA-Social-Operator/0.1 (+brand-discovery)",
-        },
-      })
-    } catch (error) {
-      if (error instanceof WebsiteDiscoveryError) {
-        throw error
-      }
-      throw new WebsiteDiscoveryError("unreachable", "Website could not be reached")
-    }
+const discoveryCache = new Map<string, DiscoveryCacheEntry>()
 
-    if (REDIRECT_STATUSES.has(response.status)) {
-      const location = response.headers.get("location")
-      if (location === null) {
-        throw new WebsiteDiscoveryError("unreachable", "Redirect has no location")
+function cachedDiscovery(key: string): WebsiteDiscovery | undefined {
+  const entry = discoveryCache.get(key)
+  if (entry === undefined) {
+    return undefined
+  }
+  if (entry.expiresAt <= Date.now()) {
+    discoveryCache.delete(key)
+    return undefined
+  }
+  return entry.value
+}
+
+function rememberDiscovery(keys: readonly string[], value: WebsiteDiscovery): void {
+  const entry = { expiresAt: Date.now() + DISCOVERY_CACHE_TTL_MS, value }
+  for (const key of keys) {
+    discoveryCache.delete(key)
+    discoveryCache.set(key, entry)
+  }
+  while (discoveryCache.size > MAX_DISCOVERY_CACHE_ENTRIES) {
+    const oldest = discoveryCache.keys().next().value as string | undefined
+    if (oldest === undefined) {
+      break
+    }
+    discoveryCache.delete(oldest)
+  }
+}
+
+function uniqueTextValues(values: readonly string[], limit = 50): readonly string[] {
+  const unique = new Map<string, string>()
+  for (const value of values) {
+    const cleaned = cleanText(value, 160)
+    if (cleaned !== undefined) {
+      const key = cleaned.toLocaleLowerCase("ka-GE")
+      if (!unique.has(key)) {
+        unique.set(key, cleaned)
       }
-      current = normalizeWebsiteUrl(new URL(location, current).toString())
-      continue
     }
-    if (!response.ok) {
-      throw new WebsiteDiscoveryError("unreachable", `Website returned ${response.status}`)
+    if (unique.size >= limit) {
+      break
     }
-    const contentType = response.headers.get("content-type")?.toLocaleLowerCase("en-US")
+  }
+  return [...unique.values()]
+}
+
+function visibleIndustry(pages: readonly CrawledWebsitePage[]): string | undefined {
+  const pattern =
+    /\b(?:digital|creative|marketing|branding|advertising|design) agency\b|\bdesign studio\b|\bdental clinic\b|стоматологическая клиника|ციფრული სააგენტო|კრეატიული სააგენტო|მარკეტინგული სააგენტო|დიზაინის სტუდია|სტომატოლოგიური კლინიკა/iu
+  for (const page of pages) {
+    const $ = loadBuffer(page.html, {
+      baseURI: page.url,
+      encoding: { defaultEncoding: "utf-8" },
+    })
+    $("script,style,noscript,template,svg").remove()
+    const match = pattern.exec(`${page.text}\n${$("body").text()}`)?.[0]
+    const cleaned = cleanText(match, 120)
+    if (cleaned !== undefined) {
+      return cleaned
+    }
     if (
-      contentType !== undefined &&
-      !contentType.includes("text/html") &&
-      !contentType.includes("application/xhtml+xml")
+      new URL(page.url).hostname.toLocaleLowerCase("en-US").endsWith(".agency") &&
+      /\bdigital\b|\bbrand\b|\bwebsites?\b|interaction systems?/iu.test(
+        `${page.title ?? ""}\n${page.text}`,
+      )
     ) {
-      throw new WebsiteDiscoveryError("notHtml", "Website did not return HTML")
+      return "Digital agency"
     }
+  }
+  return undefined
+}
 
-    const html = await readLimitedBody(response)
-    return extractWebsiteDiscovery(html, requested.toString(), current.toString())
+function mergedDiscovery(
+  base: WebsiteDiscovery,
+  pages: readonly CrawledWebsitePage[],
+  analysis: BrandModelAnalysis,
+): WebsiteDiscovery {
+  const extracted = analysis.extraction
+  const structuredServices = uniqueTextValues(
+    pages.flatMap((page) =>
+      extractWebsiteDiscovery(page.html, base.requestedUrl, page.url).services,
+    ),
+  )
+  const offerIndexPage = pages.find((page) =>
+    /\/(?:services?|products?|solutions?)\/?$/iu.test(new URL(page.url).pathname),
+  )
+  const visibleServices = uniqueTextValues(
+    (offerIndexPage === undefined ? pages : [offerIndexPage]).flatMap(
+      visibleServiceCandidates,
+    ),
+  )
+  const modelServices = extracted?.services.map((item) => item.value) ?? []
+  const services = uniqueTextValues(
+    modelServices.length > 0
+      ? modelServices
+      : visibleServices.length >= 5
+        ? visibleServices
+        : [...structuredServices, ...visibleServices],
+  )
+  const businessName = extracted?.brandName?.value ?? base.businessName
+  const description = extracted?.valueProposition?.value ?? base.description
+  const industry = extracted?.industry?.value ?? visibleIndustry(pages) ?? base.industry
+  const location = extracted?.locations[0]?.value ?? base.location
+  const language = extracted?.language ?? base.language
+  const usefulFieldCount = [businessName, description, industry].filter(
+    (item) => item !== undefined,
+  ).length + services.length
+  const warnings: string[] = []
+  if (!analysis.attempted) {
+    warnings.push("ღრმა AI-ანალიზი ჯერ გამორთულია; ველები ვებგვერდის ტექსტიდან შევავსეთ")
+  } else if (extracted === undefined) {
+    warnings.push("AI-ანალიზი ვერ დასრულდა; ველები ვებგვერდის ტექსტიდან შევავსეთ")
+  } else if (extracted.completeness !== "complete") {
+    warnings.push("ვებგვერდის ნაწილი არასრული ან ორაზროვანი იყო — გადაამოწმეთ შევსებული ველები")
+  }
+  if (usefulFieldCount < 2) {
+    warnings.push("ვებგვერდზე ცოტა გამოსადეგი ინფორმაცია ვიპოვეთ")
   }
 
-  throw new WebsiteDiscoveryError("tooManyRedirects", "Website redirected too many times")
+  return {
+    ...base,
+    ...(businessName === undefined ? {} : { businessName }),
+    ...(description === undefined ? {} : { description }),
+    ...(industry === undefined ? {} : { industry }),
+    ...(location === undefined ? {} : { location }),
+    ...(language === undefined ? {} : { language }),
+    services,
+    serviceCategories: extracted?.serviceCategories.map((item) => item.value) ?? [],
+    evidence: {
+      ...(extracted?.brandName === undefined
+        ? {}
+        : { businessName: extracted.brandName }),
+      ...(extracted?.industry === undefined
+        ? {}
+        : { industry: extracted.industry }),
+      ...(extracted?.valueProposition === undefined
+        ? {}
+        : { description: extracted.valueProposition }),
+      locations: extracted?.locations ?? [],
+      services: extracted?.services ?? [],
+    },
+    analysis: {
+      method: extracted === undefined ? "deterministic" : "ai",
+      pagesAnalyzed: pages.length,
+      modelsTried: analysis.modelsTried,
+    },
+    warnings,
+  }
+}
+
+export async function discoverWebsite(
+  websiteUrl: string,
+  dependencies: WebsiteDiscoveryDependencies = {},
+): Promise<WebsiteDiscovery> {
+  const requested = normalizeWebsiteUrl(websiteUrl)
+  const useCache =
+    dependencies.fetchPage === undefined &&
+    dependencies.resolveAddresses === undefined &&
+    dependencies.analyzeBrand === undefined
+  if (useCache) {
+    const cached = cachedDiscovery(requested.toString())
+    if (cached !== undefined) {
+      return cached
+    }
+  }
+
+  const fetchPage = dependencies.fetchPage ?? fetch
+  const resolveAddresses = dependencies.resolveAddresses ?? defaultResolveAddresses
+  const analyzeBrand = dependencies.analyzeBrand ?? analyzeBrandWebsiteWithModel
+  const pages = await crawlWebsite(requested, fetchPage, resolveAddresses)
+  const root = pages[0]
+  if (root === undefined) {
+    throw new WebsiteDiscoveryError("unreachable", "Website returned no pages")
+  }
+  const base = extractWebsiteDiscovery(
+    root.html,
+    requested.toString(),
+    root.url,
+  )
+  const analysis = await analyzeBrand(
+    pages.map(({ url, title, text }) => ({
+      url,
+      ...(title === undefined ? {} : { title }),
+      text,
+    })),
+  )
+  const result = mergedDiscovery(base, pages, analysis)
+  if (useCache) {
+    rememberDiscovery([requested.toString(), result.finalUrl], result)
+  }
+  return result
 }

@@ -2,18 +2,21 @@ import { createHash, randomUUID } from "node:crypto"
 
 import { ingestSocialManualBrandProfile } from "../../blueprints/social/ingestion/manual-profile"
 import type { SocialManualKnowledgeInput } from "../../blueprints/social/ingestion/manual-profile"
-import { ingestSocialWebsiteProfile } from "../../blueprints/social/ingestion/website-profile"
+import {
+  ingestSocialWebsiteProfile,
+  type SocialWebsiteKnowledgeCitations,
+} from "../../blueprints/social/ingestion/website-profile"
 import { createIsoDateTime } from "../../core/domain/primitives"
 import type {
   BrandId,
   ContentHash,
   EvidenceId,
   IngestionRunId,
-  SourceArtifact,
   SourceArtifactId,
   SourceId,
   SourceSnapshotId,
 } from "../../core/domain/primitives"
+import type { SourceArtifact } from "../../core/domain/source-artifact"
 import type { MinimumViableBrandStatus } from "../../core/domain/operation"
 import type {
   IngestionStore,
@@ -33,6 +36,7 @@ export type WebsiteSourceCapture = {
   readonly pageTitle?: string
   readonly warnings?: readonly string[]
   readonly knowledge: SocialManualKnowledgeInput
+  readonly citations?: SocialWebsiteKnowledgeCitations
   readonly logo?: {
     readonly finalUrl: string
     readonly mediaType: SourceArtifact["mediaType"]
@@ -94,9 +98,10 @@ function websiteContentHash(capture: WebsiteSourceCapture): ContentHash {
   const digest = createHash("sha256")
     .update(
       JSON.stringify({
-        version: "social.website-profile.v1",
+        version: "social.website-profile.v2",
         finalUrl: capture.finalUrl,
         knowledge: capture.knowledge,
+        citations: capture.citations,
       }),
     )
     .digest("hex")
@@ -162,6 +167,9 @@ export async function createBrandOnboarding(
             ? {}
             : { warnings: websiteCapture.warnings }),
           knowledge: websiteCapture.knowledge,
+          ...(websiteCapture.citations === undefined
+            ? {}
+            : { citations: websiteCapture.citations }),
           createEvidenceId: () =>
             `evidence:${operationId}:${evidenceSequence++}` as EvidenceId,
         })
@@ -174,7 +182,7 @@ export async function createBrandOnboarding(
     contentHash: contentHash(knowledge),
     sourceLabel: "Business onboarding",
     knowledge,
-    ...(websiteIngestion === undefined
+    ...(websiteIngestion === undefined || websiteCapture === undefined
       ? {}
       : {
           parentEvidenceIdsByKnowledgeField: matchingWebsiteEvidence(

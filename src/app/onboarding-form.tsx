@@ -13,6 +13,9 @@ type ReadyResult = {
   readonly minimumViableBrand: MinimumViableBrand
   readonly evidenceCount: number
   readonly proposalCount: number
+  readonly sourceCount: number
+  readonly websiteEvidenceCount: number
+  readonly logoAssetCount: number
 }
 
 type WebsiteDiscovery = {
@@ -26,6 +29,11 @@ type WebsiteDiscovery = {
   readonly logoUrl?: string
   readonly facebookPage?: string
   readonly services: readonly string[]
+  readonly serviceCategories: readonly string[]
+  readonly analysis: {
+    readonly method: "deterministic" | "ai"
+    readonly pagesAnalyzed: number
+  }
   readonly warnings: readonly string[]
 }
 
@@ -68,7 +76,10 @@ function readReadyResult(value: unknown): ReadyResult | undefined {
   if (
     !isRecord(result.minimumViableBrand) ||
     typeof result.evidenceCount !== "number" ||
-    typeof result.proposalCount !== "number"
+    typeof result.proposalCount !== "number" ||
+    typeof result.sourceCount !== "number" ||
+    typeof result.websiteEvidenceCount !== "number" ||
+    typeof result.logoAssetCount !== "number"
   ) {
     return undefined
   }
@@ -90,6 +101,9 @@ function readReadyResult(value: unknown): ReadyResult | undefined {
     },
     evidenceCount: result.evidenceCount,
     proposalCount: result.proposalCount,
+    sourceCount: result.sourceCount,
+    websiteEvidenceCount: result.websiteEvidenceCount,
+    logoAssetCount: result.logoAssetCount,
   }
 }
 
@@ -106,6 +120,11 @@ function readWebsiteDiscovery(value: unknown): WebsiteDiscovery | undefined {
     typeof result.finalUrl !== "string" ||
     !Array.isArray(result.services) ||
     result.services.some((item) => typeof item !== "string") ||
+    !Array.isArray(result.serviceCategories) ||
+    result.serviceCategories.some((item) => typeof item !== "string") ||
+    !isRecord(result.analysis) ||
+    (result.analysis.method !== "deterministic" && result.analysis.method !== "ai") ||
+    typeof result.analysis.pagesAnalyzed !== "number" ||
     !Array.isArray(result.warnings) ||
     result.warnings.some((item) => typeof item !== "string")
   ) {
@@ -124,6 +143,11 @@ function readWebsiteDiscovery(value: unknown): WebsiteDiscovery | undefined {
   return {
     finalUrl: result.finalUrl,
     services: result.services as string[],
+    serviceCategories: result.serviceCategories as string[],
+    analysis: {
+      method: result.analysis.method,
+      pagesAnalyzed: result.analysis.pagesAnalyzed,
+    },
     warnings: result.warnings as string[],
     ...(pageTitle === undefined ? {} : { pageTitle }),
     ...(businessName === undefined ? {} : { businessName }),
@@ -185,6 +209,14 @@ function CheckIcon() {
         strokeWidth="2"
       />
     </svg>
+  )
+}
+
+function FieldOrigin({ edited }: { readonly edited: boolean }) {
+  return (
+    <span className={edited ? "field-origin edited" : "field-origin"}>
+      {edited ? "თქვენი ცვლილება" : "ვებგვერდიდან"}
+    </span>
   )
 }
 
@@ -313,6 +345,9 @@ export function OnboardingForm() {
   const [stage, setStage] = useState<"sources" | "review">("sources")
   const [discovery, setDiscovery] = useState<WebsiteDiscovery | undefined>()
   const [facebookPage, setFacebookPage] = useState("")
+  const [editedFields, setEditedFields] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  )
   const [sourceError, setSourceError] = useState<string | undefined>()
   const [isDiscovering, startDiscovery] = useTransition()
   const [isPending, startTransition] = useTransition()
@@ -320,6 +355,17 @@ export function OnboardingForm() {
   function showReview() {
     setStage("review")
     window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  function markEdited(field: string) {
+    setEditedFields((current) => {
+      if (current.has(field)) {
+        return current
+      }
+      const next = new Set(current)
+      next.add(field)
+      return next
+    })
   }
 
   function continueFromSources(websiteUrl: string, suppliedFacebookPage: string) {
@@ -353,6 +399,7 @@ export function OnboardingForm() {
           return
         }
         setDiscovery(result)
+        setEditedFields(new Set())
         if (suppliedFacebookPage.length === 0 && result.facebookPage !== undefined) {
           setFacebookPage(result.facebookPage)
         }
@@ -432,6 +479,7 @@ export function OnboardingForm() {
           onManual={() => {
             setDiscovery(undefined)
             setFacebookPage("")
+            setEditedFields(new Set())
             setSourceError(undefined)
             showReview()
           }}
@@ -486,6 +534,16 @@ export function OnboardingForm() {
                 გადაამოწმეთ ყველა ველი. თუ რამეს შეცვლით, თქვენს პასუხს უფრო ახალ
                 და პრიორიტეტულ ინფორმაციად მივიჩნევთ.
               </p>
+              <span className="prefill-analysis-summary">
+                {discovery.analysis.pagesAnalyzed} გვერდი გაანალიზდა
+                {discovery.analysis.method === "ai" ? " • AI-ით გადამოწმებული" : ""}
+                {discovery.services.length > 0
+                  ? ` • ${discovery.services.length} სერვისი ნაპოვნია`
+                  : ""}
+                {discovery.serviceCategories.length > 0
+                  ? ` • ${discovery.serviceCategories.length} მიმართულება`
+                  : ""}
+              </span>
               {discovery.warnings.map((warning) => (
                 <span className="prefill-warning" key={warning}>{warning}</span>
               ))}
@@ -506,7 +564,12 @@ export function OnboardingForm() {
 
             <div className="field-grid two-columns">
               <div className="field">
-                <label htmlFor="businessName">ბიზნესის სახელი *</label>
+                <label htmlFor="businessName">
+                  <span>ბიზნესის სახელი *</span>
+                  {discovery?.businessName === undefined ? null : (
+                    <FieldOrigin edited={editedFields.has("businessName")} />
+                  )}
+                </label>
                 <input
                   id="businessName"
                   name="businessName"
@@ -514,6 +577,7 @@ export function OnboardingForm() {
                   placeholder="მაგ. სტუდიო მზე"
                   required
                   maxLength={120}
+                  onChange={() => markEdited("businessName")}
                   aria-invalid={fieldError(state, "businessName") !== undefined}
                   aria-describedby="businessName-error"
                 />
@@ -522,20 +586,31 @@ export function OnboardingForm() {
                 </span>
               </div>
               <div className="field">
-                <label htmlFor="industry">საქმიანობის სფერო</label>
+                <label htmlFor="industry">
+                  <span>საქმიანობის სფერო</span>
+                  {discovery?.industry === undefined ? null : (
+                    <FieldOrigin edited={editedFields.has("industry")} />
+                  )}
+                </label>
                 <input
                   id="industry"
                   name="industry"
                   defaultValue={discovery?.industry}
                   placeholder="მაგ. ინტერიერის დიზაინი"
                   maxLength={120}
+                  onChange={() => markEdited("industry")}
                 />
                 <span className="field-hint">ერთი მოკლე და გასაგები პასუხი</span>
               </div>
             </div>
 
             <div className="field">
-              <label htmlFor="description">რას აკეთებთ და რა არის მთავარი ღირებულება?</label>
+              <label htmlFor="description">
+                <span>რას აკეთებთ და რა არის მთავარი ღირებულება?</span>
+                {discovery?.description === undefined ? null : (
+                  <FieldOrigin edited={editedFields.has("description")} />
+                )}
+              </label>
               <textarea
                 id="description"
                 name="description"
@@ -543,12 +618,18 @@ export function OnboardingForm() {
                 rows={3}
                 placeholder="ორი–სამი წინადადებით აღწერეთ თქვენი ბიზნესი და მისი მთავარი ღირებულება."
                 maxLength={500}
+                onChange={() => markEdited("description")}
               />
             </div>
 
             <div className="field-grid two-columns">
               <div className="field">
-                <label htmlFor="website">ვებგვერდი</label>
+                <label htmlFor="website">
+                  <span>ვებგვერდი</span>
+                  {discovery === undefined ? null : (
+                    <FieldOrigin edited={editedFields.has("website")} />
+                  )}
+                </label>
                 <input
                   id="website"
                   name="website"
@@ -556,6 +637,7 @@ export function OnboardingForm() {
                   defaultValue={discovery?.finalUrl}
                   placeholder="https://example.ge"
                   maxLength={300}
+                  onChange={() => markEdited("website")}
                   aria-invalid={fieldError(state, "website") !== undefined}
                   aria-describedby="website-error"
                 />
@@ -564,7 +646,12 @@ export function OnboardingForm() {
                 </span>
               </div>
               <div className="field">
-                <label htmlFor="facebookPage">Facebook გვერდი</label>
+                <label htmlFor="facebookPage">
+                  <span>Facebook გვერდი</span>
+                  {discovery?.facebookPage === undefined ? null : (
+                    <FieldOrigin edited={editedFields.has("facebookPage")} />
+                  )}
+                </label>
                 <input
                   id="facebookPage"
                   name="facebookPage"
@@ -572,6 +659,7 @@ export function OnboardingForm() {
                   defaultValue={facebookPage}
                   placeholder="https://facebook.com/your-page"
                   maxLength={300}
+                  onChange={() => markEdited("facebookPage")}
                   aria-invalid={fieldError(state, "facebookPage") !== undefined}
                   aria-describedby="facebookPage-error"
                 />
@@ -581,13 +669,19 @@ export function OnboardingForm() {
               </div>
             </div>
             <div className="field compact-field">
-              <label htmlFor="location">მდებარეობა</label>
+              <label htmlFor="location">
+                <span>მდებარეობა</span>
+                {discovery?.location === undefined ? null : (
+                  <FieldOrigin edited={editedFields.has("location")} />
+                )}
+              </label>
               <input
                 id="location"
                 name="location"
                 defaultValue={discovery?.location}
                 placeholder="მაგ. თბილისი, საქართველო"
                 maxLength={160}
+                onChange={() => markEdited("location")}
               />
             </div>
           </div>
@@ -604,7 +698,12 @@ export function OnboardingForm() {
             </div>
             <div className="field-grid two-columns">
               <div className="field">
-                <label htmlFor="services">მთავარი მომსახურებები ან პროდუქტები *</label>
+                <label htmlFor="services">
+                  <span>მთავარი მომსახურებები ან პროდუქტები *</span>
+                  {discovery === undefined || discovery.services.length === 0 ? null : (
+                    <FieldOrigin edited={editedFields.has("services")} />
+                  )}
+                </label>
                 <textarea
                   id="services"
                   name="services"
@@ -612,6 +711,7 @@ export function OnboardingForm() {
                   rows={5}
                   placeholder={"თითო ხაზზე ერთი, მაგალითად:\nბრენდის სტრატეგია\nსოციალური მედიის მართვა"}
                   required
+                  onChange={() => markEdited("services")}
                   aria-invalid={fieldError(state, "services") !== undefined}
                   aria-describedby="services-error services-hint"
                 />
@@ -648,12 +748,18 @@ export function OnboardingForm() {
 
             <div className="field-grid voice-grid">
               <div className="field">
-                <label htmlFor="language">კონტენტის ძირითადი ენა *</label>
+                <label htmlFor="language">
+                  <span>კონტენტის ძირითადი ენა *</span>
+                  {discovery?.language === undefined ? null : (
+                    <FieldOrigin edited={editedFields.has("language")} />
+                  )}
+                </label>
                 <select
                   id="language"
                   name="language"
                   defaultValue={discovery?.language ?? "ka"}
                   required
+                  onChange={() => markEdited("language")}
                 >
                   <option value="ka">ქართული</option>
                   <option value="en">English</option>
@@ -757,6 +863,38 @@ export function OnboardingForm() {
                   </div>
                 )
               })}
+            </div>
+            <div className="source-proof-summary">
+              <div>
+                <span className="source-proof-icon"><CheckIcon /></span>
+                <p>
+                  <strong>
+                    {state.result.sourceCount > 1
+                      ? "ვებგვერდის წყარო შენახულია"
+                      : "ხელით შევსებული წყარო შენახულია"}
+                  </strong>
+                  <span>
+                    {state.result.websiteEvidenceCount > 0
+                      ? `${state.result.websiteEvidenceCount} ჩანაწერს აქვს ვებგვერდის კვალი`
+                      : "ყველა ველი მომხმარებლის პასუხს ეყრდნობა"}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <span className="source-proof-icon"><CheckIcon /></span>
+                <p>
+                  <strong>
+                    {state.result.logoAssetCount > 0
+                      ? "ლოგო ჩვენს საცავშია"
+                      : "ლოგო ჯერ არ არის შენახული"}
+                  </strong>
+                  <span>
+                    {state.result.logoAssetCount > 0
+                      ? "გარე ბმულზე აღარ ვართ დამოკიდებული"
+                      : "მის დამატებას Brand Brain-იდან შეძლებთ"}
+                  </span>
+                </p>
+              </div>
             </div>
             <div className="result-stats">
               <div>

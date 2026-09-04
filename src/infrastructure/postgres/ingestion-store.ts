@@ -11,6 +11,8 @@ import {
   type KnowledgeClaimId,
   type KnowledgeMutationProposal,
   type Source,
+  type SourceArtifact,
+  type SourceArtifactId,
   type SourceId,
   type SourceSnapshot,
   type SourceSnapshotId,
@@ -21,6 +23,7 @@ import type {
   IngestionStore,
   PersistedBrand,
   PersistedIngestionGraph,
+  PersistedSourceGraph,
   PersistIngestionResult,
 } from "../../core/persistence"
 
@@ -80,6 +83,33 @@ type KnowledgeClaimRow = {
   created_at: Date
 }
 
+type SupportingSourceRow = {
+  source_id: string
+  source_kind: string
+  source_reference: unknown
+  source_created_at: Date
+  snapshot_id: string
+  captured_at: Date
+  content_hash: string
+  content: unknown
+  source_metadata: unknown | null
+}
+
+type SourceArtifactRow = {
+  id: string
+  brand_id: string
+  source_id: string
+  snapshot_id: string
+  kind: SourceArtifact["kind"]
+  role: SourceArtifact["role"]
+  media_type: SourceArtifact["mediaType"]
+  content_hash: string
+  byte_size: number
+  content: Buffer
+  source_url: string
+  created_at: Date
+}
+
 function jsonValue(value: unknown, field: string): string {
   const serialized = JSON.stringify(value)
   if (serialized === undefined) {
@@ -89,7 +119,7 @@ function jsonValue(value: unknown, field: string): string {
 }
 
 function assertBatchIntegrity(batch: IngestionPersistenceBatch): void {
-  const { brand, run, source, snapshot, evidence, routings } = batch
+  const { brand, run, source, snapshot } = batch
 
   if (source.brandId !== brand.id) {
     throw new RangeError("Source brand does not match the persisted brand")
@@ -114,28 +144,67 @@ function assertBatchIntegrity(batch: IngestionPersistenceBatch): void {
   }
 
   const evidenceIds = new Set<EvidenceId>()
-  for (const item of evidence) {
-    if (item.brandId !== brand.id || item.snapshotId !== snapshot.id) {
-      throw new RangeError("Evidence does not belong to the supplied graph")
+  const routingKeys = new Set<string>()
+  const sourceIds = new Set<SourceId>([source.id])
+  const snapshotIds = new Set<SourceSnapshotId>([snapshot.id])
+  const graphs = [
+    { source, snapshot, evidence: batch.evidence, routings: batch.routings },
+    ...(batch.supportingSources ?? []),
+  ]
+  for (const graph of graphs) {
+    if (
+      graph.source.brandId !== brand.id ||
+      graph.snapshot.brandId !== brand.id ||
+      graph.snapshot.sourceId !== graph.source.id
+    ) {
+      throw new RangeError("Source graph does not belong to the supplied brand")
     }
-    if (evidenceIds.has(item.id)) {
-      throw new RangeError(`Duplicate Evidence ID: ${item.id}`)
+    if (graph !== graphs[0]) {
+      if (sourceIds.has(graph.source.id) || snapshotIds.has(graph.snapshot.id)) {
+        throw new RangeError("Source graph IDs must be unique")
+      }
+      sourceIds.add(graph.source.id)
+      snapshotIds.add(graph.snapshot.id)
     }
-    evidenceIds.add(item.id)
+    const graphEvidenceIds = new Set<EvidenceId>()
+    for (const item of graph.evidence) {
+      if (item.brandId !== brand.id || item.snapshotId !== graph.snapshot.id) {
+        throw new RangeError("Evidence does not belong to the supplied graph")
+      }
+      if (evidenceIds.has(item.id)) {
+        throw new RangeError(`Duplicate Evidence ID: ${item.id}`)
+      }
+      evidenceIds.add(item.id)
+      graphEvidenceIds.add(item.id)
+    }
+    for (const routing of graph.routings) {
+      if (!graphEvidenceIds.has(routing.evidenceId)) {
+        throw new RangeError(
+          `Routing references unknown Evidence: ${routing.evidenceId}`,
+        )
+      }
+      const key = `${routing.evidenceId}\u0000${routing.routingVersion}`
+      if (routingKeys.has(key)) {
+        throw new RangeError(`Duplicate Evidence routing: ${routing.evidenceId}`)
+      }
+      routingKeys.add(key)
+    }
   }
 
-  const routingKeys = new Set<string>()
-  for (const routing of routings) {
-    if (!evidenceIds.has(routing.evidenceId)) {
-      throw new RangeError(
-        `Routing references unknown Evidence: ${routing.evidenceId}`,
-      )
+  const artifactIds = new Set<SourceArtifactId>()
+  for (const artifact of batch.sourceArtifacts ?? []) {
+    if (
+      artifact.brandId !== brand.id ||
+      !sourceIds.has(artifact.sourceId) ||
+      !snapshotIds.has(artifact.snapshotId) ||
+      artifact.byteSize !== artifact.content.byteLength
+    ) {
+      throw new RangeError("Source artifact does not belong to the supplied graph")
     }
-    const key = `${routing.evidenceId}\u0000${routing.routingVersion}`
-    if (routingKeys.has(key)) {
-      throw new RangeError(`Duplicate Evidence routing: ${routing.evidenceId}`)
+    if (artifactIds.has(artifact.id)) {
+      throw new RangeError(`Duplicate SourceArtifact ID: ${artifact.id}`)
     }
-    routingKeys.add(key)
+    artifactIds.add(artifact.id)
   }
 }
 
@@ -290,6 +359,37 @@ async function persistRoutings(
   }
 }
 
+async function persistSourceArtifacts(
+  client: PoolClient,
+  artifacts: readonly SourceArtifact[],
+): Promise<void> {
+  for (const artifact of artifacts) {
+    await client.query(
+      `
+        INSERT INTO source_artifacts(
+          id, brand_id, source_id, snapshot_id, kind, role, media_type,
+          content_hash, byte_size, content, source_url, created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `,
+      [
+        artifact.id,
+        artifact.brandId,
+        artifact.sourceId,
+        artifact.snapshotId,
+        artifact.kind,
+        artifact.role,
+        artifact.mediaType,
+        artifact.contentHash,
+        artifact.byteSize,
+        Buffer.from(artifact.content),
+        artifact.sourceUrl,
+        artifact.createdAt,
+      ],
+    )
+  }
+}
+
 async function persistRunAndProposals(
   client: PoolClient,
   batch: IngestionPersistenceBatch,
@@ -396,6 +496,24 @@ export class PostgresIngestionStore implements IngestionStore {
     try {
       await client.query("BEGIN")
       await persistBrand(client, batch.brand)
+      for (const supporting of batch.supportingSources ?? []) {
+        await persistSource(client, supporting.source)
+        const duplicateSupportingSnapshot = await persistSnapshot(
+          client,
+          supporting.snapshot,
+        )
+        if (duplicateSupportingSnapshot !== undefined) {
+          throw new Error(
+            `Supporting snapshot ${supporting.snapshot.id} duplicates ${
+              duplicateSupportingSnapshot.status === "duplicate"
+                ? duplicateSupportingSnapshot.existingSnapshotId
+                : duplicateSupportingSnapshot.snapshotId
+            }`,
+          )
+        }
+        await persistEvidence(client, supporting.evidence)
+        await persistRoutings(client, supporting.routings)
+      }
       await persistSource(client, batch.source)
       const duplicate = await persistSnapshot(client, batch.snapshot)
       if (duplicate !== undefined) {
@@ -405,6 +523,7 @@ export class PostgresIngestionStore implements IngestionStore {
 
       await persistEvidence(client, batch.evidence)
       await persistRoutings(client, batch.routings)
+      await persistSourceArtifacts(client, batch.sourceArtifacts ?? [])
       await persistRunAndProposals(client, batch)
       await client.query("COMMIT")
       return {
@@ -491,6 +610,84 @@ export class PostgresIngestionStore implements IngestionStore {
         `,
         [graph.brand_id],
       )
+      const supportingResult = await client.query<SupportingSourceRow>(
+        `
+          SELECT
+            s.id AS source_id,
+            s.kind AS source_kind,
+            s.reference AS source_reference,
+            s.created_at AS source_created_at,
+            ss.id AS snapshot_id,
+            ss.captured_at,
+            ss.content_hash,
+            ss.content,
+            ss.source_metadata
+          FROM source_snapshots ss
+          JOIN sources s ON s.id = ss.source_id
+          WHERE ss.brand_id = $1 AND ss.id <> $2
+          ORDER BY ss.captured_at, ss.id
+        `,
+        [graph.brand_id, graph.snapshot_id],
+      )
+      const supportingSources: PersistedSourceGraph[] = []
+      for (const row of supportingResult.rows) {
+        const supportingEvidence = await client.query<EvidenceRow>(
+          "SELECT * FROM evidence WHERE snapshot_id = $1 ORDER BY id",
+          [row.snapshot_id],
+        )
+        const supportingRoutings = await client.query<EvidenceRoutingRow>(
+          `
+            SELECT er.evidence_id, er.routing_version, er.targets
+            FROM evidence_routings er
+            JOIN evidence e ON e.id = er.evidence_id
+            WHERE e.snapshot_id = $1
+            ORDER BY er.evidence_id, er.routing_version
+          `,
+          [row.snapshot_id],
+        )
+        const supportingSourceId = row.source_id as SourceId
+        const supportingSnapshotId = row.snapshot_id as SourceSnapshotId
+        supportingSources.push({
+          source: {
+            id: supportingSourceId,
+            brandId: graph.brand_id as BrandId,
+            kind: row.source_kind as Source["kind"],
+            reference: row.source_reference as Source["reference"],
+            createdAt: createIsoDateTime(row.source_created_at.toISOString()),
+          },
+          snapshot: {
+            id: supportingSnapshotId,
+            sourceId: supportingSourceId,
+            brandId: graph.brand_id as BrandId,
+            capturedAt: createIsoDateTime(row.captured_at.toISOString()),
+            contentHash: row.content_hash as SourceSnapshot["contentHash"],
+            content: row.content as SourceSnapshot["content"],
+            ...(row.source_metadata === null
+              ? {}
+              : {
+                  sourceMetadata:
+                    row.source_metadata as NonNullable<
+                      SourceSnapshot["sourceMetadata"]
+                    >,
+                }),
+          },
+          evidence: supportingEvidence.rows.map(hydrateEvidence),
+          routings: supportingRoutings.rows.map((routing) => ({
+            evidenceId: routing.evidence_id as EvidenceId,
+            routingVersion: routing.routing_version,
+            targets: routing.targets as EvidenceRouting["targets"],
+          })),
+        })
+      }
+      const artifactResult = await client.query<SourceArtifactRow>(
+        `
+          SELECT *
+          FROM source_artifacts
+          WHERE brand_id = $1
+          ORDER BY created_at, id
+        `,
+        [graph.brand_id],
+      )
 
       await client.query("COMMIT")
 
@@ -546,6 +743,21 @@ export class PostgresIngestionStore implements IngestionStore {
           (row) => row.proposal as KnowledgeMutationProposal,
         ),
         knowledgeClaims: claimResult.rows.map(hydrateKnowledgeClaim),
+        supportingSources,
+        sourceArtifacts: artifactResult.rows.map((row) => ({
+          id: row.id as SourceArtifactId,
+          brandId: row.brand_id as BrandId,
+          sourceId: row.source_id as SourceId,
+          snapshotId: row.snapshot_id as SourceSnapshotId,
+          kind: row.kind,
+          role: row.role,
+          mediaType: row.media_type,
+          contentHash: row.content_hash as SourceArtifact["contentHash"],
+          byteSize: row.byte_size,
+          content: row.content,
+          sourceUrl: row.source_url,
+          createdAt: createIsoDateTime(row.created_at.toISOString()),
+        })),
       }
     } catch (error) {
       await client.query("ROLLBACK")

@@ -39,6 +39,7 @@ export type OnboardingValidationResult =
 type MutableErrors = Partial<Record<OnboardingField, string>>
 
 const MAX_LIST_ITEMS = 12
+const MAX_SERVICE_ITEMS = 50
 const MAX_ITEM_LENGTH = 160
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -114,8 +115,9 @@ function readList(
     }
   }
 
-  if (items.length > MAX_LIST_ITEMS) {
-    errors[field] = `მაქსიმუმ ${MAX_LIST_ITEMS} ჩანაწერია დასაშვები`
+  const maxItems = field === "services" ? MAX_SERVICE_ITEMS : MAX_LIST_ITEMS
+  if (items.length > maxItems) {
+    errors[field] = `მაქსიმუმ ${maxItems} ჩანაწერია დასაშვები`
     return undefined
   }
   if (required && items.length === 0) {

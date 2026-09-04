@@ -28,7 +28,9 @@ content, and have the Operator publish that content automatically.
 - `src/blueprints/social/` will contain Social Operator knowledge, policies, and
   channel-specific behavior.
 - `src/app/` contains the Next.js UI and request surfaces.
-- `worker/` will be the only layer that executes provider and model work.
+- `src/infrastructure/` contains request-time storage, website, and model
+  adapters used by synchronous flows such as onboarding.
+- `worker/` will execute background provider and model work.
 
 The core rule is that language models handle ambiguous semantic reasoning while
 deterministic application code owns IDs, validation, authority, state changes,
@@ -48,9 +50,17 @@ Viable Brand result, and rejects a repeated snapshot with the same source and
 content hash. The Georgian onboarding is now source-first: `POST
 /api/onboarding/discover` safely reads public website metadata and JSON-LD,
 prefills editable brand candidates, and falls back to manual entry when a
-website is unavailable. Confirmed details go through `POST /api/onboarding`,
+website is unavailable. Discovery crawls up to five same-origin priority pages,
+then uses a fast Structured Outputs extraction model when `OPENAI_API_KEY` is
+configured. Every AI-extracted value is accepted only when its URL and exact
+excerpt can be verified against the fetched page; a stronger fallback model is
+used only for incomplete or ambiguous results. Confirmed details go through `POST /api/onboarding`,
 run the same ingestion pipeline, persist to PostgreSQL, and display the Brand
-Brain readiness state. Connected-social adapters can reuse this pipeline.
+Brain readiness state. The final submission captures a separate immutable
+website snapshot, routes its evidence independently, links unchanged confirmed
+fields through Evidence lineage, and stores a verified raster logo as a local
+source artifact when one is available. Connected-social adapters can reuse this
+pipeline.
 
 The current architecture correction map is in
 `docs/Brand Knowledge Architecture — Amendments & Supersession Map v1.md` and

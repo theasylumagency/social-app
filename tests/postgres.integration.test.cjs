@@ -5,6 +5,7 @@ const test = require("node:test")
 const { createIsoDateTime } = require("../dist/core/domain/index.js")
 const {
   ingestSocialManualBrandProfile,
+  ingestSocialWebsiteProfile,
 } = require("../dist/blueprints/social/index.js")
 const {
   createPostgresPool,
@@ -77,11 +78,54 @@ test(
       snapshotId,
       evidencePrefix: `evidence:integration:${suffix}:1`,
     })
-    const firstBatch = createBatch({
+    const websiteIngestion = ingestSocialWebsiteProfile({
+      brandId,
+      sourceId: `source:integration:${suffix}:website`,
+      snapshotId: `snapshot:integration:${suffix}:website`,
+      capturedAt: createIsoDateTime("2026-09-04T12:00:00+04:00"),
+      contentHash: "sha256:postgres-integration-website-v1",
+      requestedUrl: "https://example.ge/",
+      finalUrl: "https://example.ge/",
+      pageTitle: "Integration Test Brand",
+      knowledge: {
+        identityName: "Integration Test Brand",
+        identityWebsite: "https://example.ge/",
+      },
+      createEvidenceId: (localRef) =>
+        `evidence:integration:${suffix}:website:${localRef}`,
+    })
+    const logoBytes = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10, 1])
+    const firstBatch = {
+      ...createBatch({
       brandId,
       runId: `run:integration:${suffix}:1`,
       ingestion: firstIngestion,
-    })
+      }),
+      supportingSources: [
+        {
+          source: websiteIngestion.source,
+          snapshot: websiteIngestion.snapshot,
+          evidence: websiteIngestion.evidence,
+          routings: websiteIngestion.routings,
+        },
+      ],
+      sourceArtifacts: [
+        {
+          id: `artifact:integration:${suffix}:logo`,
+          brandId,
+          sourceId: websiteIngestion.source.id,
+          snapshotId: websiteIngestion.snapshot.id,
+          kind: "image",
+          role: "logoCandidate",
+          mediaType: "image/png",
+          contentHash: "sha256:postgres-integration-logo-v1",
+          byteSize: logoBytes.byteLength,
+          content: logoBytes,
+          sourceUrl: "https://example.ge/logo.png",
+          createdAt: websiteIngestion.source.createdAt,
+        },
+      ],
+    }
 
     const firstStore = new PostgresIngestionStore(pool)
     assert.deepEqual(await firstStore.persist(firstBatch), {
@@ -112,6 +156,18 @@ test(
       usableVoice: true,
       satisfied: true,
     })
+    assert.equal(loaded.supportingSources.length, 1)
+    assert.equal(loaded.supportingSources[0].source.kind, "social.website")
+    assert.equal(
+      loaded.supportingSources[0].evidence.length,
+      websiteIngestion.evidence.length,
+    )
+    assert.equal(loaded.sourceArtifacts.length, 1)
+    assert.equal(loaded.sourceArtifacts[0].role, "logoCandidate")
+    assert.deepEqual(
+      Buffer.from(loaded.sourceArtifacts[0].content),
+      Buffer.from(logoBytes),
+    )
 
     const duplicateIngestion = createManualIngestion({
       brandId,

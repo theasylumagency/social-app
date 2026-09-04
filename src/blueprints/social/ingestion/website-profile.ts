@@ -36,11 +36,25 @@ export type SocialWebsiteProfileIngestionInput = {
   readonly pageTitle?: string
   readonly warnings?: readonly string[]
   readonly knowledge: SocialManualKnowledgeInput
+  readonly citations?: SocialWebsiteKnowledgeCitations
   readonly createEvidenceId: (
     localRef: string,
     proposal: ExtractedEvidenceProposal,
   ) => EvidenceId
 }
+
+export type SocialWebsiteKnowledgeCitation = {
+  readonly value: JsonValue
+  readonly sourceUrl: string
+  readonly exactExcerpt: string
+  readonly confidence: "high" | "medium" | "low"
+}
+
+export type SocialWebsiteKnowledgeCitations = Readonly<
+  Partial<
+    Record<SocialManualKnowledgeField, readonly SocialWebsiteKnowledgeCitation[]>
+  >
+>
 
 export type SocialWebsiteProfileIngestionResult = {
   readonly source: Source
@@ -68,6 +82,7 @@ function evidenceTypeFor(field: SocialManualKnowledgeField): EvidenceType {
 
 function proposalsForKnowledge(
   knowledge: SocialManualKnowledgeInput,
+  citations: SocialWebsiteKnowledgeCitations,
 ): readonly RoutedProposal[] {
   const proposals: RoutedProposal[] = []
 
@@ -80,10 +95,14 @@ function proposalsForKnowledge(
     const values = Array.isArray(value) ? value : [value]
 
     values.forEach((item, index) => {
-      const locatorPath: (string | number)[] = ["knowledge", field]
-      if (Array.isArray(value)) {
-        locatorPath.push(index)
-      }
+      const fieldCitations = citations[field] ?? []
+      const citationIndex = fieldCitations.findIndex(
+        (candidate) => JSON.stringify(candidate.value) === JSON.stringify(item),
+      )
+      const citation = citationIndex < 0 ? undefined : fieldCitations[citationIndex]
+      const locatorPath: (string | number)[] = citation === undefined
+        ? ["knowledge", field, ...(Array.isArray(value) ? [index] : [])]
+        : ["citations", field, citationIndex]
       proposals.push({
         field,
         path,
@@ -92,7 +111,13 @@ function proposalsForKnowledge(
           type: evidenceTypeFor(field),
           sourceClaimMode: "explicit",
           value: item,
-          evidenceStrength: "medium",
+          evidenceStrength:
+            citation?.confidence === "high"
+              ? "strong"
+              : citation?.confidence === "low"
+                ? "weak"
+                : "medium",
+          ...(citation === undefined ? {} : { excerpt: citation.exactExcerpt }),
           locator: { kind: "structuredPath", path: locatorPath },
           semanticHints: ["website", path],
         },
@@ -100,6 +125,23 @@ function proposalsForKnowledge(
     })
   }
   return proposals
+}
+
+function snapshotCitations(
+  citations: SocialWebsiteKnowledgeCitations,
+): Readonly<Record<string, JsonValue>> {
+  const result: Record<string, JsonValue> = {}
+  for (const [field, values] of Object.entries(citations)) {
+    if (values !== undefined && values.length > 0) {
+      result[field] = values.map((citation) => ({
+        value: citation.value,
+        sourceUrl: citation.sourceUrl,
+        exactExcerpt: citation.exactExcerpt,
+        confidence: citation.confidence,
+      }))
+    }
+  }
+  return result
 }
 
 function snapshotKnowledge(
@@ -125,9 +167,10 @@ export function ingestSocialWebsiteProfile({
   pageTitle,
   warnings = [],
   knowledge,
+  citations = {},
   createEvidenceId,
 }: SocialWebsiteProfileIngestionInput): SocialWebsiteProfileIngestionResult {
-  const routedProposals = proposalsForKnowledge(knowledge)
+  const routedProposals = proposalsForKnowledge(knowledge, citations)
   const extractedEvidence = routedProposals.map((item) => item.proposal)
   const pathByLocalRef = new Map(
     routedProposals.map((item) => [item.proposal.localRef, item.path] as const),
@@ -178,7 +221,10 @@ export function ingestSocialWebsiteProfile({
     contentHash,
     content: {
       kind: "structured",
-      data: { knowledge: snapshotKnowledge(knowledge) },
+      data: {
+        knowledge: snapshotKnowledge(knowledge),
+        citations: snapshotCitations(citations),
+      },
       mediaType: "application/vnd.unda.website-profile+json",
     },
     sourceMetadata: {
@@ -186,7 +232,7 @@ export function ingestSocialWebsiteProfile({
       attributes: {
         requestedUrl,
         finalUrl,
-        extractionVersion: "social.website-profile.v1",
+        extractionVersion: "social.website-profile.v2",
         warnings,
       },
     },

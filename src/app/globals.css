@@ -290,6 +290,30 @@ a {
   font-weight: 700;
 }
 
+.field label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field-origin {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.field-origin.edited {
+  background: #f2ecdf;
+  color: #7b6540;
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -619,6 +643,58 @@ a {
 .mini-check svg {
   width: 15px;
   height: 15px;
+}
+
+.source-proof-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 15px;
+  border: 1px solid rgba(36, 95, 69, 0.14);
+  border-radius: 13px;
+  background: rgba(239, 246, 230, 0.72);
+}
+
+.source-proof-summary > div {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.source-proof-summary p,
+.source-proof-summary strong,
+.source-proof-summary p > span {
+  display: block;
+  margin: 0;
+}
+
+.source-proof-summary strong {
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.source-proof-summary p > span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.source-proof-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--accent);
+  color: white;
+}
+
+.source-proof-icon svg {
+  width: 13px;
+  height: 13px;
 }
 
 .result-stats {
@@ -969,6 +1045,15 @@ a {
   color: var(--muted);
   font-size: 10px;
   line-height: 1.5;
+}
+
+.prefill-analysis-summary {
+  display: block;
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
 }
 
 .prefill-warning {
