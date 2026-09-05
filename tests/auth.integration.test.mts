@@ -17,6 +17,8 @@ test("return paths and production configuration reject unsafe defaults", () => {
   assert.equal(safeReturnPath("/account?tab=security"), "/account?tab=security")
   assert.throws(() => authOrigin({ NODE_ENV: "production", BETTER_AUTH_URL: "http://localhost:3000" }))
   assert.throws(() => createEmailSender({ NODE_ENV: "production", AUTH_EMAIL_MODE: "preview" }))
+  assert.throws(() => createEmailSender({ AUTH_EMAIL_MODE: "resend" }))
+  assert.equal(typeof createEmailSender({ RESEND_API_KEY: "re_test_key" }), "function")
 })
 
 test("authentication and workspace isolation against PostgreSQL", { skip: !process.env.DATABASE_URL }, async (t) => {
@@ -115,6 +117,8 @@ test("authentication and workspace isolation against PostgreSQL", { skip: !proce
     const verified = await owner.request(link.pathname + link.search)
     assert.equal(verified.status, 302)
     assert.equal(owner.cookies.has("unda.session_token"), false)
+    const welcome = messages.findLast((item) => item.to === email && item.subject.includes("რეგისტრაცია წარმატებით"))
+    assert.ok(welcome, "Expected welcome email after verification")
   })
 
   await t.test("remembered login persists, logout revokes, temporary login does not persist", async () => {

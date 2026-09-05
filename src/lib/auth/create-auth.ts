@@ -47,6 +47,18 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
         to: user.email,
         subject: "UNDA — პაროლის დაყენება",
         text: `პაროლის დასაყენებლად ან შესაცვლელად გახსენი ბმული:\n\n${url}\n\nბმული მოქმედებს 30 წუთი და გამოიყენება ერთხელ. თუ ეს შენ არ მოგითხოვია, უგულებელყავი წერილი.`,
+        html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">პაროლის დაყენება ან შეცვლა</h2>
+          <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა,</p>
+          <p style="font-size: 15px; margin-bottom: 24px;">შენი UNDA ანგარიშისთვის ახალი პაროლის დასაყენებლად ან შესაცვლელად დააჭირე ქვემოთ მოცემულ ღილაკს:</p>
+          <p style="margin-bottom: 24px;">
+            <a href="${url}" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">პაროლის დაყენება</a>
+          </p>
+          <p style="font-size: 13px; color: #555; margin-bottom: 8px;">ბმული მოქმედებს 30 წუთი და გამოიყენება მხოლოდ ერთხელ.</p>
+          <p style="font-size: 13px; color: #555;">თუ ეს მოქმედება შენ არ მოგითხოვია, შეგიძლია უგულებელყო ეს წერილი.</p>
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
+          <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>
+        </div>`,
       }),
     },
     emailVerification: {
@@ -58,6 +70,18 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
         to: user.email,
         subject: "UNDA — დაადასტურე ელფოსტა",
         text: `UNDA ანგარიშის გასააქტიურებლად დაადასტურე ელფოსტა:\n\n${url}\n\nბმული მოქმედებს ერთი საათი. თუ ანგარიში შენ არ შეგიქმნია, უგულებელყავი წერილი.`,
+        html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">დაადასტურე შენი ელფოსტა</h2>
+          <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა,</p>
+          <p style="font-size: 15px; margin-bottom: 24px;">UNDA ანგარიშის გასააქტიურებლად გთხოვთ დაადასტუროთ თქვენი ელფოსტის მისამართი:</p>
+          <p style="margin-bottom: 24px;">
+            <a href="${url}" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">ელფოსტის დადასტურება</a>
+          </p>
+          <p style="font-size: 13px; color: #555; margin-bottom: 8px;">ბმული მოქმედებს 1 საათის განმავლობაში.</p>
+          <p style="font-size: 13px; color: #555;">თუ ანგარიში შენ არ შეგიქმნია, შეგიძლია უგულებელყო ეს წერილი.</p>
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
+          <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>
+        </div>`,
       }),
     },
     rateLimit: {
@@ -98,6 +122,55 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
       }),
     },
     databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            if (user.emailVerified) {
+              const name = user.name ? ` ${user.name}` : ""
+              await sendEmail({
+                to: user.email,
+                subject: "UNDA — რეგისტრაცია წარმატებით დასრულდა!",
+                text: `გამარჯობა${name},\n\nმოგესალმებით UNDA-ში! შენი ანგარიში წარმატებით შეიქმნა.\n\nსამუშაო სივრცეში გადასასვლელად გახსენი ბმული:\n${origin}\n\n14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.\n\nშეგიძლია ნებისმიერ დროს შეხვიდე Google-ით, ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.\n\nპატივისცემით,\nUNDA გუნდი`,
+                html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
+                  <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">მოგესალმებით UNDA-ში!</h2>
+                  <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა${name},</p>
+                  <p style="font-size: 15px; margin-bottom: 24px;">შენი UNDA ანგარიში წარმატებით შეიქმნა.</p>
+                  <p style="margin-bottom: 24px;">
+                    <a href="${origin}" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">სამუშაო სივრცეში გადასვლა</a>
+                  </p>
+                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე. შეგიძლია ნებისმიერ დროს შეხვიდე Google-ით ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.</p>
+                  <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
+                  <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>
+                </div>`,
+              }).catch((error) => console.error("Welcome email delivery failed:", error))
+            }
+          },
+        },
+        update: {
+          after: async (user, ctx) => {
+            if (ctx?.path === "/verify-email" && user.emailVerified) {
+              const name = user.name ? ` ${user.name}` : ""
+              await sendEmail({
+                to: user.email,
+                subject: "UNDA — რეგისტრაცია წარმატებით დასრულდა!",
+                text: `გამარჯობა${name},\n\nშენი UNDA ანგარიში წარმატებით გააქტიურდა.\n\nშესვლა შეგიძლია ბმულიდან:\n${origin}/login\n\n14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.\n\nთუ რაიმე შეკითხვა გაგიჩნდება, მოგვწერე ნებისმიერ დროს.\n\nპატივისცემით,\nUNDA გუნდი`,
+                html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
+                  <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">მოგესალმებით UNDA-ში!</h2>
+                  <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა${name},</p>
+                  <p style="font-size: 15px; margin-bottom: 24px;">შენი ანგარიში წარმატებით გააქტიურდა და ელფოსტა დადასტურებულია.</p>
+                  <p style="margin-bottom: 24px;">
+                    <a href="${origin}/login" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">სამუშაო სივრცეში შესვლა</a>
+                  </p>
+                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.</p>
+                  <p style="font-size: 13px; color: #555;">თუ რაიმე შეკითხვა გაგიჩნდება, მოგვწერე ნებისმიერ დროს.</p>
+                  <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
+                  <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>
+                </div>`,
+              }).catch((error) => console.error("Welcome email delivery failed:", error))
+            }
+          },
+        },
+      },
       session: {
         create: {
           before: async (session, ctx) => {

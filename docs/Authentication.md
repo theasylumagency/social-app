@@ -76,17 +76,21 @@ GitHub can be enabled with `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, using
 
 ## Production email and sessions
 
-Configure these server-side values before deployment:
+Configure these server-side values before deployment to `https://app.unda.pro`:
 
 - `BETTER_AUTH_URL=https://app.unda.pro`
 - A unique `BETTER_AUTH_SECRET` with at least 32 random characters, consistent
   across application instances. Do not reuse the development secret.
-- `AUTH_EMAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, and, when the
-  server requires authentication, `SMTP_USER` and `SMTP_PASSWORD`.
-- Port 465 uses implicit TLS; other ports require STARTTLS. Configure the sender
-  address and domain with the chosen email service.
+- **Resend (recommended):** `AUTH_EMAIL_MODE=resend`, `RESEND_API_KEY=re_...`,
+  and `RESEND_FROM=UNDA <noreply@unda.pro>`.
+- **SMTP fallback:** `AUTH_EMAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`,
+  and, when the server requires authentication, `SMTP_USER` and `SMTP_PASSWORD`.
+  Port 465 uses implicit TLS; other ports require STARTTLS.
 
-The sender is awaited so delivery work is not abandoned on serverless hosts.
+When a user's registration is confirmed (either immediately via Google OAuth or
+after clicking the email verification link), a welcome confirmation email is sent.
+Google-only accounts can request password addition through `/account`, which sends
+a secure password reset link via Resend.
 Verification, resend, and recovery responses avoid exposing whether an email
 exists; a durable email queue with uniform response timing can be added with
 the background worker. Delivery and Google consent must be tested against real

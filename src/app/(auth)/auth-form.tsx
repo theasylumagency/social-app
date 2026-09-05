@@ -10,6 +10,7 @@ type Mode = "login" | "register" | "forgot" | "reset"
 type Props = {
   mode: Mode
   next?: string
+  initialEmail?: string
   google?: boolean
   github?: boolean
   token?: string
@@ -24,20 +25,20 @@ const copy: Record<Mode, { title: string; intro: string; action: string }> = {
   reset: { title: "დააყენე ახალი პაროლი", intro: "ეს პაროლი იმავე UNDA ანგარიშში შესასვლელად გამოგადგება.", action: "პაროლის შენახვა" },
 }
 
-export function AuthForm({ mode, next = "/", google = false, github = false, token, initialError, verified }: Props) {
+export function AuthForm({ mode, next = "/", initialEmail = "", google = false, github = false, token, initialError, verified }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(initialError ? authErrorMessage(initialError) : "")
   const [success, setSuccess] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [visible, setVisible] = useState(false)
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(initialEmail)
   const [needsVerification, setNeedsVerification] = useState(false)
   const isEntry = mode === "login" || mode === "register"
   const hasPassword = isEntry || mode === "reset"
   const invalidReset = mode === "reset" && (!token || Boolean(initialError))
   const details = copy[mode]
-  const verificationCallback = `/login?verified=1&next=${encodeURIComponent(next)}`
+  const verificationCallback = `/login?verified=1&email=${encodeURIComponent(email.trim())}&next=${encodeURIComponent(next)}`
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

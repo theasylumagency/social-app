@@ -14,6 +14,10 @@ export function authErrorMessage(code: string | undefined): string {
   switch (code) {
     case "INVALID_EMAIL_OR_PASSWORD":
     case "INVALID_PASSWORD": return "ელფოსტა ან პაროლი არასწორია."
+    case "USER_ALREADY_EXISTS": return "მომხმარებელი ამ ელფოსტით უკვე არსებობს. სცადე შესვლა."
+    case "INVALID_EMAIL": return "მიუთითე სწორი ელფოსტის მისამართი."
+    case "USER_NOT_FOUND": return "მომხმარებელი ამ მონაცემებით ვერ მოიძებნა."
+    case "FAILED_TO_CREATE_USER": return "ანგარიშის შექმნა ვერ მოხერხდა. სცადე ხელახლა."
     case "EMAIL_NOT_VERIFIED": return "შესვლამდე დაადასტურე ელფოსტა — შეამოწმე მიღებული წერილი."
     case "PASSWORD_TOO_SHORT": return `პაროლი სულ მცირე ${PASSWORD_MIN_LENGTH} სიმბოლოს უნდა შეიცავდეს.`
     case "PASSWORD_TOO_LONG": return `პაროლი მაქსიმუმ ${PASSWORD_MAX_LENGTH} სიმბოლოს უნდა შეიცავდეს.`

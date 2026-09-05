@@ -32,7 +32,11 @@ export async function requireSession(returnTo = "/") {
 }
 
 export async function authenticateWorkRequest(request: Request) {
-  if (request.headers.get("origin") !== authOrigin()) {
+  const origin = request.headers.get("origin")
+  const expectedOrigin = authOrigin()
+  const isDev = process.env.NODE_ENV !== "production"
+  const isAllowedDevOrigin = isDev && (origin === "http://localhost:3000" || origin === "http://127.0.0.1:3000")
+  if (origin !== expectedOrigin && !isAllowedDevOrigin) {
     return { error: Response.json({ message: "მოთხოვნა დაუშვებელია." }, { status: 403 }) } as const
   }
   const session = await getAuth().api.getSession({ headers: request.headers })
