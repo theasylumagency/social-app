@@ -14,6 +14,7 @@ import {
 import { getDatabasePool } from "../../_server/database"
 import { authenticateWorkRequest } from "../../_server/auth"
 import { ensurePersonalWorkspace } from "../../../infrastructure/postgres/workspace-store"
+import { rememberBrand } from "../../_server/active-brand"
 
 export const runtime = "nodejs"
 
@@ -178,6 +179,7 @@ export async function POST(request: Request): Promise<Response> {
     const result = await createBrandOnboarding(validation.data, store, {
       ...(websiteCapture === undefined ? {} : { websiteCapture }),
     })
+    await rememberBrand(result.brandId)
     return Response.json({
       message: "Brand Brain-ის საფუძველი მზადაა",
       result,

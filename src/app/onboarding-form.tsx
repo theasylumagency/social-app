@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 
 import { ProgressFeedbackModal } from "./feedback-modal"
 
@@ -922,10 +923,10 @@ export function OnboardingForm() {
                 <span>Brand Brain-ის სიგნალი</span>
               </div>
             </div>
-            <button className="secondary-button" type="button" disabled>
-              შემდეგი: პირველი სტრატეგია
-              <span>მალე</span>
-            </button>
+            <Link className="secondary-button" href="/workspace">
+              კვირის სამუშაო სივრცეში გადასვლა
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
         ) : (
           <div className="guide-card">

@@ -73,6 +73,24 @@ implemented. See [Authentication](docs/Authentication.md) for local setup,
 Google and SMTP configuration, and verification. Subscription limits, billing,
 and the trial lifecycle remain to be implemented.
 
+The authenticated workspace now opens at `/workspace`, with Week, Content,
+Results, Brand, Connections, and Settings. The root route resumes the last
+accessible brand; users without a ready brand go to `/onboarding`. Completing
+onboarding selects the new brand and provides a link into its weekly workspace.
+Brand switching uses a server-validated, HttpOnly preference cookie. Every
+dashboard query and weekly-goal write checks workspace ownership.
+
+Week displays the real first-cycle state, a Monday-based Tbilisi week picker,
+and an editable, persisted weekly objective. Migration `0005_weekly_briefs.sql`
+stores this user-authored direction separately from Brand Knowledge. Brand
+shows confirmed onboarding information, source capture dates and initial
+history. Content includes list/calendar views and status filters with honest
+empty states; Results and Connections explain their current availability.
+Automated planning, content generation/review/publishing, Meta OAuth, analytics,
+knowledge refinement, billing and trial activation are not implemented by this
+dashboard milestone. No sample posts, live metrics, active jobs or trial
+countdowns are presented as real data.
+
 ## Local commands
 
 ```bash
@@ -84,6 +102,7 @@ npm run db:migrate   # Apply pending database migrations
 npm run test:integration # Verify the real PostgreSQL persistence flow
 npm run auth:init-local # Add local auth settings without overwriting existing values
 npm run test:auth    # Verify auth and ownership in an isolated PostgreSQL schema
+npm run test:dashboard # Verify dashboard data and weekly goals in an isolated schema
 npm run lint         # Run the project linter
 npm run build        # Create the production Next.js build
 npm run verify       # Run the full local verification pipeline
