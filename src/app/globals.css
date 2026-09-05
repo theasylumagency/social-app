@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+.auth-shell { display: grid; grid-template-columns: minmax(0, 1fr) minmax(440px, 1fr); min-height: 100vh; }
+.auth-story { display: flex; flex-direction: column; justify-content: space-between; padding: 48px clamp(32px, 5vw, 88px); background: #e9eddf; border-right: 1px solid var(--line); }
+.auth-story-copy { max-width: 560px; padding: 72px 0; }
+.auth-story-copy h1 { font-size: clamp(38px, 4vw, 64px); line-height: 1.25; letter-spacing: -.04em; margin: 24px 0; font-weight: 650; }
+.auth-story-copy > p { color: var(--muted); font-size: 17px; line-height: 1.9; max-width: 460px; }
+.auth-trial-note { display: flex; align-items: center; gap: 20px; margin-top: 48px; }
+.auth-trial-note > span { font-size: 46px; line-height: 1; font-weight: 600; color: var(--accent); }
+.auth-trial-note strong { font-size: 15px; }
+.auth-trial-note p, .auth-story-footer { color: var(--muted); font-size: 12px; line-height: 1.8; margin: 6px 0 0; }
+.auth-content { display: flex; align-items: center; justify-content: center; padding: 64px 32px; background: var(--paper); }
+.auth-card { width: 100%; max-width: 410px; }
+.auth-card h2 { font-size: clamp(25px, 2.5vw, 34px); line-height: 1.4; font-weight: 650; letter-spacing: -.03em; margin: 16px 0 12px; }
+.auth-intro { color: var(--muted); font-size: 14px; line-height: 1.85; margin-bottom: 32px; }
+.auth-providers { display: grid; gap: 10px; }
+.auth-provider, .auth-primary { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 48px; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 650; cursor: pointer; transition: background .15s; }
+.auth-provider { border: 1px solid var(--line); color: var(--ink); background: var(--paper); }
+.auth-provider:hover:not(:disabled) { background: var(--canvas); }
+.auth-primary { border: 1px solid var(--accent); background: var(--accent); color: white; width: 100%; }
+.auth-primary:hover:not(:disabled) { background: var(--accent-strong); }
+.auth-provider:disabled, .auth-primary:disabled, .auth-text-button:disabled { cursor: not-allowed; opacity: .55; }
+.google-letter { font-family: Arial, sans-serif; font-size: 22px; font-weight: 700; color: #4285f4; }
+.auth-helper { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 0; }
+.auth-remember { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0 0; font-size: 12px; line-height: 1.7; cursor: pointer; }
+.auth-remember input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+.auth-remember small { display: block; color: var(--muted); font-size: 11px; }
+.auth-divider { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 11px; margin: 24px 0; }
+.auth-divider::before, .auth-divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+.auth-form { display: grid; gap: 18px; }
+.auth-form > label { display: grid; gap: 8px; font-size: 12px; font-weight: 600; }
+.auth-form input { width: 100%; min-width: 0; min-height: 48px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font-size: 14px; color: var(--ink); }
+.auth-form small { font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.7; }
+.auth-password { position: relative; }
+.auth-password input { padding-right: 84px; }
+.auth-password button { position: absolute; right: 8px; top: 5px; min-height: 38px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; font-size: 11px; color: var(--muted); cursor: pointer; }
+.auth-shell :focus-visible, .account-shell :focus-visible { outline: 3px solid #85b898; outline-offset: 3px; }
+.auth-forgot { justify-self: end; font-size: 12px; margin-top: -6px; }
+.auth-forgot, .auth-switch a, .auth-text-button, .account-topline a { color: var(--accent); text-underline-offset: 4px; }
+.auth-switch { font-size: 12px; color: var(--muted); margin-top: 28px; text-align: center; line-height: 1.8; }
+.auth-switch a { font-weight: 650; }
+.auth-message { padding: 14px 16px; border-radius: 10px; font-size: 13px; line-height: 1.85; margin: 16px 0; overflow-wrap: anywhere; }
+.auth-message.error { color: var(--danger); background: var(--danger-soft); }
+.auth-message.success { color: var(--accent-strong); background: var(--accent-soft); }
+.auth-text-button { background: none; border: none; padding: 8px 0; font-size: 12px; cursor: pointer; text-align: left; }
+.auth-button-link { text-decoration: none; }
+.account-shell { width: min(760px, calc(100% - 40px)); margin: 0 auto; padding: 40px 0 80px; }
+.account-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 60px; font-size: 13px; }
+.account-shell h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 650; line-height: 1.4; margin: 18px 0 12px; }
+.account-identity { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.account-card { border: 1px solid var(--line); border-radius: 20px; background: var(--paper); margin-top: 32px; overflow: hidden; }
+.account-section { display: grid; gap: 20px; padding: 32px; }
+.account-section + .account-section { border-top: 1px solid var(--line); }
+.account-section h2 { font-size: 18px; font-weight: 650; margin: 0 0 12px; }
+.account-section p { color: var(--muted); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.sign-out-control { display: grid; gap: 4px; }
+.sign-out-control > span { color: var(--danger); font-size: 11px; }
+.account-menu { display: flex; justify-self: end; align-items: center; gap: 20px; font-size: 12px; }
+.account-menu > a { color: var(--accent); text-decoration: none; }
+@media (max-width: 900px) { .auth-shell { grid-template-columns: 1fr; } .auth-story { padding: 24px 28px; border-right: 0; border-bottom: 1px solid var(--line); } .auth-story-copy, .auth-story-footer { display: none; } .auth-content { padding: 40px 24px 64px; align-items: flex-start; } .account-menu { gap: 12px; } }
+@media (max-width: 520px) { .account-section { padding: 24px; } .account-topline { margin-bottom: 36px; } .account-menu { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .auth-provider, .auth-primary { transition: none; } }
+
 :root {
   --ink: #17211b;
   --muted: #667069;

@@ -1,6 +1,13 @@
 import { OnboardingForm } from "./onboarding-form"
+import Link from "next/link"
+import { requireSession } from "./_server/auth"
+import { getDatabasePool } from "./_server/database"
+import { ensurePersonalWorkspace } from "../infrastructure/postgres/workspace-store"
+import { SessionRefresh, SignOutButton } from "./account/account-controls"
 
-export default function Home() {
+export default async function Home() {
+  const session = await requireSession()
+  await ensurePersonalWorkspace(getDatabasePool(), session.user.id)
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -15,13 +22,14 @@ export default function Home() {
           </span>
           <span className="progress-copy">1 / 4</span>
         </div>
-        <div className="local-badge">
-          <span aria-hidden="true" />
-          Local workspace
+        <div className="account-menu">
+          <Link href="/account">ჩემი ანგარიში</Link>
+          <SignOutButton />
         </div>
       </header>
 
       <main id="main" className="main-content">
+        <SessionRefresh />
         <OnboardingForm />
       </main>
     </div>

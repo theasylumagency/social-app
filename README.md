@@ -66,6 +66,13 @@ The current architecture correction map is in
 `docs/Brand Knowledge Architecture — Amendments & Supersession Map v1.md` and
 takes precedence over older prompt contracts where they conflict.
 
+The agreed account, workspace, Social plan, and 14-day trial requirements are in
+[Access, Plans and Trial — Product Decisions v1](docs/Access%2C%20Plans%20and%20Trial%20%E2%80%94%20Product%20Decisions%20v1.md).
+Authentication, private workspace ownership, and protected onboarding are now
+implemented. See [Authentication](docs/Authentication.md) for local setup,
+Google and SMTP configuration, and verification. Subscription limits, billing,
+and the trial lifecycle remain to be implemented.
+
 ## Local commands
 
 ```bash
@@ -75,6 +82,8 @@ npm test             # Build and run the domain contract tests
 npm run db:up        # Start the project PostgreSQL service
 npm run db:migrate   # Apply pending database migrations
 npm run test:integration # Verify the real PostgreSQL persistence flow
+npm run auth:init-local # Add local auth settings without overwriting existing values
+npm run test:auth    # Verify auth and ownership in an isolated PostgreSQL schema
 npm run lint         # Run the project linter
 npm run build        # Create the production Next.js build
 npm run verify       # Run the full local verification pipeline

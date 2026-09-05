@@ -12,6 +12,8 @@ import {
   discoverWebsite,
 } from "../../../infrastructure/web/website-discovery"
 import { getDatabasePool } from "../../_server/database"
+import { authenticateWorkRequest } from "../../_server/auth"
+import { ensurePersonalWorkspace } from "../../../infrastructure/postgres/workspace-store"
 
 export const runtime = "nodejs"
 
@@ -129,6 +131,8 @@ async function captureWebsiteSource(
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const access = await authenticateWorkRequest(request)
+  if (access.error) return access.error
   const contentLength = Number(request.headers.get("content-length") ?? 0)
   if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_SIZE) {
     return Response.json(
@@ -168,7 +172,9 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const websiteCapture = await captureWebsiteSource(validation.data.website)
-    const store = new PostgresIngestionStore(getDatabasePool())
+    const pool = getDatabasePool()
+    const workspace = await ensurePersonalWorkspace(pool, access.session.user.id)
+    const store = new PostgresIngestionStore(pool, workspace)
     const result = await createBrandOnboarding(validation.data, store, {
       ...(websiteCapture === undefined ? {} : { websiteCapture }),
     })

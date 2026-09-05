@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg"
+import { assertWorkspaceAccess, type WorkspaceAccess } from "./workspace-store"
 
 import {
   createIsoDateTime,
@@ -211,16 +212,18 @@ function assertBatchIntegrity(batch: IngestionPersistenceBatch): void {
 async function persistBrand(
   client: PoolClient,
   brand: PersistedBrand,
+  access?: WorkspaceAccess,
 ): Promise<void> {
   const result = await client.query(
     `
-      INSERT INTO brands(id, created_at)
-      VALUES ($1, $2)
+      INSERT INTO brands(id, created_at, workspace_id)
+      VALUES ($1, $2, $3)
       ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id
       WHERE brands.created_at = EXCLUDED.created_at
+        AND brands.workspace_id IS NOT DISTINCT FROM EXCLUDED.workspace_id
       RETURNING id
     `,
-    [brand.id, brand.createdAt],
+    [brand.id, brand.createdAt, access?.workspaceId ?? null],
   )
   if (result.rowCount !== 1) {
     throw new Error(`Brand ID ${brand.id} already exists with different data`)
@@ -484,9 +487,13 @@ function hydrateKnowledgeClaim(row: KnowledgeClaimRow): KnowledgeClaim {
 
 export class PostgresIngestionStore implements IngestionStore {
   readonly #pool: Pool
+  readonly #access: WorkspaceAccess | undefined
 
-  constructor(pool: Pool) {
+  // Unscoped instances are reserved for internal maintenance/domain tests.
+  // Every application request must supply server-resolved workspace access.
+  constructor(pool: Pool, access?: WorkspaceAccess) {
     this.#pool = pool
+    this.#access = access
   }
 
   async persist(batch: IngestionPersistenceBatch): Promise<PersistIngestionResult> {
@@ -495,7 +502,8 @@ export class PostgresIngestionStore implements IngestionStore {
 
     try {
       await client.query("BEGIN")
-      await persistBrand(client, batch.brand)
+      if (this.#access) await assertWorkspaceAccess(client, this.#access)
+      await persistBrand(client, batch.brand, this.#access)
       for (const supporting of batch.supportingSources ?? []) {
         await persistSource(client, supporting.source)
         const duplicateSupportingSnapshot = await persistSnapshot(
@@ -545,6 +553,7 @@ export class PostgresIngestionStore implements IngestionStore {
     const client = await this.#pool.connect()
     try {
       await client.query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+      if (this.#access) await assertWorkspaceAccess(client, this.#access)
       const graphResult = await client.query<SnapshotGraphRow>(
         `
           SELECT
@@ -569,8 +578,9 @@ export class PostgresIngestionStore implements IngestionStore {
           JOIN sources s ON s.id = ss.source_id
           JOIN ingestion_runs ir ON ir.snapshot_id = ss.id
           WHERE ss.id = $1
+            ${this.#access ? "AND b.workspace_id = $2" : ""}
         `,
-        [snapshotId],
+        this.#access ? [snapshotId, this.#access.workspaceId] : [snapshotId],
       )
       const graph = graphResult.rows[0]
       if (graph === undefined) {

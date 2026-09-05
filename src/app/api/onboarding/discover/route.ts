@@ -2,6 +2,7 @@ import {
   discoverWebsite,
   WebsiteDiscoveryError,
 } from "../../../../infrastructure/web/website-discovery"
+import { authenticateWorkRequest } from "../../../_server/auth"
 
 export const runtime = "nodejs"
 
@@ -18,6 +19,8 @@ const ERROR_MESSAGES: Record<WebsiteDiscoveryError["code"], string> = {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const access = await authenticateWorkRequest(request)
+  if (access.error) return access.error
   const rawBody = await request.text()
   if (rawBody.length > MAX_REQUEST_SIZE) {
     return Response.json({ message: "მოთხოვნა ზედმეტად დიდია" }, { status: 413 })
