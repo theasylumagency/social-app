@@ -111,3 +111,46 @@ test("audience deterministic evaluator rejects invented authority and provenance
         true,
     )
 })
+
+test("audience without evidence must remain tentative and explicit about assumptions", () => {
+    const output = {
+        segments: [
+            {
+                name: "ჰიპოთეტური აუდიტორია",
+                buyingSituation:
+                    "სავარაუდო buying situation პირდაპირი evidence-ის გარეშე.",
+                currentNeed: "გაიგოს შესაძლო არჩევანი.",
+                relevantOffers: ["Diagnostics"],
+                mainQuestions: ["რა არჩევანი არსებობს?"],
+                likelyBarriers: ["uncertainty"],
+                decisionStage: "problemAware",
+                evidenceKeys: [],
+                rationale:
+                    "ეს არის category-level working hypothesis.",
+                assumptions: [],
+                confidenceBand: "strong",
+            },
+        ],
+    }
+
+    const result = evaluateAudienceProposal(
+        output,
+        TOTAL_CHARM_DENT_GOLDEN_INPUT,
+    )
+
+    assert.equal(result.passed, false)
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes("tentative confidence"),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes("state its assumptions"),
+        ),
+        true,
+    )
+})

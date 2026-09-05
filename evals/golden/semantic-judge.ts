@@ -1,40 +1,9 @@
 import type { GoldenModelRunner } from "./model-runner"
 
-export type GoldenScore = 0 | 1 | 2
-
-export type GoldenRegressionSeverity =
-    | "critical"
-    | "major"
-    | "minor"
-
-export type GoldenRegressionCategory =
-    | "STRUCTURAL"
-    | "EVIDENCE"
-    | "SEGMENTATION"
-    | "BUSINESS_SPECIFICITY"
-    | "AUTHORITY"
-    | "BRAND_PRESERVATION"
-    | "CROSS_AUDIENCE_SYNTHESIS"
-    | "MANAGERIAL_USEFULNESS"
-    | "GENERIC_AI_OUTPUT"
-
-export type AudienceGoldenEvaluation = {
-    readonly scores: {
-        readonly distinctness: GoldenScore
-        readonly businessSpecificity: GoldenScore
-        readonly evidenceDiscipline: GoldenScore
-        readonly managerialUsefulness: GoldenScore
-        readonly founderImpact: GoldenScore
-    }
-
-    readonly regressions: readonly {
-        readonly category: GoldenRegressionCategory
-        readonly severity: GoldenRegressionSeverity
-        readonly explanation: string
-    }[]
-
-    readonly summary: string
-}
+import type {
+    AudienceGoldenScores,
+    GoldenRegression,
+} from "./contracts"
 
 const SYSTEM_PROMPT = `
 You are evaluating the strategic quality of an audience analysis
@@ -79,6 +48,14 @@ authority violations or structurally unsafe behavior.
 Return only structured evaluation output.
 `.trim()
 
+
+
+
+export type AudienceGoldenEvaluation = {
+    readonly scores: AudienceGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}
 export async function evaluateAudienceSemantics(
     runner: GoldenModelRunner,
     input: unknown,

@@ -30,6 +30,12 @@ export type AudienceGoldenScores = {
     readonly founderImpact: GoldenScore
 }
 
+export type AudienceGoldenEvaluation = {
+    readonly scores: AudienceGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}
+
 export type GoldenEvaluationResult = {
     readonly caseId: string
     readonly component:
@@ -40,8 +46,7 @@ export type GoldenEvaluationResult = {
 
     readonly passed: boolean
     readonly scores: AudienceGoldenScores
-
     readonly regressions: readonly GoldenRegression[]
-
     readonly summary: string
 }
+

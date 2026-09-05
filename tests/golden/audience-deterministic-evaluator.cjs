@@ -110,6 +110,7 @@ function evaluateAudienceProposal(output, input) {
                 `${prefix}.evidenceKeys must be an array`,
             )
         } else {
+            // Every supplied evidence key must exist in the input.
             for (const key of segment.evidenceKeys) {
                 if (!knownEvidence.has(key)) {
                     failures.push(
@@ -117,15 +118,33 @@ function evaluateAudienceProposal(output, input) {
                     )
                 }
             }
-        }
 
+            // A hypothesis without direct evidence is allowed only as an
+            // explicitly tentative working hypothesis.
+            if (segment.evidenceKeys.length === 0) {
+                if (segment.confidenceBand !== "tentative") {
+                    failures.push(
+                        `${prefix} without evidence must use tentative confidence`,
+                    )
+                }
+
+                if (
+                    !isStringArray(segment.assumptions) ||
+                    segment.assumptions.length === 0
+                ) {
+                    failures.push(
+                        `${prefix} without evidence must state its assumptions`,
+                    )
+                }
+            }
+        }
         if (!isNonEmptyString(segment.rationale)) {
             failures.push(`${prefix}.rationale is required`)
         }
 
-        if (!Array.isArray(segment.assumptions)) {
+        if (!isStringArray(segment.assumptions)) {
             failures.push(
-                `${prefix}.assumptions must be an array`,
+                `${prefix}.assumptions must be a string array`,
             )
         }
 
