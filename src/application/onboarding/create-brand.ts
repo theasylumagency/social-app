@@ -28,6 +28,8 @@ export type CreateBrandOnboardingOptions = {
   readonly now?: () => Date
   readonly createOperationId?: () => string
   readonly websiteCapture?: WebsiteSourceCapture
+  readonly existingBrand?: { readonly id: BrandId; readonly createdAt: string }
+  readonly preservedIdentity?: Pick<SocialManualKnowledgeInput, "identityIndustry" | "identityLocations" | "identitySocialAccounts">
 }
 
 export type WebsiteSourceCapture = {
@@ -138,15 +140,17 @@ export async function createBrandOnboarding(
     now = () => new Date(),
     createOperationId = randomUUID,
     websiteCapture,
+    existingBrand,
+    preservedIdentity,
   }: CreateBrandOnboardingOptions = {},
 ): Promise<BrandOnboardingResult> {
   const operationId = createOperationId()
   const occurredAt = createIsoDateTime(now().toISOString())
-  const brandId = `brand:${operationId}` as BrandId
+  const brandId = existingBrand?.id ?? `brand:${operationId}` as BrandId
   const sourceId = `source:${operationId}` as SourceId
   const snapshotId = `snapshot:${operationId}` as SourceSnapshotId
   const runId = `run:${operationId}` as IngestionRunId
-  const knowledge = toKnowledge(input)
+  const knowledge = { ...preservedIdentity, ...toKnowledge(input) }
   let evidenceSequence = 0
 
   const websiteIngestion =
@@ -214,7 +218,7 @@ export async function createBrandOnboarding(
   }
 
   const persistence = await store.persist({
-    brand: { id: brandId, createdAt: occurredAt },
+    brand: { id: brandId, createdAt: existingBrand ? createIsoDateTime(existingBrand.createdAt) : occurredAt },
     run: {
       id: runId,
       brandId,

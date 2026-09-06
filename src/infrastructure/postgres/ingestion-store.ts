@@ -485,6 +485,29 @@ function hydrateKnowledgeClaim(row: KnowledgeClaimRow): KnowledgeClaim {
   }
 }
 
+/** Caller owns the transaction, allowing setup confirmation and ingestion to commit together. */
+export async function persistIngestionInTransaction(client: PoolClient, batch: IngestionPersistenceBatch, access: WorkspaceAccess): Promise<PersistIngestionResult> {
+  assertBatchIntegrity(batch)
+  await assertWorkspaceAccess(client, access)
+  await persistBrand(client, batch.brand, access)
+  // Check the primary snapshot before supporting sources for safe whole-request retries.
+  await persistSource(client, batch.source)
+  const duplicate = await persistSnapshot(client, batch.snapshot)
+  if (duplicate) return duplicate
+  for (const supporting of batch.supportingSources ?? []) {
+    await persistSource(client, supporting.source)
+    const existing = await persistSnapshot(client, supporting.snapshot)
+    if (existing) throw new Error("Supporting snapshot is already attached to another ingestion")
+    await persistEvidence(client, supporting.evidence)
+    await persistRoutings(client, supporting.routings)
+  }
+  await persistEvidence(client, batch.evidence)
+  await persistRoutings(client, batch.routings)
+  await persistSourceArtifacts(client, batch.sourceArtifacts ?? [])
+  await persistRunAndProposals(client, batch)
+  return { status: "persisted", runId: batch.run.id, snapshotId: batch.snapshot.id }
+}
+
 export class PostgresIngestionStore implements IngestionStore {
   readonly #pool: Pool
   readonly #access: WorkspaceAccess | undefined

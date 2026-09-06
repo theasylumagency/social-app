@@ -1,3 +1,6 @@
+import { readBrandDossier, readDossierHistory } from "../../../infrastructure/postgres/brand-discovery-store"
+import { publicDiscoveryPayload } from "../../../blueprints/social/brand-discovery/model"
+import "../../discovery.css"
 import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { currentWeek, DASHBOARD_SECTIONS, isWeek, selectBrand, type DashboardSection } from "../../../application/dashboard/model"
@@ -27,16 +30,18 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   if (!brand || !brand.ready) redirect("/onboarding")
   const today = currentWeek()
   const week = isWeek(query.week) ? query.week : today
-  const [sources, brief] = await Promise.all([
+  const [sources, brief, dossier, history] = await Promise.all([
     listDashboardSources(pool, session.user.id, brand.id),
     section === "week" ? readWeeklyBrief(pool, session.user.id, brand.id, week) : Promise.resolve(null),
+    section === "brand" ? readBrandDossier(pool, session.user.id, brand.id) : Promise.resolve(null),
+    section === "brand" && query.view === "history" ? readDossierHistory(pool, session.user.id, brand.id) : Promise.resolve([]),
   ])
   const textParam = (name: string) => typeof query[name] === "string" ? query[name] as string : ""
   return <WorkspaceShell section={section as DashboardSection} brands={brands} brand={brand} user={session.user}>
     {section === "week" ? <WeekView brand={brand} sources={sources} week={week} today={today} brief={brief} /> : null}
     {section === "content" ? <ContentView filter={textParam("filter")} view={textParam("view")} week={week} /> : null}
     {section === "results" ? <ResultsView /> : null}
-    {section === "brand" ? <BrandView brand={brand} sources={sources} view={textParam("view")} /> : null}
+    {section === "brand" ? <BrandView history={history} dossier={dossier ? { ...dossier, payload: publicDiscoveryPayload(dossier.payload) } : null} brand={brand} sources={sources} view={textParam("view")} /> : null}
     {section === "connections" ? <ConnectionsView sources={sources} /> : null}
     {section === "settings" ? <SettingsView brand={brand} user={session.user} brandCount={brands.length} /> : null}
   </WorkspaceShell>

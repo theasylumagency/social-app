@@ -1129,3 +1129,13 @@ export async function discoverWebsite(
   }
   return result
 }
+
+/** A durable setup stores this corpus once; downstream stages never crawl again. */
+export async function captureBrandWebsite(
+  websiteUrl: string,
+  dependencies: WebsiteDiscoveryDependencies = {},
+): Promise<readonly WebsiteCorpusPage[]> {
+  const requested = normalizeWebsiteUrl(websiteUrl)
+  const pages = await crawlWebsite(requested, dependencies.fetchPage ?? fetch, dependencies.resolveAddresses ?? defaultResolveAddresses)
+  return pages.map(({ url, title, text }) => ({ url, ...(title ? { title } : {}), text }))
+}

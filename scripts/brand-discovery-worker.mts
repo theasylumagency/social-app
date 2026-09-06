@@ -1,0 +1,18 @@
+import { Pool } from "pg"
+import { setTimeout } from "node:timers/promises"
+import { runBrandDiscovery } from "../src/worker/brand-discovery"
+
+// Run continuously under the host's process manager. Leases allow multiple replicas.
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+let stopping = false
+process.once("SIGTERM", () => { stopping = true })
+process.once("SIGINT", () => { stopping = true })
+try {
+  do {
+    const pending = await pool.query<{ id: string; owner_user_id: string }>(`SELECT s.id,s.owner_user_id FROM brand_discovery_sessions s JOIN auth_user u ON u.id=s.owner_user_id WHERE u."emailVerified"=true AND (s.status='queued' OR (s.status='running' AND s.lease_until<now())) ORDER BY s.updated_at LIMIT 4`)
+    await Promise.allSettled(pending.rows.map((job) => runBrandDiscovery(pool, job.owner_user_id, job.id, 300_000)))
+    if (process.argv.includes("--once")) break
+    if (!stopping) await setTimeout(3000)
+  } while (!stopping)
+} finally { await pool.end() }

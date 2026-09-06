@@ -1,5 +1,7 @@
 "use client"
 
+import { splitListLines } from "../blueprints/social/brand-discovery/model"
+
 import { useState, useTransition } from "react"
 import Link from "next/link"
 
@@ -196,10 +198,7 @@ function lines(formData: FormData, field: string): readonly string[] {
   if (typeof value !== "string") {
     return []
   }
-  return value
-    .split(/\r?\n|,/u)
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0)
+  return splitListLines(value)
 }
 
 function fieldError(state: SubmissionState, field: string): string | undefined {
