@@ -1603,3 +1603,208 @@ export const CONTENT_BRIEF_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+export const CONTENT_EXECUTION_SPEC_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        executionSpecs: {
+            type: "array",
+            minItems: 1,
+            maxItems: 2,
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    channel: {
+                        type: "string",
+                        enum: [
+                            "facebook",
+                            "instagram",
+                        ],
+                    },
+
+                    contentMode: {
+                        type: "string",
+                        enum: [
+                            "social.brandStory",
+                            "social.educational",
+                            "social.serviceExplainer",
+                            "social.trustBuilder",
+                            "social.proofLed",
+                            "social.directOffer",
+                        ],
+                    },
+
+                    format: {
+                        type: "string",
+                        enum: [
+                            "staticPost",
+                            "carousel",
+                            "story",
+                            "reel",
+                        ],
+                    },
+
+                    depth: {
+                        type: "string",
+                        enum: [
+                            "compact",
+                            "standard",
+                            "deep",
+                        ],
+                    },
+
+                    visualDependency: {
+                        type: "string",
+                        enum: [
+                            "none",
+                            "supporting",
+                            "essential",
+                        ],
+                    },
+
+                    executionGuidance: {
+                        type: "array",
+
+                        items: {
+                            type: "string",
+                        },
+                    },
+
+                    constraints: {
+                        type: "array",
+
+                        items: {
+                            type: "string",
+                        },
+                    },
+
+                    rationale: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "channel",
+                    "contentMode",
+                    "format",
+                    "depth",
+                    "visualDependency",
+                    "executionGuidance",
+                    "constraints",
+                    "rationale",
+                ],
+            },
+        },
+    },
+
+    required: [
+        "executionSpecs",
+    ],
+} as const satisfies JsonSchema
+export const CONTENT_EXECUTION_SPEC_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                briefFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                formatFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                channelDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                boundaryDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "briefFit",
+                "formatFit",
+                "channelDiscipline",
+                "boundaryDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

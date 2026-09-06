@@ -23,7 +23,17 @@ const {
 } = require(
     "./total-charm-dent.content-direction.fixture.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_CONTENT_EXECUTION_SPEC_INPUT,
+} = require(
+    "./total-charm-dent.content-execution-spec.fixture.cjs",
+)
 
+const {
+    evaluateContentExecutionSpecProposal,
+} = require(
+    "./content-execution-spec-deterministic-evaluator.cjs",
+)
 const {
     evaluateContentDirectionProposal,
 } = require(
@@ -1249,6 +1259,205 @@ test("content brief evaluator rejects copy fields, authority fields and invented
             (failure) =>
                 failure.includes(
                     "unknown evidence key",
+                ),
+        ),
+        true,
+    )
+})
+
+test("content execution spec evaluator accepts valid destination-specific specs", () => {
+    const output = {
+        executionSpecs: [
+            {
+                channel:
+                    "instagram",
+
+                contentMode:
+                    "social.educational",
+
+                format:
+                    "carousel",
+
+                depth:
+                    "deep",
+
+                visualDependency:
+                    "essential",
+
+                executionGuidance: [
+                    "ინფორმაცია განვითარდეს თანმიმდევრულად: გაურკვევლობიდან კონკრეტულ კითხვებამდე.",
+                    "საბოლოო takeaway არ დაიკარგოს მრავალ ნაწილად დაყოფისას.",
+                ],
+
+                constraints: [
+                    "თითოეული ნაწილი უნდა ემსახურებოდეს ერთსა და იმავე explanatory logic-ს.",
+                ],
+
+                rationale:
+                    "მრავალსაფეხურიანი განმარტება კარგად ერგება თანმიმდევრულ carousel execution-ს.",
+            },
+
+            {
+                channel:
+                    "facebook",
+
+                contentMode:
+                    "social.educational",
+
+                format:
+                    "staticPost",
+
+                depth:
+                    "standard",
+
+                visualDependency:
+                    "supporting",
+
+                executionGuidance: [
+                    "შეინარჩუნე ერთი ცენტრალური takeaway და შეკარი supporting points ერთ უწყვეტ explanatory flow-ში.",
+                ],
+
+                constraints: [
+                    "ტექსტის შეკუმშვამ არ უნდა დაკარგოს ინდივიდუალური შეფასების აუცილებლობის დათქმა.",
+                ],
+
+                rationale:
+                    "Brief-ის ძირითადი ლოგიკა შეიძლება ერთიან explanatory post-შიც გასაგებად დარჩეს.",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentExecutionSpecProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_EXECUTION_SPEC_INPUT,
+        )
+
+    assert.deepEqual(
+        result,
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+})
+
+test("content execution spec evaluator rejects duplicate channels, invalid modes and copy leakage", () => {
+    const output = {
+        executionSpecs: [
+            {
+                channel:
+                    "instagram",
+
+                contentMode:
+                    "social.proofLed",
+
+                format:
+                    "carousel",
+
+                depth:
+                    "deep",
+
+                visualDependency:
+                    "essential",
+
+                executionGuidance: [
+                    "Explain it.",
+                ],
+
+                constraints: [],
+
+                rationale:
+                    "Useful.",
+
+                caption:
+                    "Book now.",
+            },
+
+            {
+                channel:
+                    "instagram",
+
+                contentMode:
+                    "social.directOffer",
+
+                format:
+                    "carousel",
+
+                depth:
+                    "standard",
+
+                visualDependency:
+                    "supporting",
+
+                executionGuidance: [
+                    "Sell it.",
+                ],
+
+                constraints: [],
+
+                rationale:
+                    "Promotional.",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentExecutionSpecProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_EXECUTION_SPEC_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "duplicate execution channel",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "ineligible content mode",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "proofLed mode requires eligibleProof",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "directOffer mode requires publicOfferFacts",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "copy field: caption",
                 ),
         ),
         true,

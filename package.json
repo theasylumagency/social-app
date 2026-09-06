@@ -26,6 +26,7 @@
     "eval:golden:content-direction": "node --env-file=.env.local --import tsx evals/golden/content-direction-cli.ts",
     "eval:golden:experiment": "node --env-file=.env.local --import tsx evals/golden/experiment-decision-cli.ts",
     "eval:golden:content-brief": "node --env-file=.env.local --import tsx evals/golden/content-brief-cli.ts",
+    "eval:golden:execution-spec": "node --env-file=.env.local --import tsx evals/golden/content-execution-spec-cli.ts",
     "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
