@@ -23,6 +23,8 @@
     "eval:golden:weekly-focus": "node --env-file=.env.local --import tsx evals/golden/weekly-audience-focus-cli.ts",
     "eval:golden:content-audience": "node --env-file=.env.local --import tsx evals/golden/content-audience-direction-cli.ts",
     "eval:golden:weekly-objective": "node --env-file=.env.local --import tsx evals/golden/weekly-objective-cli.ts",
+    "eval:golden:content-direction": "node --env-file=.env.local --import tsx evals/golden/content-direction-cli.ts",
+    "eval:golden:experiment": "node --env-file=.env.local --import tsx evals/golden/experiment-decision-cli.ts",
     "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {

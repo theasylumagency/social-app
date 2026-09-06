@@ -1,0 +1,46 @@
+{
+    "caseId": "total-charm-dent-content-direction-v1",
+    "component": "contentDirection",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "objectiveAlignment": 2,
+            "strategicDistinctness": 2,
+            "directionAbstraction": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "The candidate produced four content directions that are tightly and consistently aligned to this week's objective: reducing uncertainty for audiences facing complex dental treatment by clarifying how proper diagnostics and multidisciplinary planning work. Each direction contributes a distinct communication job: (1) what diagnostics answers vs. what remains individual assessment, (2) how multiple specialists converge into one coordinated plan, (3) how treatment options and their trade-offs/limitations are compared before an individual recommendation, and (4) the sequence from diagnostics to an agreed treatment plan. These are genuinely different territories (clinical questions, coordination trust, option comparison as a decision problem, and process clarity) with no meaningful overlap and no forced diversity.\n\nDirections stay at the correct strategic level—none assign format, platform, schedule, hooks, captions, CTAs, audiences, or experiments. Purposes describe real changes in understanding and decision readiness rather than vague \"educate/engage\" statements, and rationales credibly tie each direction to the current week and supplied context (multidisciplinary approach, diagnostics emphasis).\n\nEvidence discipline is strong: no proof is supplied and the candidate correctly avoids proof-led or superiority claims, inventing no statistics, outcomes, or testimonials. All directions sit comfortably within the Communication Envelope (consultative, low sales pressure, assessment-before-action framing, transparent options/limitations) and explicitly avoid urgency, guarantees, and premature-diagnosis impressions. Deliberate omissions (promoting individual aesthetic services, prioritizing continuity for existing patients, artificial urgency) are respected. No audience assignments or authority violations (IDs, envelope, objective, audience focus) are present. This is a clean, focused, downstream-usable set."
+    },
+    "output": {
+        "directions": [
+            {
+                "direction": "განმარტეთ, რა კითხვებს პასუხობს სრულფასოვანი დიაგნოსტიკა რთული მკურნალობის არჩევამდე და რომელი საკითხები რჩება ინდივიდუალური შეფასების საგნად.",
+                "purpose": "გაურკვევლობა გარდაიქმნას კონკრეტულ კლინიკურ კითხვებად, რომლებზეც მკურნალობის გეგმა უნდა პასუხობდეს.",
+                "rationale": "ეს ქმნის კვირის მთავარ საფუძველს: შესაძლო მოქმედებამდე აჩვენებს შეფასების საჭიროებას და არ ტოვებს წინასწარი დიაგნოზის შთაბეჭდილებას."
+            },
+            {
+                "direction": "აჩვენეთ, როგორ ერთიანდება სხვადასხვა სპეციალისტის შეფასება შეთანხმებულ მრავალპროფილურ გეგმაში.",
+                "purpose": "გასაგები გახდეს, როგორ ამცირებს სპეციალისტების კოორდინაცია ურთიერთგამომრიცხავი რეკომენდაციებისა და გაურკვეველი თანმიმდევრობის რისკს.",
+                "rationale": "კლინიკის მრავალპროფილური მიდგომა უშუალოდ ემსახურება რთული შემთხვევების დაგეგმვის მიმართ ნდობას, ზედმეტი უპირატესობის მტკიცების გარეშე."
+            },
+            {
+                "direction": "განმარტეთ, როგორ ფასდება და შედარდება მკურნალობის შესაძლო ვარიანტები, მათი შეზღუდვები და კომპრომისები ინდივიდუალურ რეკომენდაციამდე.",
+                "purpose": "მკურნალობის არჩევანი აღქმული იყოს დასაბუთებულ გადაწყვეტილებად და არა ერთადერთ, აუხსნელ პასუხად.",
+                "rationale": "რთული ვარიანტების შედარება ამ კვირის ცენტრალური გადაწყვეტილების პრობლემაა; გამჭვირვალე კლინიკური ლოგიკა ამცირებს ეჭვსა და ზედაპირულ მოლოდინებს."
+            },
+            {
+                "direction": "გაამარტივეთ გზა დიაგნოსტიკიდან შეთანხმებულ მკურნალობის გეგმამდე: რა თანმიმდევრობით ზუსტდება პრიორიტეტები, ეტაპები და შემდეგი ნაბიჯები.",
+                "purpose": "ადამიანმა წინასწარ გაიგოს, როგორ ყალიბდება მოქმედების გასაგები გზა სრული ინფორმაციის საფუძველზე.",
+                "rationale": "პროცესისა და ეტაპების სიცხადე უშუალოდ ამცირებს რთული მკურნალობის წინ არსებულ გაურკვევლობას, გაყიდვითი ზეწოლისა და ხელოვნური გადაუდებლობის გარეშე."
+            }
+        ]
+    }
+}

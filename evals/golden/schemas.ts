@@ -1074,3 +1074,347 @@ export const WEEKLY_OBJECTIVE_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+export const CONTENT_DIRECTION_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        directions: {
+            type: "array",
+            minItems: 3,
+            maxItems: 5,
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    direction: {
+                        type: "string",
+                    },
+
+                    purpose: {
+                        type: "string",
+                    },
+
+                    rationale: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "direction",
+                    "purpose",
+                    "rationale",
+                ],
+            },
+        },
+    },
+
+    required: [
+        "directions",
+    ],
+} as const satisfies JsonSchema
+
+export const CONTENT_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                objectiveAlignment: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                strategicDistinctness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                directionAbstraction: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "objectiveAlignment",
+                "strategicDistinctness",
+                "directionAbstraction",
+                "evidenceDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema
+export const EXPERIMENT_DECISION_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        experimentDecision: {
+            oneOf: [
+                {
+                    type: "object",
+                    additionalProperties: false,
+
+                    properties: {
+                        decision: {
+                            const: "noExperiment",
+                        },
+
+                        rationale: {
+                            type: "string",
+                        },
+
+                        experiment: {
+                            type: "null",
+                        },
+                    },
+
+                    required: [
+                        "decision",
+                        "rationale",
+                        "experiment",
+                    ],
+                },
+
+                {
+                    type: "object",
+                    additionalProperties: false,
+
+                    properties: {
+                        decision: {
+                            const: "experiment",
+                        },
+
+                        rationale: {
+                            type: "string",
+                        },
+
+                        experiment: {
+                            type: "object",
+                            additionalProperties: false,
+
+                            properties: {
+                                hypothesis: {
+                                    type: "string",
+                                },
+
+                                variable: {
+                                    type: "string",
+                                },
+
+                                comparison: {
+                                    type: "string",
+                                },
+
+                                learningSignal: {
+                                    type: "string",
+                                },
+
+                                guardrails: {
+                                    type: "array",
+
+                                    items: {
+                                        type: "string",
+                                    },
+                                },
+                            },
+
+                            required: [
+                                "hypothesis",
+                                "variable",
+                                "comparison",
+                                "learningSignal",
+                                "guardrails",
+                            ],
+                        },
+                    },
+
+                    required: [
+                        "decision",
+                        "rationale",
+                        "experiment",
+                    ],
+                },
+            ],
+        },
+    },
+
+    required: [
+        "experimentDecision",
+    ],
+} as const satisfies JsonSchema
+
+export const EXPERIMENT_DECISION_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                decisionQuality: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                hypothesisQuality: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                experimentIsolation: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "decisionQuality",
+                "hypothesisQuality",
+                "experimentIsolation",
+                "evidenceDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

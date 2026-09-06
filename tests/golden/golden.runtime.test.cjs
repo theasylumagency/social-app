@@ -18,6 +18,30 @@ const {
 } = require(
     "./total-charm-dent.weekly-objective.fixture.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_CONTENT_DIRECTION_INPUT,
+} = require(
+    "./total-charm-dent.content-direction.fixture.cjs",
+)
+
+const {
+    evaluateContentDirectionProposal,
+} = require(
+    "./content-direction-deterministic-evaluator.cjs",
+)
+const {
+    TOTAL_CHARM_DENT_EXPERIMENT_DECISION_INPUT,
+} = require(
+    "./total-charm-dent.experiment-decision.fixture.cjs",
+)
+
+const {
+    evaluateExperimentDecisionProposal,
+} = require(
+    "./experiment-decision-deterministic-evaluator.cjs",
+)
+
+
 
 const {
     evaluateWeeklyObjectiveProposal,
@@ -827,6 +851,254 @@ test("weekly objective evaluator rejects authority-owned and activity-based outp
         result.failures.some((failure) =>
             failure.includes(
                 "activity-based",
+            ),
+        ),
+        true,
+    )
+})
+test("content direction evaluator accepts strategic non-execution directions", () => {
+    const output = {
+        directions: [
+            {
+                direction:
+                    "აჩვენოს, რას არკვევს პროფესიული შეფასება მკურნალობის არჩევამდე.",
+
+                purpose:
+                    "შეამციროს გაურკვევლობა დიაგნოსტიკისა და შეფასების როლის უკეთ გაგებით.",
+
+                rationale:
+                    "ეს პირდაპირ ემსახურება კვირის მიზანს და ეხმარება მკითხველს გადაწყვეტილების პროცესის საწყისი ეტაპის გაგებაში.",
+            },
+
+            {
+                direction:
+                    "ახსნას, რატომ შეიძლება არსებობდეს ერთი პრობლემის რამდენიმე შესაძლო მკურნალობის გზა.",
+
+                purpose:
+                    "გააუმჯობესოს მკურნალობის ვარიანტებისა და ინდივიდუალური რეკომენდაციის ლოგიკის გაგება.",
+
+                rationale:
+                    "რთული გადაწყვეტილების დროს არჩევანის ლოგიკის გაგება ამცირებს გაურკვევლობას და ზრდის პროფესიული პროცესის მიმართ ნდობას.",
+            },
+
+            {
+                direction:
+                    "აჩვენოს, როგორ ერთიანდება სხვადასხვა სპეციალისტის შეფასება ერთ საერთო მკურნალობის გეგმაში.",
+
+                purpose:
+                    "გააძლიეროს მრავალპროფილური დაგეგმვისა და კოორდინაციის მიმართ ნდობა.",
+
+                rationale:
+                    "კლინიკის მრავალპროფილური მიდგომა ამ კვირის objective-სთან პირდაპირ კავშირშია და რთული მკურნალობის დაგეგმვას უფრო გასაგებს ხდის.",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentDirectionProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_DIRECTION_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("content direction evaluator rejects execution-specific, duplicated and authority-owned output", () => {
+    const output = {
+        directions: [
+            {
+                id: "model-created-id",
+
+                direction:
+                    "Create an Instagram carousel with 5 slides about diagnostics.",
+
+                purpose:
+                    "Explain diagnostics.",
+
+                rationale:
+                    "Reason",
+            },
+
+            {
+                direction:
+                    "Explain treatment planning.",
+
+                purpose:
+                    "Improve understanding.",
+
+                rationale:
+                    "Reason",
+            },
+
+            {
+                direction:
+                    "Explain treatment planning.",
+
+                purpose:
+                    "Improve understanding.",
+
+                rationale:
+                    "Reason",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentDirectionProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_DIRECTION_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority or execution field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "execution-specific",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "duplicate direction",
+            ),
+        ),
+        true,
+    )
+})
+test("experiment decision evaluator accepts a valid no-experiment decision", () => {
+    const output = {
+        experimentDecision: {
+            decision: "noExperiment",
+
+            rationale:
+                "ამ კვირაში მთავარი გაურკვევლობა თავად მკურნალობის გადაწყვეტილების პროცესის გაგებას ეხება და არსებული კონტექსტი არ გვაძლევს საკმარის საფუძველს ცალკე ექსპერიმენტის დასამატებლად.",
+
+            experiment: null,
+        },
+    }
+
+    const result =
+        evaluateExperimentDecisionProposal(
+            output,
+            TOTAL_CHARM_DENT_EXPERIMENT_DECISION_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("experiment decision evaluator rejects invalid authority-owned and incomplete experiment output", () => {
+    const output = {
+        experimentDecision: {
+            id: "model-created-id",
+
+            decision: "experiment",
+
+            rationale:
+                "Try something new.",
+
+            experiment: {
+                experimentId:
+                    "model-created-experiment-id",
+
+                hypothesis: "",
+
+                variable:
+                    "everything",
+
+                comparison:
+                    "",
+
+                learningSignal:
+                    "",
+
+                guardrails:
+                    "stay safe",
+            },
+        },
+    }
+
+    const result =
+        evaluateExperimentDecisionProposal(
+            output,
+            TOTAL_CHARM_DENT_EXPERIMENT_DECISION_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: experimentId",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "experiment.hypothesis",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "experiment.comparison",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "experiment.learningSignal",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "experiment.guardrails",
             ),
         ),
         true,
