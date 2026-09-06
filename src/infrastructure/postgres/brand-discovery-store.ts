@@ -14,7 +14,7 @@ type Row = { id: string; owner_user_id: string; brand_id: string | null; revisio
 const readable = `s.owner_user_id = $1 AND (s.brand_id IS NULL OR EXISTS (SELECT 1 FROM brands b JOIN workspaces w ON w.id=b.workspace_id WHERE b.id=s.brand_id AND w.owner_user_id=$1))`
 const sessionFromRow = (r: Row): DiscoverySession => ({ id: r.id, ownerId: r.owner_user_id, brandId: r.brand_id, revision: r.revision, status: r.status, step: r.step, payload: r.payload, error: r.error, updatedAt: r.updated_at.toISOString(), leaseUntil: r.lease_until?.toISOString() ?? null })
 
-export class DiscoveryConflict extends Error {}
+export class DiscoveryConflict extends Error { }
 export const isDiscoveryId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 
 async function transaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
@@ -203,12 +203,29 @@ export async function confirmDiscovery(pool: Pool, ownerId: string, id: string, 
     const existing = session.brandId ? (await client.query<{ id: string; created_at: Date }>("SELECT id,created_at FROM brands WHERE id=$1 AND workspace_id=$2", [session.brandId, access.workspaceId])).rows[0] : undefined
     if (session.brandId && !existing) throw new Error("ბრენდი ვერ მოიძებნა.")
     const previous = existing ? (await client.query<{ knowledge: SocialManualKnowledgeInput }>("SELECT s.content#>'{data,knowledge}' AS knowledge FROM ingestion_runs r JOIN source_snapshots s ON s.id=r.snapshot_id WHERE r.brand_id=$1 ORDER BY r.completed_at DESC,r.id DESC LIMIT 1", [existing.id])).rows[0]?.knowledge : undefined
-    const preservedIdentity = previous ? Object.fromEntries(["identityIndustry", "identityLocations", "identitySocialAccounts"].filter((key) => previous[key as keyof SocialManualKnowledgeInput] !== undefined).map((key) => [key, previous[key as keyof SocialManualKnowledgeInput]])) : undefined
+    const preservedIdentity: Pick<
+      SocialManualKnowledgeInput,
+      "identityIndustry" | "identityLocations" | "identitySocialAccounts"
+    > | undefined = previous
+        ? {
+          ...(previous.identityIndustry === undefined
+            ? {}
+            : { identityIndustry: previous.identityIndustry }),
+          ...(previous.identityLocations === undefined
+            ? {}
+            : { identityLocations: previous.identityLocations }),
+          ...(previous.identitySocialAccounts === undefined
+            ? {}
+            : { identitySocialAccounts: previous.identitySocialAccounts }),
+        }
+        : undefined
+
     p.feedback.selectedGoalIds = selectedGoals as string[]
     p.input.language = language
     const now = new Date().toISOString() as IsoDateTime
     let confirmedBatch: IngestionPersistenceBatch | undefined
-    const result = await createBrandOnboarding({ businessName: p.understanding.name, language, services: p.understanding.offers.map((o) => o.name), description: p.understanding.summary, tones: p.understanding.voice.traits,
+    const result = await createBrandOnboarding({
+      businessName: p.understanding.name, language, services: p.understanding.offers.map((o) => o.name), description: p.understanding.summary, tones: p.understanding.voice.traits,
       ...(p.sources.find((s) => s.url)?.url ? { website: p.sources.find((s) => s.url)!.url! } : {}), goals: p.goals.filter((g) => selectedGoals.includes(g.id)).map((g) => g.title), ...(p.understanding.constraints.length ? { avoidTopics: p.understanding.constraints } : {}),
     }, {
       async persist(batch) {
@@ -216,7 +233,19 @@ export async function confirmDiscovery(pool: Pool, ownerId: string, id: string, 
         confirmedBatch = withSources
         return persistIngestionInTransaction(client, withSources, access)
       }, async loadBySnapshotId() { throw new Error("Not used during confirmation") },
-    }, { createOperationId: () => session.id, now: () => new Date(now), preservedIdentity, ...(existing ? { existingBrand: { id: existing.id as BrandId, createdAt: existing.created_at.toISOString() } } : {}) })
+    }, {
+      createOperationId: () => session.id,
+      now: () => new Date(now),
+      ...(preservedIdentity === undefined ? {} : { preservedIdentity }),
+      ...(existing
+        ? {
+          existingBrand: {
+            id: existing.id as BrandId,
+            createdAt: existing.created_at.toISOString(),
+          },
+        }
+        : {}),
+    })
     if (!confirmedBatch || result.persistence !== "persisted") throw new Error("Setup confirmation snapshot conflict")
     const proposals = confirmedBatch.knowledgeProposals.filter((proposal) => proposal.kind === "proposeSet" || proposal.kind === "proposeAdd")
     await client.query("UPDATE knowledge_claims SET lifecycle='inactive' WHERE brand_id=$1 AND path=ANY($2::text[])", [result.brandId, [...new Set([...proposals.map((proposal) => proposal.path), SOCIAL_KNOWLEDGE_PATHS.constraintsSensitiveTopics])]])
