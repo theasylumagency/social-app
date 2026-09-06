@@ -13,6 +13,18 @@ const {
 } = require(
     "./total-charm-dent.content-audience-direction.fixture.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_WEEKLY_OBJECTIVE_INPUT,
+} = require(
+    "./total-charm-dent.weekly-objective.fixture.cjs",
+)
+
+const {
+    evaluateWeeklyObjectiveProposal,
+} = require(
+    "./weekly-objective-deterministic-evaluator.cjs",
+)
+
 
 const {
     evaluateContentAudienceDirectionProposal,
@@ -740,6 +752,81 @@ test("content audience direction evaluator rejects missing, unknown, duplicated 
         result.failures.some((failure) =>
             failure.includes(
                 "invalid content audience bias",
+            ),
+        ),
+        true,
+    )
+})
+test("weekly objective evaluator accepts a useful-progress objective", () => {
+    const output = {
+        weeklyObjective: {
+            objective:
+                "შეამციროს რთული მკურნალობის გადაწყვეტილების წინ არსებული გაურკვევლობა დიაგნოსტიკისა და დაგეგმვის როლის უფრო გასაგებად წარმოჩენით.",
+
+            rationale:
+                "მომხმარებლის ამ კვირის პრიორიტეტი პირდაპირ ეხება რთული მკურნალობის თემებს, ხოლო არსებული ბრენდული და ბიზნეს კონტექსტი საშუალებას გვაძლევს ყურადღება გადავიტანოთ პროცესის სიცხადესა და პროფესიულ დასაბუთებაზე.",
+
+            deliberateOmissions: [
+                "ზოგადი ბრენდული ისტორიები, რომლებიც არ უკავშირდება ამ კვირის გადაწყვეტილების გაურკვევლობის თემას.",
+                "მიმდინარე პაციენტების მკურნალობის უწყვეტობის თემა, თუ ის პირდაპირ არ ემსახურება ამ კვირის მიზანს.",
+                "პრომოციული ზეწოლა ან ხელოვნური გადაუდებლობა.",
+            ],
+        },
+    }
+
+    const result =
+        evaluateWeeklyObjectiveProposal(
+            output,
+            TOTAL_CHARM_DENT_WEEKLY_OBJECTIVE_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("weekly objective evaluator rejects authority-owned and activity-based output", () => {
+    const output = {
+        weeklyObjective: {
+            id: "model-created-id",
+
+            objective:
+                "Publish more posts and increase posting frequency.",
+
+            rationale:
+                "Reason",
+
+            deliberateOmissions: [
+                "Something",
+            ],
+        },
+    }
+
+    const result =
+        evaluateWeeklyObjectiveProposal(
+            output,
+            TOTAL_CHARM_DENT_WEEKLY_OBJECTIVE_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "activity-based",
             ),
         ),
         true,

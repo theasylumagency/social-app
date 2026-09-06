@@ -1,0 +1,34 @@
+{
+    "caseId": "total-charm-dent-weekly-objective-v1",
+    "component": "weeklyObjective",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "usefulProgress": 2,
+            "contextAlignment": 2,
+            "focusDiscipline": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "The objective translates the broad User Priority (\"pay more attention to complex treatment topics and explain why proper diagnostics and planning matter\") into a clear, outcome-oriented weekly goal: helping the audience facing complex dental treatment understand how correct diagnostics and multidisciplinary planning reduce uncertainty about treatment options and next steps. This is a genuine communication outcome (decision readiness, clarity, reduced uncertainty), not an activity or publishing target.\\n\\nContext alignment is strong. It leverages Brand Knowledge (multidisciplinary approach, importance of diagnostics/planning) and Business Facts, and appropriately centers audiences a1 (doesn't yet know needed treatment) and a2 (comparing complex options), which are the segments most relevant to the priority. It refines rather than merely copies the priority by framing it as reducing uncertainty and supporting decision-making.\\n\\nFocus is disciplined: a single governing objective, with deliberate omissions that protect it — temporarily deprioritizing esthetic/veneer promotion and, notably, deprioritizing continuity communication for in-treatment patients (a3), which is a genuine trade-off rather than a permanent avoid-list. Constraint-based omissions (technology-as-guarantee, artificial urgency) are somewhat generic restatements of supplied constraints, a minor weakness but not material.\\n\\nEvidence discipline is clean: no invented KPIs, trends, conversion claims, or false certainty; cautious wording (\"reduce uncertainty\" rather than promising outcomes) aligns with the no-guarantee constraint. No authority violations or brand alterations. The objective can clearly govern downstream Weekly Audience Focus and Content Directions."
+    },
+    "output": {
+        "weeklyObjective": {
+            "objective": "რთული სტომატოლოგიური მკურნალობის წინ მყოფ აუდიტორიას გაუმარტივდეს იმის გაგება, როგორ ამცირებს სწორი დიაგნოსტიკა და მრავალპროფილური დაგეგმვა გაურკვევლობას მკურნალობის ვარიანტებსა და შემდეგ ნაბიჯებზე.",
+            "rationale": "ეს მიზანი პირდაპირ პასუხობს ამ კვირის პრიორიტეტს და ეყრდნობა კლინიკის მრავალპროფილურ მიდგომასა და დიაგნოსტიკა-დაგეგმვის მნიშვნელობას. იგი განსაკუთრებით სასარგებლოა მათთვის, ვინც ჯერ ვერ არჩევს საჭირო მკურნალობას ან ადარებს რთულ ვარიანტებს; აქცენტი კეთდება გადაწყვეტილების მზაობასა და კლინიკური ლოგიკის გაგებაზე და არა შედეგის დაპირებაზე, ტექნოლოგიაზე ან სარეკლამო წნეხზე.",
+            "deliberateOmissions": [
+                "ცალკეული ესთეტიკური სერვისების, მათ შორის ვინირების, პრომოციულად წარმოჩენა.",
+                "ტექნოლოგიის წარმოდგენა მკურნალობის წარმატების გარანტიად.",
+                "უკვე მიმდინარე მკურნალობაში მყოფი პაციენტებისთვის პროცესის უწყვეტობისა და შემდგომი ეტაპების კომუნიკაციის მთავარ პრიორიტეტად ქცევა.",
+                "სასწრაფო გადაწყვეტილების ან დაუყოვნებლივი ჩაწერის ხელოვნურად წახალისება."
+            ]
+        }
+    }
+}
