@@ -40,7 +40,17 @@ const {
 } = require(
     "./experiment-decision-deterministic-evaluator.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_CONTENT_BRIEF_INPUT,
+} = require(
+    "./total-charm-dent.content-brief.fixture.cjs",
+)
 
+const {
+    evaluateContentBriefProposal,
+} = require(
+    "./content-brief-deterministic-evaluator.cjs",
+)
 
 
 const {
@@ -1106,6 +1116,140 @@ test("experiment decision evaluator rejects invalid authority-owned and incomple
             failure.includes(
                 "experiment.guardrails",
             ),
+        ),
+        true,
+    )
+})
+
+test("content brief evaluator accepts a valid strategy-to-writing brief", () => {
+    const output = {
+        contentBrief: {
+            communicationJob:
+                "აუხსნას ადამიანს, რა საკითხების გარკვევას ემსახურება დიაგნოსტიკა რთული მკურნალობის არჩევამდე.",
+
+            keyTakeaway:
+                "დიაგნოსტიკის მიზანია გადაწყვეტილებისთვის საჭირო კითხვების დაზუსტება და არა წინასწარ ერთი მკურნალობის გამოცხადება.",
+
+            supportingPoints: [
+                "დიაგნოსტიკა ეხმარება პრობლემის და შეზღუდვების უკეთ განსაზღვრას.",
+                "რამდენიმე შესაძლო გზა შეიძლება საჭიროებდეს დამატებით შეფასებას.",
+                "ინდივიდუალური რეკომენდაცია სრულ ინფორმაციაზე უნდა დაეყრდნოს.",
+            ],
+
+            evidenceMode:
+                "noProofNeeded",
+
+            evidenceKeys: [],
+
+            ctaIntent:
+                "inviteConsultation",
+
+            constraints: [
+                "გაარჩიე ზოგადი განმარტება ინდივიდუალური დიაგნოზისგან.",
+                "ტექნიკური ტერმინები მხოლოდ ახსნით გამოიყენე.",
+            ],
+
+            mustNotSay: [
+                "დიაგნოსტიკა გარანტირებულ შედეგს უზრუნველყოფს.",
+                "არსებობს მხოლოდ ერთი სწორი მკურნალობა.",
+            ],
+
+            rationale:
+                "ეს brief პირდაპირ ამცირებს გადაწყვეტილების გაურკვევლობას და ემსახურება არჩეულ explanatory audience bias-ს.",
+        },
+    }
+
+    const result =
+        evaluateContentBriefProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_BRIEF_INPUT,
+        )
+
+    assert.deepEqual(
+        result,
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+})
+
+test("content brief evaluator rejects copy fields, authority fields and invented evidence", () => {
+    const output = {
+        contentBrief: {
+            id:
+                "model-created-id",
+
+            communicationJob:
+                "Explain diagnostics.",
+
+            keyTakeaway:
+                "Diagnostics matter.",
+
+            supportingPoints: [
+                "Point one",
+                "Point two",
+            ],
+
+            evidenceMode:
+                "evidenceSupported",
+
+            evidenceKeys: [
+                "invented-proof",
+            ],
+
+            ctaIntent:
+                "inform",
+
+            constraints: [],
+
+            mustNotSay: [],
+
+            rationale:
+                "Useful.",
+
+            caption:
+                "Book your consultation today.",
+        },
+    }
+
+    const result =
+        evaluateContentBriefProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_BRIEF_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "authority field: id",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "copy/execution field: caption",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "unknown evidence key",
+                ),
         ),
         true,
     )

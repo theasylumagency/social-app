@@ -1404,3 +1404,202 @@ export const EXPERIMENT_DECISION_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+
+export const CONTENT_BRIEF_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        contentBrief: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                communicationJob: {
+                    type: "string",
+                },
+
+                keyTakeaway: {
+                    type: "string",
+                },
+
+                supportingPoints: {
+                    type: "array",
+                    minItems: 2,
+                    maxItems: 5,
+
+                    items: {
+                        type: "string",
+                    },
+                },
+
+                evidenceMode: {
+                    type: "string",
+                    enum: [
+                        "noProofNeeded",
+                        "evidenceSupported",
+                        "proofRequired",
+                    ],
+                },
+
+                evidenceKeys: {
+                    type: "array",
+
+                    items: {
+                        type: "string",
+                    },
+                },
+
+                ctaIntent: {
+                    type: "string",
+                    enum: [
+                        "none",
+                        "inform",
+                        "encourageReflection",
+                        "inviteQuestion",
+                        "inviteConsultation",
+                        "directAction",
+                    ],
+                },
+
+                constraints: {
+                    type: "array",
+
+                    items: {
+                        type: "string",
+                    },
+                },
+
+                mustNotSay: {
+                    type: "array",
+
+                    items: {
+                        type: "string",
+                    },
+                },
+
+                rationale: {
+                    type: "string",
+                },
+            },
+
+            required: [
+                "communicationJob",
+                "keyTakeaway",
+                "supportingPoints",
+                "evidenceMode",
+                "evidenceKeys",
+                "ctaIntent",
+                "constraints",
+                "mustNotSay",
+                "rationale",
+            ],
+        },
+    },
+
+    required: [
+        "contentBrief",
+    ],
+} as const satisfies JsonSchema
+
+export const CONTENT_BRIEF_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                directionFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                briefSpecificity: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                boundaryDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "directionFit",
+                "briefSpecificity",
+                "evidenceDiscipline",
+                "boundaryDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

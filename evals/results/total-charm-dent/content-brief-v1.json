@@ -1,0 +1,52 @@
+{
+    "caseId": "total-charm-dent-content-brief-v1",
+    "component": "contentBrief",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "directionFit": 2,
+            "briefSpecificity": 2,
+            "evidenceDiscipline": 2,
+            "boundaryDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "This is a strong, disciplined Content Brief that cleanly executes the selected direction (d1) without rewriting strategy or drifting into a new agenda. The communicationJob is specific and appropriately narrower than the Content Direction: it reframes pre-treatment uncertainty into concrete clinical questions that diagnostics/planning should answer. The single keyTakeaway is coherent and reinforces the core tension (diagnostics as basis for options, but concrete recommendations only after individual assessment) — no competing conclusions or sloganeering.\\n\\nThe five supporting points are distinct, idea-level, and materially useful: they cover problem identification, treatment goals/limiting factors, alternatives comparison, multidisciplinary involvement, and what cannot be resolved without individual assessment. None cross into polished copy. Evidence discipline is excellent: with an empty evidence array, the candidate correctly selects noProofNeeded for an explanatory item and does not inflate business facts (multidisciplinary team, diagnostics as process) into unsupported claims of superior outcomes.\\n\\nBoundary discipline is fully respected — no headline, hook, caption, format, platform, or schedule decisions; no modification of objective, envelope, audience, or IDs. The audience assignment (a1 primary, a2 secondary, moreExplanatory bias) is preserved. CTA intent (encourageReflection) fits the consultative, low-pressure envelope without creating pressure. Constraints are item-specific and useful rather than generic boilerplate, and mustNotSay protects precisely the relevant risks (premature diagnosis, false one-size-fits-all, guaranteed outcomes, artificial urgency). No material regressions identified."
+    },
+    "output": {
+        "contentBrief": {
+            "communicationJob": "აუდიტორიას დაეხმაროს, რთული სტომატოლოგიური მკურნალობის არჩევამდე არსებული გაურკვევლობა ჩამოაყალიბოს კონკრეტულ კითხვებად, რომლებზეც სრულფასოვანმა დიაგნოსტიკამ და მკურნალობის დაგეგმვამ უნდა უპასუხოს.",
+            "keyTakeaway": "სრულფასოვანი დიაგნოსტიკა მკურნალობის ვარიანტების, მათი კლინიკური ლოგიკის, შეზღუდვებისა და შესაძლო ეტაპების გარკვევის საფუძველია, თუმცა კონკრეტული რეკომენდაცია მხოლოდ ინდივიდუალური შეფასების შემდეგ განისაზღვრება.",
+            "supportingPoints": [
+                "რომელი კლინიკური პრობლემა ან პრობლემების ერთობლიობა საჭიროებს მართვას და რა დამატებითი ინფორმაციაა საჭირო მდგომარეობის გასარკვევად.",
+                "რა მიზანს უნდა ემსახურებოდეს მკურნალობა და რომელი ფაქტორები ზღუდავს ან ცვლის შესაძლო არჩევანს.",
+                "რა ალტერნატივები შეიძლება განიხილებოდეს და როგორ უნდა შედარდეს მათი კლინიკური ლოგიკა, შეზღუდვები და შესაძლო თანმიმდევრობა.",
+                "როდის არის საჭირო სხვადასხვა პროფილის სტომატოლოგების ჩართულობა და როგორ უკავშირდება მათი შეფასებები ერთიან გეგმას.",
+                "რომელი საკითხები ვერ გადაწყდება ზოგადი ინფორმაციის საფუძველზე და უნდა დარჩეს ინდივიდუალური შეფასების საგნად."
+            ],
+            "evidenceMode": "noProofNeeded",
+            "evidenceKeys": [],
+            "ctaIntent": "encourageReflection",
+            "constraints": [
+                "ტექნიკური ტერმინები გამოყენებამდე განმარტდეს მარტივი ენით.",
+                "შეფასებისა და დიაგნოსტიკის საჭიროება განხილული იყოს შესაძლო მოქმედებამდე.",
+                "ზოგადი განმარტება მკაფიოდ გაიმიჯნოს ინდივიდუალური რეკომენდაციისგან.",
+                "ვარიანტების განხილვისას გამოჩნდეს კლინიკური ლოგიკა, ალტერნატივები, შეზღუდვები და დარჩენილი გაურკვევლობა.",
+                "სპეციალისტების კოორდინაცია აღწერილი იყოს როგორც დაგეგმვის ნაწილი და არა უკეთესი შედეგის გარანტია."
+            ],
+            "mustNotSay": [
+                "დიაგნოზის დადგენა შესაძლებელია ინდივიდუალური შეფასების გარეშე.",
+                "არსებობს ერთი ყველასთვის სწორი მკურნალობის ვარიანტი.",
+                "სრულფასოვანი დიაგნოსტიკა ან კონკრეტული ტექნოლოგია შედეგის გარანტიას იძლევა.",
+                "მკურნალობის დაწყება დაუყოვნებლივ აუცილებელია დამატებითი შეფასების გარეშე."
+            ],
+            "rationale": "Brief-ი შერჩეულ მიმართულებას გარდაქმნის ერთ კონკრეტულ განმარტებით ამოცანად: აჩვენოს, რა კითხვებს უნდა პასუხობდეს დიაგნოსტიკა რთული არჩევანის წინ. ეს ემსახურება კვირის მიზანს — ამცირებს გაურკვევლობას, აძლიერებს პროფესიული და მრავალპროფილური დაგეგმვის მიმართ ნდობას და, აუდიტორიის განმარტებითი საჭიროების შესაბამისად, არ ქმნის წინასწარი დიაგნოზის ან გაყიდვითი ზეწოლის შთაბეჭდილებას."
+        }
+    }
+}

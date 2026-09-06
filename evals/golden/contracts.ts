@@ -144,3 +144,16 @@ export type ExperimentDecisionGoldenEvaluation = {
     readonly regressions: readonly GoldenRegression[]
     readonly summary: string
 }
+export type ContentBriefGoldenScores = {
+    readonly directionFit: GoldenScore
+    readonly briefSpecificity: GoldenScore
+    readonly evidenceDiscipline: GoldenScore
+    readonly boundaryDiscipline: GoldenScore
+    readonly managerialUsefulness: GoldenScore
+}
+
+export type ContentBriefGoldenEvaluation = {
+    readonly scores: ContentBriefGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}
