@@ -1808,3 +1808,187 @@ export const CONTENT_EXECUTION_SPEC_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+export const CONTENT_WRITER_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        draft: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                text: {
+                    type: [
+                        "string",
+                        "null",
+                    ],
+                },
+
+                caption: {
+                    type: [
+                        "string",
+                        "null",
+                    ],
+                },
+
+                frames: {
+                    type: "array",
+
+                    items: {
+                        type: "object",
+                        additionalProperties: false,
+
+                        properties: {
+                            heading: {
+                                type: [
+                                    "string",
+                                    "null",
+                                ],
+                            },
+
+                            body: {
+                                type: "string",
+                            },
+                        },
+
+                        required: [
+                            "heading",
+                            "body",
+                        ],
+                    },
+                },
+
+                script: {
+                    type: [
+                        "string",
+                        "null",
+                    ],
+                },
+
+                onScreenText: {
+                    type: "array",
+
+                    items: {
+                        type: "string",
+                    },
+                },
+            },
+
+            required: [
+                "text",
+                "caption",
+                "frames",
+                "script",
+                "onScreenText",
+            ],
+        },
+    },
+
+    required: [
+        "draft",
+    ],
+} as const satisfies JsonSchema
+export const CONTENT_WRITER_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                briefFidelity: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                brandVoiceFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                executionQuality: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                editorialQuality: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "briefFidelity",
+                "evidenceDiscipline",
+                "brandVoiceFit",
+                "executionQuality",
+                "editorialQuality",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

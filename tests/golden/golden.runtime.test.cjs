@@ -61,7 +61,17 @@ const {
 } = require(
     "./content-brief-deterministic-evaluator.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+} = require(
+    "./total-charm-dent.content-writer.fixture.cjs",
+)
 
+const {
+    evaluateContentWriterProposal,
+} = require(
+    "./content-writer-deterministic-evaluator.cjs",
+)
 
 const {
     evaluateWeeklyObjectiveProposal,
@@ -1458,6 +1468,547 @@ test("content execution spec evaluator rejects duplicate channels, invalid modes
             (failure) =>
                 failure.includes(
                     "copy field: caption",
+                ),
+        ),
+        true,
+    )
+})
+test("content writer evaluator accepts a valid carousel draft", () => {
+    const output = {
+        draft: {
+            text:
+                null,
+
+            caption:
+                "რთული მკურნალობის არჩევამდე მთავარი კითხვა მხოლოდ „რა გავაკეთოთ?“ არ არის. ჯერ უნდა გავიგოთ, რას გვიჩვენებს შეფასება და რას ცვლის ის შესაძლო გზებს შორის.",
+
+            frames: [
+                {
+                    heading:
+                        "ჯერ — რა არის რეალური პრობლემა?",
+
+                    body:
+                        "სრულფასოვანი შეფასება იწყება იმით, რომ გაირკვეს, კონკრეტულად რა საჭიროებს მართვას და რომელი საკითხები უკავშირდება ერთმანეთს.",
+                },
+
+                {
+                    heading:
+                        "რა ზღუდავს არჩევანს?",
+
+                    body:
+                        "ყველა შესაძლო გზა ყველა შემთხვევაში ერთნაირად შესაფერისი არ არის. მნიშვნელობა აქვს კლინიკურ მდგომარეობას, შეზღუდვებს და მკურნალობის შესაძლო ეტაპებს.",
+                },
+
+                {
+                    heading:
+                        "რა ალტერნატივები არსებობს?",
+
+                    body:
+                        "დიაგნოსტიკა ეხმარება ექიმსა და პაციენტს გაიგონ, რომელი ვარიანტების განხილვა შეიძლება და რა ლოგიკა აქვს თითოეულ მათგანს.",
+                },
+
+                {
+                    heading:
+                        "რას ვერ გვეტყვის ზოგადი ინფორმაცია?",
+
+                    body:
+                        "ზოგადი განმარტება შეიძლება დაგეხმაროთ სწორი კითხვების ჩამოყალიბებაში, მაგრამ კონკრეტული რეკომენდაცია ინდივიდუალურ შეფასებას საჭიროებს.",
+                },
+            ],
+
+            script:
+                null,
+
+            onScreenText: [],
+        },
+    }
+
+    const result =
+        evaluateContentWriterProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+        )
+
+    assert.deepEqual(
+        result,
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+})
+
+test("content writer evaluator rejects carousel transport violations and authority leakage", () => {
+    const output = {
+        draft: {
+            id:
+                "model-owned-draft-id",
+
+            text:
+                "This field must not exist for carousel.",
+
+            caption:
+                "Valid caption.",
+
+            frames: [
+                {
+                    order:
+                        1,
+
+                    heading:
+                        "Only frame",
+
+                    body:
+                        "A carousel requires more than one frame.",
+                },
+            ],
+
+            script:
+                "Carousel must not contain a script.",
+
+            onScreenText: [
+                "Not valid for carousel",
+            ],
+        },
+    }
+
+    const result =
+        evaluateContentWriterProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "authority field: id",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "authority field: order",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "carousel text must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "carousel requires at least two frames",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "carousel script must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "carousel onScreenText must be empty",
+                ),
+        ),
+        true,
+    )
+})
+
+test("content writer evaluator enforces static post transport shape", () => {
+    const input = {
+        ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+
+        contentExecutionSpec: {
+            ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT
+                .contentExecutionSpec,
+
+            format:
+                "staticPost",
+        },
+    }
+
+    const validOutput = {
+        draft: {
+            text:
+                "სრულფასოვანი დიაგნოსტიკის მიზანი მხოლოდ პრობლემის დასახელება არ არის — ის უნდა დაეხმაროს მკურნალობის შესაძლო გზების, მათი შეზღუდვებისა და შემდეგი ნაბიჯების გარკვევას. კონკრეტული რეკომენდაცია კი მხოლოდ ინდივიდუალური შეფასების შემდეგ შეიძლება განისაზღვროს.",
+
+            caption:
+                null,
+
+            frames: [],
+
+            script:
+                null,
+
+            onScreenText: [],
+        },
+    }
+
+    assert.deepEqual(
+        evaluateContentWriterProposal(
+            validOutput,
+            input,
+        ),
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+
+    const invalidOutput = {
+        draft: {
+            text:
+                null,
+
+            caption:
+                "Not allowed.",
+
+            frames: [
+                {
+                    heading:
+                        null,
+
+                    body:
+                        "Not allowed.",
+                },
+            ],
+
+            script:
+                "Not allowed.",
+
+            onScreenText: [
+                "Not allowed.",
+            ],
+        },
+    }
+
+    const result =
+        evaluateContentWriterProposal(
+            invalidOutput,
+            input,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "staticPost requires non-empty text",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "staticPost caption must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "staticPost frames must be empty",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "staticPost script must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "staticPost onScreenText must be empty",
+                ),
+        ),
+        true,
+    )
+})
+
+test("content writer evaluator enforces story transport shape", () => {
+    const input = {
+        ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+
+        contentExecutionSpec: {
+            ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT
+                .contentExecutionSpec,
+
+            format:
+                "story",
+        },
+    }
+
+    const validOutput = {
+        draft: {
+            text:
+                null,
+
+            caption:
+                null,
+
+            frames: [
+                {
+                    heading:
+                        "სწორი კითხვა",
+
+                    body:
+                        "მკურნალობის არჩევამდე ჯერ უნდა გაირკვეს, რას გვიჩვენებს ინდივიდუალური შეფასება.",
+                },
+            ],
+
+            script:
+                null,
+
+            onScreenText: [],
+        },
+    }
+
+    assert.deepEqual(
+        evaluateContentWriterProposal(
+            validOutput,
+            input,
+        ),
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+
+    const invalidOutput = {
+        draft: {
+            text:
+                "Not allowed.",
+
+            caption:
+                "Not allowed.",
+
+            frames: [],
+
+            script:
+                "Not allowed.",
+
+            onScreenText: [
+                "Not allowed.",
+            ],
+        },
+    }
+
+    const result =
+        evaluateContentWriterProposal(
+            invalidOutput,
+            input,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "story text must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "story caption must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "story requires at least one frame",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "story script must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "story onScreenText must be empty",
+                ),
+        ),
+        true,
+    )
+})
+
+test("content writer evaluator enforces reel transport shape", () => {
+    const input = {
+        ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT,
+
+        contentExecutionSpec: {
+            ...TOTAL_CHARM_DENT_CONTENT_WRITER_INPUT
+                .contentExecutionSpec,
+
+            format:
+                "reel",
+        },
+    }
+
+    const validOutput = {
+        draft: {
+            text:
+                null,
+
+            caption:
+                "რთული მკურნალობის წინ სწორი კითხვების ჩამოყალიბება უკვე მნიშვნელოვანი ნაბიჯია.",
+
+            frames: [],
+
+            script:
+                "რთული მკურნალობის არჩევამდე მხოლოდ ის არ უნდა ვიცოდეთ, რა ვარიანტები არსებობს. ჯერ უნდა გავიგოთ, რას გვიჩვენებს დიაგნოსტიკა, რა ზღუდავს არჩევანს და რომელი საკითხები მოითხოვს ინდივიდუალურ შეფასებას.",
+
+            onScreenText: [
+                "რა უნდა გაარკვიოს დიაგნოსტიკამ?",
+                "ვარიანტები • შეზღუდვები • შემდეგი ნაბიჯები",
+            ],
+        },
+    }
+
+    assert.deepEqual(
+        evaluateContentWriterProposal(
+            validOutput,
+            input,
+        ),
+        {
+            passed: true,
+            failures: [],
+        },
+    )
+
+    const invalidOutput = {
+        draft: {
+            text:
+                "Not allowed.",
+
+            caption:
+                null,
+
+            frames: [
+                {
+                    heading:
+                        null,
+
+                    body:
+                        "Not allowed.",
+                },
+            ],
+
+            script:
+                null,
+
+            onScreenText: [],
+        },
+    }
+
+    const result =
+        evaluateContentWriterProposal(
+            invalidOutput,
+            input,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "reel text must be null",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "reel frames must be empty",
+                ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some(
+            (failure) =>
+                failure.includes(
+                    "reel requires non-empty script",
                 ),
         ),
         true,

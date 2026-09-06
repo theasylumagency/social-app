@@ -12,7 +12,7 @@
     "db:migrate": "node --env-file=.env.local scripts/db/migrate.mjs",
     "start": "next start",
     "lint": "eslint",
-    "test": "npm run check && npm run build:domain && node --test tests/primitives.runtime.test.cjs tests/social-blueprint.runtime.test.cjs tests/weekly-plan.runtime.test.cjs tests/ingestion.runtime.test.cjs",
+    "test": "npm run check && npm run build:domain && node --test tests/primitives.runtime.test.cjs tests/social-blueprint.runtime.test.cjs tests/weekly-plan.runtime.test.cjs tests/content-brief.runtime.test.cjs",
     "test:dashboard": "node --env-file=.env.local --import tsx --test tests/dashboard.integration.test.mts",
     "test:integration": "npm run build:domain && npm run db:migrate && node --env-file=.env.local --test tests/postgres.integration.test.cjs",
     "test:auth": "node --env-file=.env.local --import tsx --test tests/auth.integration.test.mts",
@@ -27,6 +27,7 @@
     "eval:golden:experiment": "node --env-file=.env.local --import tsx evals/golden/experiment-decision-cli.ts",
     "eval:golden:content-brief": "node --env-file=.env.local --import tsx evals/golden/content-brief-cli.ts",
     "eval:golden:execution-spec": "node --env-file=.env.local --import tsx evals/golden/content-execution-spec-cli.ts",
+    "eval:golden:writer": "node --env-file=.env.local --import tsx evals/golden/content-writer-cli.ts",
     "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {

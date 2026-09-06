@@ -175,3 +175,51 @@ export type ContentExecutionSpecGoldenEvaluation = {
     readonly summary:
     string
 }
+export type ContentWriterGoldenScores = {
+    /**
+     * Does the copy faithfully execute the approved
+     * Content Brief without rewriting strategy?
+     */
+    readonly briefFidelity:
+    GoldenScore
+
+    /**
+     * Are all public claims supported by supplied
+     * public facts / permitted proof, with no invention
+     * or strengthening?
+     */
+    readonly evidenceDiscipline:
+    GoldenScore
+
+    /**
+     * Does the copy preserve the supplied brand voice
+     * and Communication Envelope?
+     */
+    readonly brandVoiceFit:
+    GoldenScore
+
+    /**
+     * Does the writing use the approved format,
+     * depth, CTA intent, and execution guidance well?
+     */
+    readonly executionQuality:
+    GoldenScore
+
+    /**
+     * Is the final writing clear, specific, natural,
+     * non-generic, coherent, and worth publishing?
+     */
+    readonly editorialQuality:
+    GoldenScore
+}
+
+export type ContentWriterGoldenEvaluation = {
+    readonly scores:
+    ContentWriterGoldenScores
+
+    readonly regressions:
+    readonly GoldenRegression[]
+
+    readonly summary:
+    string
+}
