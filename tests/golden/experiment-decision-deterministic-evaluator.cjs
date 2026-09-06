@@ -78,30 +78,47 @@ function evaluateExperimentDecisionProposal(
     }
 
     if (
-        decision.decision !== "noExperiment" &&
-        decision.decision !== "experiment"
-    ) {
-        failures.push(
-            "experimentDecision.decision is invalid",
-        )
-    }
-
-    if (
-        !isNonEmptyString(
-            decision.rationale,
-        )
-    ) {
-        failures.push(
-            "experimentDecision.rationale must be a non-empty string",
-        )
-    }
-
-    if (
         decision.decision === "noExperiment"
     ) {
-        if (decision.experiment !== null) {
+        const experiment =
+            decision.experiment
+
+        if (
+            experiment === null ||
+            typeof experiment !== "object" ||
+            Array.isArray(experiment)
+        ) {
             failures.push(
-                "noExperiment decision must have experiment: null",
+                "noExperiment decision must include the structured experiment object",
+            )
+
+            return {
+                passed:
+                    failures.length === 0,
+
+                failures,
+            }
+        }
+
+        for (const field of [
+            "hypothesis",
+            "variable",
+            "comparison",
+            "learningSignal",
+        ]) {
+            if (experiment[field] !== null) {
+                failures.push(
+                    `noExperiment requires experiment.${field} to be null`,
+                )
+            }
+        }
+
+        if (
+            !Array.isArray(experiment.guardrails) ||
+            experiment.guardrails.length !== 0
+        ) {
+            failures.push(
+                "noExperiment requires experiment.guardrails to be an empty array",
             )
         }
 

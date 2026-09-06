@@ -992,7 +992,13 @@ test("experiment decision evaluator accepts a valid no-experiment decision", () 
             rationale:
                 "ამ კვირაში მთავარი გაურკვევლობა თავად მკურნალობის გადაწყვეტილების პროცესის გაგებას ეხება და არსებული კონტექსტი არ გვაძლევს საკმარის საფუძველს ცალკე ექსპერიმენტის დასამატებლად.",
 
-            experiment: null,
+            experiment: {
+                hypothesis: null,
+                variable: null,
+                comparison: null,
+                learningSignal: null,
+                guardrails: [],
+            },
         },
     }
 

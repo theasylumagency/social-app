@@ -249,6 +249,26 @@ Use only supplied:
 
 Do not invent evidence merely to justify an experiment.
 
+STRUCTURED OUTPUT REPRESENTATION
+
+The response schema uses one fixed transport shape for both decisions.
+
+When decision = "noExperiment":
+- experiment.hypothesis must be null
+- experiment.variable must be null
+- experiment.comparison must be null
+- experiment.learningSignal must be null
+- experiment.guardrails must be []
+
+This still means there is NO experiment.
+The nested object exists only for structured-output compatibility.
+
+When decision = "experiment":
+- hypothesis must be a non-empty string
+- variable must be a non-empty string
+- comparison must be a non-empty string
+- learningSignal must be a non-empty string
+- guardrails must contain the relevant experiment guardrails.
 
 AUTHORITY
 

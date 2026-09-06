@@ -1,0 +1,35 @@
+{
+    "caseId": "total-charm-dent-experiment-decision-v1",
+    "component": "experimentDecision",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "decisionQuality": 2,
+            "hypothesisQuality": 2,
+            "experimentIsolation": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "The candidate correctly decides noExperiment. With no prior results, no recent signals, and no prior experiments, there is no isolated, meaningful strategic uncertainty that would produce interpretable learning this week. The rationale is well-grounded in the supplied context: the Weekly Objective (decision clarity and trust in professional planning) is already clear, and the four content directions are complementary and coherent, so execution deserves priority over a weak or confounded test.\\n\\nCrucially, the candidate does not fall into experimentation-by-default. It explicitly recognizes that absence of data is not itself a reason to experiment, and that an unmotivated test would create confounded rather than interpretable learning. The reasoning ties directly to the current objective rather than relying on generic testing language.\\n\\nEvidence discipline is clean: no invented trends, benchmarks, audience preferences, or numerical targets. It draws only on the fact that priorResults, recentSignals, and priorExperiments are empty. No authority violations — the candidate does not alter the objective, audience focus, content directions, envelope, or create posts/schedules. It leaves the experiment fields appropriately null.\\n\\nPer scoring rules, hypothesisQuality and experimentIsolation are set to 2 for a correct noExperiment decision and are not penalized for the absence of a hypothesis or comparison. Managerial usefulness is high: the decision protects weekly focus, avoids unnecessary complexity, and makes clear why the core plan remains the priority. This is a strong first-class noExperiment outcome."
+    },
+    "output": {
+        "experimentDecision": {
+            "decision": "noExperiment",
+            "rationale": "ამ კვირას უკვე აქვს მკაფიო სტრატეგიული ამოცანა და ურთიერთშემავსებელი მიმართულებები: დიაგნოსტიკის, მრავალპროფილური კოორდინაციის, ვარიანტების შედარებისა და შემდეგი ნაბიჯების ახსნა. წინა შედეგებისა და მიმდინარე სიგნალების გარეშე არ იკვეთება კონკრეტული, მნიშვნელოვანი გაურკვევლობა, რომლის იზოლირებულად გამოცდაც ამ კვირაში ინტერპრეტირებად ცოდნას შექმნიდა. ყურადღების ძირითად გეგმაზე შენარჩუნება უკეთ მოემსახურება გადაწყვეტილების სიცხადისა და პროფესიული დაგეგმვის მიმართ ნდობის გაძლიერებას.",
+            "experiment": {
+                "hypothesis": null,
+                "variable": null,
+                "comparison": null,
+                "learningSignal": null,
+                "guardrails": []
+            }
+        }
+    }
+}

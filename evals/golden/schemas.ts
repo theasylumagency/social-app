@@ -1223,91 +1223,78 @@ export const EXPERIMENT_DECISION_OUTPUT_SCHEMA = {
 
     properties: {
         experimentDecision: {
-            oneOf: [
-                {
-                    type: "object",
-                    additionalProperties: false,
+            type: "object",
+            additionalProperties: false,
 
-                    properties: {
-                        decision: {
-                            const: "noExperiment",
-                        },
-
-                        rationale: {
-                            type: "string",
-                        },
-
-                        experiment: {
-                            type: "null",
-                        },
-                    },
-
-                    required: [
-                        "decision",
-                        "rationale",
+            properties: {
+                decision: {
+                    type: "string",
+                    enum: [
+                        "noExperiment",
                         "experiment",
                     ],
                 },
 
-                {
+                rationale: {
+                    type: "string",
+                },
+
+                experiment: {
                     type: "object",
                     additionalProperties: false,
 
                     properties: {
-                        decision: {
-                            const: "experiment",
-                        },
-
-                        rationale: {
-                            type: "string",
-                        },
-
-                        experiment: {
-                            type: "object",
-                            additionalProperties: false,
-
-                            properties: {
-                                hypothesis: {
-                                    type: "string",
-                                },
-
-                                variable: {
-                                    type: "string",
-                                },
-
-                                comparison: {
-                                    type: "string",
-                                },
-
-                                learningSignal: {
-                                    type: "string",
-                                },
-
-                                guardrails: {
-                                    type: "array",
-
-                                    items: {
-                                        type: "string",
-                                    },
-                                },
-                            },
-
-                            required: [
-                                "hypothesis",
-                                "variable",
-                                "comparison",
-                                "learningSignal",
-                                "guardrails",
+                        hypothesis: {
+                            type: [
+                                "string",
+                                "null",
                             ],
                         },
+
+                        variable: {
+                            type: [
+                                "string",
+                                "null",
+                            ],
+                        },
+
+                        comparison: {
+                            type: [
+                                "string",
+                                "null",
+                            ],
+                        },
+
+                        learningSignal: {
+                            type: [
+                                "string",
+                                "null",
+                            ],
+                        },
+
+                        guardrails: {
+                            type: "array",
+
+                            items: {
+                                type: "string",
+                            },
+                        },
                     },
 
                     required: [
-                        "decision",
-                        "rationale",
-                        "experiment",
+                        "hypothesis",
+                        "variable",
+                        "comparison",
+                        "learningSignal",
+                        "guardrails",
                     ],
                 },
+            },
+
+            required: [
+                "decision",
+                "rationale",
+                "experiment",
             ],
         },
     },
@@ -1316,7 +1303,6 @@ export const EXPERIMENT_DECISION_OUTPUT_SCHEMA = {
         "experimentDecision",
     ],
 } as const satisfies JsonSchema
-
 export const EXPERIMENT_DECISION_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
     additionalProperties: false,
