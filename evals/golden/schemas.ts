@@ -777,3 +777,160 @@ export const WEEKLY_AUDIENCE_FOCUS_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+export const CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        directions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    contentDirectionKey: {
+                        type: "string",
+                    },
+
+                    primaryAudienceKey: {
+                        type: "string",
+                    },
+
+                    secondaryAudienceKeys: {
+                        type: "array",
+                        maxItems: 1,
+
+                        items: {
+                            type: "string",
+                        },
+                    },
+
+                    bias: {
+                        type: "string",
+                        enum: [
+                            "balanced",
+                            "moreExplanatory",
+                            "moreDecisionOriented",
+                            "moreTrustFocused",
+                            "morePractical",
+                        ],
+                    },
+                },
+
+                required: [
+                    "contentDirectionKey",
+                    "primaryAudienceKey",
+                    "secondaryAudienceKeys",
+                    "bias",
+                ],
+            },
+        },
+    },
+
+    required: [
+        "directions",
+    ],
+} as const satisfies JsonSchema
+export const CONTENT_AUDIENCE_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                directionFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                weeklyFocusDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                biasCalibration: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "directionFit",
+                "weeklyFocusDiscipline",
+                "biasCalibration",
+                "evidenceDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

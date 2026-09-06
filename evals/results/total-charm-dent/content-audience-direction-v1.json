@@ -1,0 +1,48 @@
+{
+    "caseId": "total-charm-dent-content-audience-direction-v1",
+    "component": "contentAudienceDirection",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "directionFit": 2,
+            "weeklyFocusDiscipline": 2,
+            "biasCalibration": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "The candidate produces a coherent, well-grounded set of audience assignments that respect the Weekly Audience Focus (a1 primary, a2 secondary) and never reintroduce the excluded a3.\\n\\nDirection fit is strong and non-symmetric in a justified way:\\n- d1 (professional assessment before treatment, uncertainty reduction) → a1 primary with a2 secondary and moreExplanatory. This matches a1's communicationGoal (understanding assessment/diagnostics without predetermining treatment) and the direction's purpose of reducing uncertainty. moreExplanatory correctly fits a process-understanding/uncertainty job.\\n- d2 (why one problem has several treatment paths and what factors drive an individual recommendation) → a2 primary with a1 secondary and moreDecisionOriented. This is a clear comparison/recommendation-logic direction, aligning with a2's framing (clinical justification of recommendation, comparison of alternatives). Keeping a1 secondary is reasonable because uncertainty reduction still matters. moreDecisionOriented is appropriately used for evaluation/recommendation logic, not as a salesy shift.\\n- d3 (how specialist roles are divided in complex planning and why coordination matters) → a2 primary, no secondary, moreTrustFocused. The direction's purpose is explicitly about strengthening trust in coordination. While a3 is the natural continuity audience for this content, a3 is intentionally excluded from Weekly Focus, so choosing a2 (multidisciplinary coordination is in a2's preferredFraming) is a defensible in-boundary choice. moreTrustFocused fits the credibility/coordination/transparency job. Dropping the secondary here is correct rather than forced symmetry.\\n\\nBias choices are small, direction-specific adaptations inside the Envelope, not new tone/CTA/strategy rules. Evidence discipline is clean: no invented performance, demographic, conversion, or business claims. No authority violations — content directions, IDs, weekly objective, and focus are all preserved. The result gives downstream writers clear differentiation (who each direction is for, when the other audience matters, and how emphasis shifts) without forcing variation."
+    },
+    "output": {
+        "directions": [
+            {
+                "contentDirectionKey": "d1",
+                "primaryAudienceKey": "a1",
+                "secondaryAudienceKeys": [
+                    "a2"
+                ],
+                "bias": "moreExplanatory"
+            },
+            {
+                "contentDirectionKey": "d2",
+                "primaryAudienceKey": "a2",
+                "secondaryAudienceKeys": [
+                    "a1"
+                ],
+                "bias": "moreDecisionOriented"
+            },
+            {
+                "contentDirectionKey": "d3",
+                "primaryAudienceKey": "a2",
+                "secondaryAudienceKeys": [],
+                "bias": "moreTrustFocused"
+            }
+        ]
+    }
+}

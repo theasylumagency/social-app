@@ -8,7 +8,17 @@ const {
 } = require(
     "./total-charm-dent.weekly-audience-focus.fixture.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_CONTENT_AUDIENCE_DIRECTION_INPUT,
+} = require(
+    "./total-charm-dent.content-audience-direction.fixture.cjs",
+)
 
+const {
+    evaluateContentAudienceDirectionProposal,
+} = require(
+    "./content-audience-direction-deterministic-evaluator.cjs",
+)
 const {
     evaluateWeeklyAudienceFocusProposal,
 } = require(
@@ -574,6 +584,162 @@ test("weekly audience focus evaluator rejects unknown, duplicated, excessive and
         result.failures.some((failure) =>
             failure.includes(
                 "unknown secondary audienceKey",
+            ),
+        ),
+        true,
+    )
+})
+
+test("content audience direction evaluator accepts valid weekly-focus assignments", () => {
+    const output = {
+        directions: [
+            {
+                contentDirectionKey: "d1",
+                primaryAudienceKey: "a1",
+                secondaryAudienceKeys: [],
+                bias: "moreExplanatory",
+            },
+
+            {
+                contentDirectionKey: "d2",
+                primaryAudienceKey: "a2",
+                secondaryAudienceKeys: [
+                    "a1",
+                ],
+                bias:
+                    "moreDecisionOriented",
+            },
+
+            {
+                contentDirectionKey: "d3",
+                primaryAudienceKey: "a2",
+                secondaryAudienceKeys: [
+                    "a1",
+                ],
+                bias:
+                    "moreTrustFocused",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentAudienceDirectionProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_AUDIENCE_DIRECTION_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("content audience direction evaluator rejects missing, unknown, duplicated and out-of-focus assignments", () => {
+    const output = {
+        directions: [
+            {
+                id: "model-created-id",
+
+                contentDirectionKey: "d1",
+
+                primaryAudienceKey: "a3",
+
+                secondaryAudienceKeys: [
+                    "a3",
+                    "a1",
+                ],
+
+                bias: "maximum-conversion",
+            },
+
+            {
+                contentDirectionKey: "d1",
+
+                primaryAudienceKey: "a1",
+                secondaryAudienceKeys: [],
+                bias: "balanced",
+            },
+
+            {
+                contentDirectionKey:
+                    "unknown-direction",
+
+                primaryAudienceKey: "a1",
+                secondaryAudienceKeys: [],
+                bias: "balanced",
+            },
+        ],
+    }
+
+    const result =
+        evaluateContentAudienceDirectionProposal(
+            output,
+            TOTAL_CHARM_DENT_CONTENT_AUDIENCE_DIRECTION_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "outside Weekly Audience Focus: a3",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "duplicate contentDirectionKey: d1",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "unknown contentDirectionKey",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "missing contentDirectionKey: d2",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "missing contentDirectionKey: d3",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "invalid content audience bias",
             ),
         ),
         true,

@@ -91,3 +91,17 @@ export type WeeklyAudienceFocusGoldenEvaluation = {
     readonly regressions: readonly GoldenRegression[]
     readonly summary: string
 }
+
+export type ContentAudienceDirectionGoldenScores = {
+    readonly directionFit: GoldenScore
+    readonly weeklyFocusDiscipline: GoldenScore
+    readonly biasCalibration: GoldenScore
+    readonly evidenceDiscipline: GoldenScore
+    readonly managerialUsefulness: GoldenScore
+}
+
+export type ContentAudienceDirectionGoldenEvaluation = {
+    readonly scores: ContentAudienceDirectionGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}
