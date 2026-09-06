@@ -3,7 +3,17 @@ const {
 } = require(
     "./total-charm-dent.communication-profile.fixture.cjs",
 )
+const {
+    TOTAL_CHARM_DENT_WEEKLY_AUDIENCE_FOCUS_INPUT,
+} = require(
+    "./total-charm-dent.weekly-audience-focus.fixture.cjs",
+)
 
+const {
+    evaluateWeeklyAudienceFocusProposal,
+} = require(
+    "./weekly-audience-focus-deterministic-evaluator.cjs",
+)
 const {
     evaluateCommunicationProfileProposal,
 } = require(
@@ -475,6 +485,95 @@ test("communication envelope evaluator rejects authority-owned and invalid field
         result.failures.some((failure) =>
             failure.includes(
                 "salesPressure is invalid",
+            ),
+        ),
+        true,
+    )
+})
+
+test("weekly audience focus evaluator accepts a valid narrow focus", () => {
+    const output = {
+        focus: {
+            primaryAudienceKey: "a2",
+            secondaryAudienceKeys: [
+                "a1",
+            ],
+
+            rationale:
+                "მაღალი ნდობის გადაწყვეტილების წინაშე მყოფი აუდიტორია ყველაზე პირდაპირ უკავშირდება კვირის მიზანს, ხოლო პრობლემის მქონე მაგრამ ჯერ გაურკვეველი პაციენტები იმავე შეფასებისა და დაგეგმვის თემიდან სარგებელს მიიღებენ.",
+        },
+    }
+
+    const result =
+        evaluateWeeklyAudienceFocusProposal(
+            output,
+            TOTAL_CHARM_DENT_WEEKLY_AUDIENCE_FOCUS_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("weekly audience focus evaluator rejects unknown, duplicated, excessive and authority-owned selections", () => {
+    const output = {
+        focus: {
+            id: "model-created-id",
+
+            primaryAudienceKey: "a2",
+
+            secondaryAudienceKeys: [
+                "a2",
+                "unknown-audience",
+            ],
+
+            rationale: "Reason",
+        },
+    }
+
+    const result =
+        evaluateWeeklyAudienceFocusProposal(
+            output,
+            TOTAL_CHARM_DENT_WEEKLY_AUDIENCE_FOCUS_INPUT,
+        )
+
+    assert.equal(
+        result.passed,
+        false,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "at most one secondary",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "primary audience cannot also be secondary",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "unknown secondary audienceKey",
             ),
         ),
         true,

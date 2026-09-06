@@ -77,3 +77,17 @@ export type CommunicationEnvelopeGoldenEvaluation = {
     readonly regressions: readonly GoldenRegression[]
     readonly summary: string
 }
+
+export type WeeklyAudienceFocusGoldenScores = {
+    readonly objectiveAlignment: GoldenScore
+    readonly focusDiscipline: GoldenScore
+    readonly audienceFit: GoldenScore
+    readonly evidenceDiscipline: GoldenScore
+    readonly managerialUsefulness: GoldenScore
+}
+
+export type WeeklyAudienceFocusGoldenEvaluation = {
+    readonly scores: WeeklyAudienceFocusGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}

@@ -675,3 +675,105 @@ export const WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA = {
 
     required: ["focus"],
 } as const satisfies JsonSchema
+
+export const WEEKLY_AUDIENCE_FOCUS_GOLDEN_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+
+    properties: {
+        scores: {
+            type: "object",
+            additionalProperties: false,
+
+            properties: {
+                objectiveAlignment: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                focusDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                audienceFit: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+
+                managerialUsefulness: {
+                    type: "integer",
+                    enum: [0, 1, 2],
+                },
+            },
+
+            required: [
+                "objectiveAlignment",
+                "focusDiscipline",
+                "audienceFit",
+                "evidenceDiscipline",
+                "managerialUsefulness",
+            ],
+        },
+
+        regressions: {
+            type: "array",
+
+            items: {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                    category: {
+                        type: "string",
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type: "string",
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type: "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type: "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

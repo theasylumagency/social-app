@@ -1,0 +1,31 @@
+{
+    "caseId": "total-charm-dent-weekly-audience-focus-v1",
+    "component": "weeklyAudienceFocus",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "objectiveAlignment": 2,
+            "focusDiscipline": 2,
+            "audienceFit": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "The candidate selects a1 as primary, which is the clearest lens for the weekly objective of increasing trust among prospective patients facing uncertain or difficult treatment decisions by making the clinic's assessment and planning process more understandable. a1's communication goal—helping patients understand professional assessment, diagnostic purpose, and possible next steps without premature conclusions—maps directly to the objective's emphasis on reducing decision uncertainty and strengthening trust in the planning process. This is also consistent with the Communication Envelope (assumedKnowledge none, consultative CTA, low sales pressure, assess-before-act framing).\\n\\nThe secondary choice of a2 is well-justified and non-diluting: for the subset of genuinely difficult decisions, a2's clinical justification and transparent comparison of alternatives materially reinforce the same trust objective, and the rationale explicitly notes it does not displace a1's process-clarity lens. The exclusion of a3 is correctly reasoned—ongoing treatment continuity serves existing rather than prospective decision-uncertain patients, so it is less directly aligned this week.\\n\\nAll three audiences carry standard influence, so no influence rules are violated, and the selection is not driven by influence ranking. The rationale relies only on supplied audience context and objective; no fabricated performance data, demographics, urgency, or authority modifications are present. The output materially narrows the next planning decision by naming who the week is for, why the secondary matters, and why the remainder of the landscape is out of scope. No regressions identified."
+    },
+    "output": {
+        "focus": {
+            "primaryAudienceKey": "a1",
+            "secondaryAudienceKeys": [
+                "a2"
+            ],
+            "rationale": "ამ კვირის მიზანს ყველაზე პირდაპირ შეესაბამება a1: ამ აუდიტორიას სჭირდება პროფესიული შეფასების, დიაგნოსტიკის მიზნისა და შესაძლო შემდეგი ნაბიჯების გასაგებად დანახვა წინასწარი დასკვნების გარეშე. a2 მეორადად რელევანტურია რთული გადაწყვეტილებებისას, როდესაც ნდობას რეკომენდაციის დასაბუთება და ალტერნატივების გამჭვირვალე შედარება აძლიერებს; მისი ჩართვა თავსებადია საერთო საკომუნიკაციო ჩარჩოსთან და არ ცვლის a1-ის ძირითად, პროცესის სიცხადეზე ორიენტირებულ ხედვას. ფოკუსი შეგნებულად არ მოიცავს a3-ს, რადგან მიმდინარე მკურნალობის უწყვეტობა ამ კვირის პერსპექტიული პაციენტების გადაწყვეტილების გაურკვევლობის შემცირების მიზანს ნაკლებად პირდაპირ ემსახურება."
+        }
+    }
+}
