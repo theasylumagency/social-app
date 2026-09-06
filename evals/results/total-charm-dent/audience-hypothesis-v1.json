@@ -1,0 +1,135 @@
+{
+    "caseId": "total-charm-dent-v1",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "distinctness": 2,
+            "businessSpecificity": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2,
+            "founderImpact": 2
+        },
+        "regressions": [],
+        "summary": "The candidate produces three segments that represent materially different decision situations rather than demographic slices: (1) problem-aware patients who have a complaint but no clarity on required treatment, (2) high-trust provider-comparison patients evaluating complex multi-step treatment, and (3) existing patients mid-way through multi-stage treatment needing continuity and coordination. These are distinct buying/decision situations mapped to different decision stages (problemAware, providerComparison, existingCustomer), so DISTINCTNESS = 2.\n\nBUSINESS SPECIFICITY = 2: the segmentation is clearly shaped by this clinic's multi-disciplinary, diagnostic and digital capabilities and by the high-consideration, multi-step nature of the treatments. Offers are correctly mapped (implantology/orthodontics/veneers to the comparison segment; therapy/periodontology to the problem-aware and continuity segments). It could not be lifted wholesale onto an unrelated business. It also respects the stated constraints — no invented demographics, no clinical outcome claims, no price-positioning inference.\n\nEVIDENCE DISCIPLINE = 2: each segment cleanly separates known facts (via evidenceKeys), explicit assumptions, and stated uncertainty. Rationales openly note that complaint frequency, patient behavior, comparison criteria, and return/coordination realities are unknown. Confidence is appropriately capped at \"reasonable\" for hypotheses inferred from business structure rather than direct audience evidence — exactly correct calibration; no overconfidence.\n\nMANAGERIAL USEFULNESS = 2: a social manager could build genuinely different content tracks — reassurance/diagnostic explainers for problem-aware patients, competence/decision-support and process-transparency content for comparison-stage patients, and continuity/coordination messaging for active patients. The mainQuestions and likelyBarriers give directly usable content angles.\n\nFOUNDER IMPACT = 2: a dental founder would recognize these as real, operationally relevant patient situations (undecided complaint holders, comparison shoppers for complex work, mid-treatment continuity) and gain a clearer framework for tailoring communication than a generic marketing persona set. Grounded, accurate, and decision-sharpening.\n\nNo fabricated facts, authority violations, or overconfident hypotheses were found; no regressions."
+    },
+    "output": {
+        "segments": [
+            {
+                "name": "პრობლემის მქონე, მაგრამ საჭირო მკურნალობაში გაურკვეველი პაციენტები",
+                "buyingSituation": "ადამიანს აქვს სტომატოლოგიური პრობლემა ან ჩივილი, თუმცა ჯერ არ იცის, რა ტიპის გამოკვლევა ან მკურნალობა სჭირდება.",
+                "currentNeed": "პრობლემის პროფესიული შეფასება, დიაგნოზის გასაგებად ახსნა და შემდგომი ნაბიჯების განსაზღვრა.",
+                "relevantOffers": [
+                    "Diagnostics",
+                    "Therapy",
+                    "Periodontology",
+                    "Digital modelling"
+                ],
+                "mainQuestions": [
+                    "რა არის პრობლემის მიზეზი?",
+                    "რომელი კვლევა ან მკურნალობა მჭირდება?",
+                    "რა ეტაპებისგან შედგება შემოთავაზებული გეგმა?",
+                    "საჭიროა თუ არა სხვა სტომატოლოგიური მიმართულების ჩართვა?"
+                ],
+                "likelyBarriers": [
+                    "ტექნიკური ინფორმაციის გაგების სირთულე",
+                    "არასწორი მკურნალობის არჩევის შიში",
+                    "მკურნალობის მოცულობასა და ეტაპებთან დაკავშირებული გაურკვევლობა",
+                    "კლინიკის მიმართ ნდობის ჩამოყალიბების საჭიროება"
+                ],
+                "decisionStage": "problemAware",
+                "evidenceKeys": [
+                    "e1",
+                    "e2"
+                ],
+                "rationale": "მხარდაჭერილია კლინიკის მრავალპროფილური, დიაგნოსტიკური და ციფრული შესაძლებლობებით. აქედან დასაბუთებულად შეიძლება ვივარაუდოთ, რომ ნაწილი კლინიკას კონკრეტული ჩივილით, მაგრამ მკურნალობის ტიპზე საბოლოო გადაწყვეტილების გარეშე მიმართავს. კონკრეტული ჩივილებისა და პაციენტთა ქცევის სიხშირე უცნობია.",
+                "assumptions": [
+                    "პაციენტების ნაწილს კლინიკასთან დაკავშირებამდე ზუსტად განსაზღვრული მკურნალობა არ აქვს არჩეული.",
+                    "დიაგნოსტიკისა და მკაფიო განმარტების საჭიროება სხვადასხვა შეთავაზებას შეიძლება კვეთდეს."
+                ],
+                "confidenceBand": "reasonable"
+            },
+            {
+                "name": "მაღალი ნდობის საჭიროების მქონე პაციენტები, რომლებიც კლინიკებს ადარებენ",
+                "buyingSituation": "ადამიანი განიხილავს ტექნიკურად რთულ ან მრავალეტაპიან მკურნალობას და საბოლოო არჩევანამდე აფასებს კლინიკის პროფესიულ კომპეტენციას, დიაგნოსტიკურ შესაძლებლობებსა და გადაწყვეტილების დასაბუთებას.",
+                "currentNeed": "სანდო პროვაიდერის არჩევა და მკურნალობის ვარიანტების, ეტაპებისა და კლინიკური მიდგომის მკაფიოდ გაგება.",
+                "relevantOffers": [
+                    "Orthodontics",
+                    "Implantology",
+                    "Aesthetic dentistry",
+                    "Ceramic veneers",
+                    "Diagnostics",
+                    "Digital modelling"
+                ],
+                "mainQuestions": [
+                    "რატომ არის რეკომენდებული კონკრეტული მკურნალობის გზა?",
+                    "რა ეტაპებია საჭირო გადაწყვეტილებიდან მკურნალობის დასრულებამდე?",
+                    "როგორ გამოიყენება დიაგნოსტიკა და ციფრული დაგეგმვა?",
+                    "შეუძლია თუ არა კლინიკას სხვადასხვა სპეციალისტის ჩართულობის კოორდინაცია?",
+                    "რა ალტერნატივები არსებობს?"
+                ],
+                "likelyBarriers": [
+                    "პროვაიდერის არჩევასთან დაკავშირებული მაღალი აღქმული რისკი",
+                    "ტექნიკური სირთულე და არჩევანის გაურკვევლობა",
+                    "რამდენიმე კლინიკის ან მიდგომის შედარების საჭიროება",
+                    "არასაკმარისად მკაფიო მკურნალობის გეგმა"
+                ],
+                "decisionStage": "providerComparison",
+                "evidenceKeys": [
+                    "e1",
+                    "e2",
+                    "e3",
+                    "e4"
+                ],
+                "rationale": "მხარდაჭერილია მრავალპროფილური მომსახურებით, დიაგნოსტიკური და ციფრული შესაძლებლობებით, ასევე იმ ფაქტით, რომ შეთავაზებების ნაწილი მრავალეტაპიან გადაწყვეტილებას მოითხოვს. კლინიკების შედარების ზუსტი კრიტერიუმები და პაციენტთა პრიორიტეტების თანმიმდევრობა პირდაპირი აუდიტორიული მონაცემებით დადასტურებული არ არის.",
+                "assumptions": [
+                    "რთული ან მრავალეტაპიანი მკურნალობის მაძიებელთა ნაწილი გადაწყვეტილებამდე ერთზე მეტ პროვაიდერს აფასებს.",
+                    "მკაფიო პროფესიული ახსნა და გადაწყვეტილების მხარდაჭერა არჩევანზე გავლენას ახდენს."
+                ],
+                "confidenceBand": "reasonable"
+            },
+            {
+                "name": "მიმდინარე მრავალეტაპიანი მკურნალობის პაციენტები",
+                "buyingSituation": "პაციენტს უკვე დაწყებული აქვს მკურნალობა და სჭირდება დაგეგმილი ეტაპების, შემდგომი ვიზიტებისა და სხვადასხვა მიმართულების ჩართულობის თანმიმდევრულად გაგრძელება.",
+                "currentNeed": "მკურნალობის უწყვეტობა, მიმდინარე გეგმის გაგება და შემდეგი ეტაპების კოორდინაცია.",
+                "relevantOffers": [
+                    "Therapy",
+                    "Orthodontics",
+                    "Implantology",
+                    "Periodontology",
+                    "Diagnostics",
+                    "Digital modelling"
+                ],
+                "mainQuestions": [
+                    "რა არის მკურნალობის შემდეგი ეტაპი?",
+                    "რატომ არის საჭირო დამატებითი კვლევა ან სხვა სპეციალისტის ჩართვა?",
+                    "როგორ უკავშირდება მიმდინარე პროცედურა მკურნალობის მთლიან გეგმას?",
+                    "რა გადაწყვეტილებაა საჭირო ამ ეტაპზე ჩემგან?"
+                ],
+                "likelyBarriers": [
+                    "გრძელვადიანი გეგმის ან შემდეგი ნაბიჯების გაურკვევლობა",
+                    "სხვადასხვა მიმართულებას შორის კოორდინაციის საჭიროება",
+                    "მკურნალობის გაგრძელების მიმართ ნდობის შენარჩუნება",
+                    "ტექნიკური ინფორმაციის გასაგებად მიწოდების საჭიროება"
+                ],
+                "decisionStage": "existingCustomer",
+                "evidenceKeys": [
+                    "e1",
+                    "e2",
+                    "e4"
+                ],
+                "rationale": "მრავალპროფილური და მრავალეტაპიანი მომსახურებები მკურნალობის უწყვეტობის საჭიროებას ლოგიკურად ქმნის. თუმცა არსებული პაციენტების რეალური გამოცდილება, დაბრუნების სიხშირე და კოორდინაციის კონკრეტული სირთულეები მოწოდებულ მასალაში არ არის აღწერილი.",
+                "assumptions": [
+                    "კლინიკაში შეთავაზებული მკურნალობების ნაწილი რამდენიმე ვიზიტსა და ეტაპს მოიცავს.",
+                    "ზოგ შემთხვევაში ერთზე მეტი სტომატოლოგიური მიმართულების ჩართვაა საჭირო."
+                ],
+                "confidenceBand": "reasonable"
+            }
+        ]
+    }
+}

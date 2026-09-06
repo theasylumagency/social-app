@@ -50,3 +50,30 @@ export type GoldenEvaluationResult = {
     readonly summary: string
 }
 
+export type CommunicationProfileGoldenScores = {
+    readonly audienceFit: GoldenScore
+    readonly brandPreservation: GoldenScore
+    readonly differentiation: GoldenScore
+    readonly evidenceDiscipline: GoldenScore
+    readonly managerialUsefulness: GoldenScore
+}
+
+export type CommunicationProfileGoldenEvaluation = {
+    readonly scores: CommunicationProfileGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}
+
+export type CommunicationEnvelopeGoldenScores = {
+    readonly brandPreservation: GoldenScore
+    readonly crossAudienceFit: GoldenScore
+    readonly synthesisQuality: GoldenScore
+    readonly evidenceDiscipline: GoldenScore
+    readonly managerialUsefulness: GoldenScore
+}
+
+export type CommunicationEnvelopeGoldenEvaluation = {
+    readonly scores: CommunicationEnvelopeGoldenScores
+    readonly regressions: readonly GoldenRegression[]
+    readonly summary: string
+}

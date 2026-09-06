@@ -1,3 +1,25 @@
+const {
+    TOTAL_CHARM_DENT_COMMUNICATION_PROFILE_INPUT,
+} = require(
+    "./total-charm-dent.communication-profile.fixture.cjs",
+)
+
+const {
+    evaluateCommunicationProfileProposal,
+} = require(
+    "./communication-profile-deterministic-evaluator.cjs",
+)
+const {
+    TOTAL_CHARM_DENT_COMMUNICATION_ENVELOPE_INPUT,
+} = require(
+    "./total-charm-dent.communication-envelope.fixture.cjs",
+)
+
+const {
+    evaluateCommunicationEnvelopeProposal,
+} = require(
+    "./communication-envelope-deterministic-evaluator.cjs",
+)
 const assert = require("node:assert/strict")
 const test = require("node:test")
 
@@ -150,6 +172,310 @@ test("audience without evidence must remain tentative and explicit about assumpt
     assert.equal(
         result.failures.some((failure) =>
             failure.includes("state its assumptions"),
+        ),
+        true,
+    )
+})
+
+test("communication profile evaluator accepts one profile per requested audience", () => {
+    const profiles =
+        TOTAL_CHARM_DENT_COMMUNICATION_PROFILE_INPUT.audiences.map(
+            (audience) => ({
+                audienceKey: audience.audienceKey,
+
+                communicationGoal:
+                    "დაეხმაროს აუდიტორიას გადაწყვეტილების უკეთ გაგებაში.",
+
+                toneAdjustments: [
+                    "შეინარჩუნოს მშვიდი და პროფესიული ტონი",
+                ],
+
+                preferredFraming: [
+                    "პრობლემა → ახსნა → შესაძლო შემდეგი ნაბიჯი",
+                ],
+
+                usefulContentAngles: [
+                    "პროცესის გასაგებად ახსნა",
+                ],
+
+                assumedKnowledge: "basic",
+                explanationDepth: "balanced",
+
+                trustMechanisms: [
+                    "პროცესის სიცხადე",
+                    "პროფესიული ახსნა",
+                ],
+
+                ctaStyle: "consultative",
+
+                avoid: [
+                    "ზედმეტი დაპირებები",
+                    "ზეწოლაზე დაფუძნებული მოწოდება",
+                ],
+
+                rationale:
+                    "პროფილი აუდიტორიის გადაწყვეტილების სიტუაციას ერგება Brand Voice-ის შეცვლის გარეშე.",
+            }),
+        )
+
+    const result =
+        evaluateCommunicationProfileProposal(
+            { profiles },
+            TOTAL_CHARM_DENT_COMMUNICATION_PROFILE_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("communication profile evaluator rejects unknown, duplicate, missing, and authority-owned audience data", () => {
+    const output = {
+        profiles: [
+            {
+                id: "model-created-id",
+
+                audienceKey: "a1",
+
+                communicationGoal: "Goal",
+                toneAdjustments: ["Adjustment"],
+                preferredFraming: ["Framing"],
+                usefulContentAngles: ["Angle"],
+
+                assumedKnowledge: "basic",
+                explanationDepth: "balanced",
+
+                trustMechanisms: ["Trust"],
+                ctaStyle: "consultative",
+
+                avoid: ["Avoid"],
+                rationale: "Reason",
+            },
+
+            {
+                audienceKey: "a1",
+
+                communicationGoal: "Goal",
+                toneAdjustments: ["Adjustment"],
+                preferredFraming: ["Framing"],
+                usefulContentAngles: ["Angle"],
+
+                assumedKnowledge: "basic",
+                explanationDepth: "balanced",
+
+                trustMechanisms: ["Trust"],
+                ctaStyle: "consultative",
+
+                avoid: ["Avoid"],
+                rationale: "Reason",
+            },
+
+            {
+                audienceKey: "unknown-audience",
+
+                communicationGoal: "Goal",
+                toneAdjustments: ["Adjustment"],
+                preferredFraming: ["Framing"],
+                usefulContentAngles: ["Angle"],
+
+                assumedKnowledge: "basic",
+                explanationDepth: "balanced",
+
+                trustMechanisms: ["Trust"],
+                ctaStyle: "consultative",
+
+                avoid: ["Avoid"],
+                rationale: "Reason",
+            },
+        ],
+    }
+
+    const result =
+        evaluateCommunicationProfileProposal(
+            output,
+            TOTAL_CHARM_DENT_COMMUNICATION_PROFILE_INPUT,
+        )
+
+    assert.equal(result.passed, false)
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes("authority field: id"),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes("duplicates audienceKey: a1"),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "unknown audienceKey: unknown-audience",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "missing profile for audienceKey: a2",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "missing profile for audienceKey: a3",
+            ),
+        ),
+        true,
+    )
+})
+test("communication envelope evaluator accepts a valid envelope", () => {
+    const output = {
+        envelope: {
+            complexity:
+                "plainWithProfessionalDepth",
+
+            assumedKnowledge: "none",
+            explanationDepth: "balanced",
+
+            toneRange: [
+                "calm",
+                "competent",
+                "clear",
+                "restrained",
+            ],
+
+            framingRules: [
+                "Explain why before asking for action.",
+                "Connect each step to the larger process.",
+            ],
+
+            preferredStructures: [
+                "question → explanation → next step",
+            ],
+
+            terminologyRules: [
+                "Explain professional terminology when used.",
+            ],
+
+            proofStyle: [
+                "Use specific real proof only when supplied.",
+            ],
+
+            ctaStyle: "consultative",
+            salesPressure: "low",
+
+            inclusivityRules: [
+                "Do not assume specialist knowledge.",
+                "Provide enough context for a first-time reader.",
+            ],
+
+            trustMechanisms: [
+                "process clarity",
+                "professional explanation",
+                "specificity",
+            ],
+
+            avoid: [
+                "unsupported superiority claims",
+                "guaranteed outcomes",
+                "pressure-based language",
+            ],
+
+            rationale:
+                "The envelope preserves the calm professional brand voice while remaining accessible across audiences with different levels of knowledge.",
+        },
+    }
+
+    const result =
+        evaluateCommunicationEnvelopeProposal(
+            output,
+            TOTAL_CHARM_DENT_COMMUNICATION_ENVELOPE_INPUT,
+        )
+
+    assert.deepEqual(result, {
+        passed: true,
+        failures: [],
+    })
+})
+
+test("communication envelope evaluator rejects authority-owned and invalid fields", () => {
+    const output = {
+        envelope: {
+            id: "model-created-id",
+
+            complexity: "super-technical",
+            assumedKnowledge: "everyone-knows",
+            explanationDepth: "maximum",
+
+            toneRange: ["calm"],
+            framingRules: ["Rule"],
+            preferredStructures: ["Structure"],
+            terminologyRules: ["Terminology"],
+            proofStyle: ["Proof"],
+
+            ctaStyle: "aggressive",
+            salesPressure: "extreme",
+
+            inclusivityRules: ["Rule"],
+            trustMechanisms: ["Trust"],
+            avoid: ["Avoid"],
+
+            rationale: "Reason",
+        },
+    }
+
+    const result =
+        evaluateCommunicationEnvelopeProposal(
+            output,
+            TOTAL_CHARM_DENT_COMMUNICATION_ENVELOPE_INPUT,
+        )
+
+    assert.equal(result.passed, false)
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "authority field: id",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "complexity is invalid",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "ctaStyle is invalid",
+            ),
+        ),
+        true,
+    )
+
+    assert.equal(
+        result.failures.some((failure) =>
+            failure.includes(
+                "salesPressure is invalid",
+            ),
         ),
         true,
     )

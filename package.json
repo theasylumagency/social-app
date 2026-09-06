@@ -18,6 +18,8 @@
     "test:auth": "node --env-file=.env.local --import tsx --test tests/auth.integration.test.mts",
     "auth:init-local": "node scripts/auth/init-local.mjs",
     "eval:golden": "node --env-file=.env.local --import tsx evals/golden/cli.ts",
+    "eval:golden:profile": "node --env-file=.env.local --import tsx evals/golden/communication-profile-cli.ts",
+    "eval:golden:envelope": "node --env-file=.env.local --import tsx evals/golden/communication-envelope-cli.ts",
     "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {

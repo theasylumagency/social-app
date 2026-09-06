@@ -1,0 +1,103 @@
+{
+    "caseId": "total-charm-dent-communication-envelope-v1",
+    "component": "communicationEnvelope",
+    "passed": true,
+    "candidateModel": "gpt-5.6-sol",
+    "judgeModel": "claude-opus-4-8",
+    "deterministic": {
+        "passed": true,
+        "failures": []
+    },
+    "semantic": {
+        "scores": {
+            "brandPreservation": 2,
+            "crossAudienceFit": 2,
+            "synthesisQuality": 2,
+            "evidenceDiscipline": 2,
+            "managerialUsefulness": 2
+        },
+        "regressions": [],
+        "summary": "This Communication Envelope performs strong, genuine synthesis rather than mechanical merging of the three supplied profiles. It correctly identifies a conservative shared corridor and defends it in the rationale.\\n\\nBRAND PRESERVATION (2): The toneRange stays fully inside the supplied Brand Voice (calm, competent, clear, confident, restrained) and adds only tonal descriptors already present in profile toneAdjustments (მკაფიო, თანმიმდევრული, თავშეკავებულად თავდაჯერებული). CTA is consultative and salesPressure is low, which respects the brand's restrained premium character and the anti-pressure constraints. No exaggeration or weakening of voice.\\n\\nCROSS-AUDIENCE FIT (2): The envelope safely accommodates the unaware/no-knowledge first-assessment seeker (a1), the comparison-oriented basic-knowledge patient (a2), and the informed in-treatment patient (a3). Inclusivity rules explicitly serve both first-time readers and ongoing-treatment patients, and layer deep detail so non-specialists retain the core message. It assumes no prior knowledge (accessible default) while leaving room for deeper clinical framing where justified.\\n\\nSYNTHESIS QUALITY (2): It makes correct strategic conservative choices: assumedKnowledge=none (lowest, safest), explanationDepth=balanced (not the deepest a2 value), ctaStyle=consultative (softer than a2/a3 directWhenJustified). It preserves meaningful profile-specific structures (assessment path, option comparison, treatment-continuity sequence, specialist coordination) as adaptable preferred structures rather than averaging or erasing them. The rationale explicitly notes more direct CTAs can be adapted later per profile.\\n\\nEVIDENCE DISCIPLINE (2): No fabricated demographics, proof, statistics, testimonials, guarantees, pricing, or certifications. Proof rules are conditional ('if real evidence exists') and echo the supplied constraints and avoid-lists. Generalizations are directly supported by the profiles.\\n\\nMANAGERIAL USEFULNESS (2): Provides concrete, operational defaults across complexity, assumed knowledge, explanation depth, framing, recurring structures, terminology, proof, CTA, sales pressure, trust, and exclusions. A planner/writer could use it directly as an operating constraint without eliminating audience-level adaptation.\\n\\nNo authority violations: no IDs, profiles, or protected fields were altered or recreated."
+    },
+    "output": {
+        "envelope": {
+            "complexity": "technicalWhenExplained",
+            "assumedKnowledge": "none",
+            "explanationDepth": "balanced",
+            "toneRange": [
+                "მშვიდი",
+                "კომპეტენტური",
+                "მკაფიო",
+                "თავშეკავებულად თავდაჯერებული",
+                "თანმიმდევრული"
+            ],
+            "framingRules": [
+                "ჯერ განმარტეთ საკითხის ან სიმპტომის პროფესიული შეფასების საჭიროება და მხოლოდ შემდეგ აღწერეთ შესაძლო მოქმედება.",
+                "დიაგნოსტიკა წარმოაჩინეთ როგორც მდგომარეობის გარკვევისა და გადაწყვეტილების დასაბუთების საფუძველი და არა წინასწარ განსაზღვრული მკურნალობის ფორმალობა.",
+                "მკაფიოდ განასხვავეთ ზოგადი ინფორმაცია, შეფასებით დასადგენი გარემოებები და ინდივიდუალური რეკომენდაცია.",
+                "შესაძლო მკურნალობის გზა აღწერეთ ეტაპებად, წინასწარი დიაგნოზისა და შედეგის დაპირების გარეშე.",
+                "რეკომენდაციის განხილვისას ახსენით მისი კლინიკური ლოგიკა, შესაძლო ალტერნატივები და შესაბამისი შეზღუდვები.",
+                "დიაგნოსტიკური ან ციფრული შესაძლებლობები დაუკავშირეთ შეფასების, დაგეგმვის ან კოორდინაციის ფუნქციას და არა გარანტირებულ შედეგს.",
+                "მრავალდისციპლინური მიდგომისას განმარტეთ თითოეული სპეციალისტის როლი და მისი კავშირი საერთო გეგმასთან.",
+                "მიმდინარე მკურნალობაზე საუბრისას დააკავშირეთ დასრულებული, მიმდინარე და შემდეგი ეტაპები.",
+                "მოქმედების მოწოდებამდე აუხსენით მკითხველს, რატომ შეიძლება იყოს პროფესიული შეფასება ან შემდეგი ნაბიჯი შესაბამისი."
+            ],
+            "preferredStructures": [
+                "საკითხი ან სიმპტომი → პროფესიული შეფასების მიზანი → შესაძლო შემდეგი ნაბიჯი",
+                "კონტექსტი → დიაგნოსტიკური ახსნა → გადაწყვეტილებისთვის მნიშვნელობა",
+                "მდგომარეობა → შესაძლო ვარიანტები → შედარების კრიტერიუმები → ინდივიდუალური რეკომენდაციის საჭიროება",
+                "დასრულებული ეტაპი → მიმდინარე ეტაპი → შემდეგი ეტაპი → საერთო გეგმასთან კავშირი",
+                "კლინიკური საჭიროება → შესაბამისი სპეციალისტების როლები → კოორდინირებული პროცესი",
+                "კითხვა → მკაფიო პროფესიული პასუხი → შეზღუდვა ან გაურკვევლობა → საკონსულტაციო ნაბიჯი"
+            ],
+            "terminologyRules": [
+                "პროფესიული და კლინიკური ტერმინი პირველად გამოყენებისას ახსენით მარტივი, ზუსტი ენით.",
+                "ტერმინოლოგია გამოიყენეთ მხოლოდ მაშინ, როცა ის აუმჯობესებს მდგომარეობის, პროცესის ან არჩევანის გაგებას.",
+                "ტექნოლოგიის ან პროცედურის დასახელებას დაურთეთ მისი ფუნქცია დიაგნოსტიკაში, დაგეგმვაში ან მკურნალობის პროცესში.",
+                "არ გამოიყენოთ ტექნიკური ენა კომპეტენტურობის საჩვენებლად, თუ ის მკითხველისთვის პრაქტიკულ მნიშვნელობას არ ამატებს.",
+                "ერთი და იმავე ცნების აღსანიშნავად შეინარჩუნეთ თანმიმდევრული ტერმინოლოგია.",
+                "არ წარმოაჩინოთ ზოგადი საგანმანათლებლო განმარტება ინდივიდუალურ დიაგნოზად ან მკურნალობის რეკომენდაციად."
+            ],
+            "proofStyle": [
+                "რეალური მტკიცებულების არსებობისას ზუსტად მიუთითეთ, რას ადასტურებს იგი და რას არ ადასტურებს.",
+                "კლინიკური რეკომენდაციის დასაბუთება აჩვენეთ შეფასების ლოგიკით, შესაბამისი ფაქტორებითა და ვარიანტების შედარებით.",
+                "დიაგნოსტიკური და ციფრული შესაძლებლობები აღწერეთ მათი კონკრეტული ფუნქციით და არა აბსტრაქტული უპირატესობის მტკიცებით.",
+                "მრავალდისციპლინური ექსპერტიზა წარმოაჩინეთ როლებისა და კოორდინაციის სიცხადით.",
+                "შეზღუდვები, ინდივიდუალური განსხვავებები და გაურკვევლობა აღნიშნეთ გამჭვირვალედ.",
+                "არ გამოიყენოთ დაუდასტურებელი შედეგები, სტატისტიკა, აღიარებები, ჩვენებები, გარანტიები ან უპირატესობის პრეტენზიები."
+            ],
+            "ctaStyle": "consultative",
+            "salesPressure": "low",
+            "inclusivityRules": [
+                "არ ჩათვალოთ, რომ მკითხველს აქვს სტომატოლოგიური ან ტექნიკური ცოდნა.",
+                "პირველად მკითხველს მიაწოდეთ საკმარისი კონტექსტი საკითხის, შეფასების მიზნისა და შესაძლო პროცესის გასაგებად.",
+                "ინფორმაცია ისე ააგეთ, რომ სასარგებლო იყოს როგორც პირველადი შეფასების მაძიებლისთვის, ისე მიმდინარე მკურნალობაში ჩართული პაციენტისთვის.",
+                "არ წარმოაჩინოთ ყველა მკითხველი მკურნალობის დასაწყებად მზად მყოფად.",
+                "შესთავაზეთ გაგებისა და გადაწყვეტილების მხარდაჭერა დაუყოვნებელი არჩევანის მოთხოვნის ნაცვლად.",
+                "ღრმა პროფესიული დეტალი მოაწყვეთ მკაფიო ფენებად, რათა ძირითადი აზრი არასპეციალისტისთვისაც ხელმისაწვდომი დარჩეს."
+            ],
+            "trustMechanisms": [
+                "პროცესისა და ეტაპების სიცხადე",
+                "პროფესიული და კლინიკურად დასაბუთებული ახსნა",
+                "დიაგნოსტიკის მიზნის მკაფიო განმარტება",
+                "ვარიანტებისა და შეზღუდვების გამჭვირვალე შედარება",
+                "მიმდინარე და შემდეგი ნაბიჯების თანმიმდევრულობა",
+                "სპეციალისტების როლებისა და კოორდინაციის სიცხადე",
+                "სპეციფიკურობა დაუდასტურებელი დაპირებების გარეშე",
+                "რეალური მტკიცებულების ზუსტი და შეზღუდული გამოყენება, თუ ის მოწოდებულია"
+            ],
+            "avoid": [
+                "წინასწარი ან დისტანციური დიაგნოზის შთაბეჭდილება",
+                "გარანტირებული კლინიკური შედეგები ან ტექნოლოგიის შედეგის გარანტიად წარმოჩენა",
+                "უსაფუძვლო უპირატესობის მტკიცება ან კონკურენტების დაკნინება",
+                "დიაგნოსტიკისა და ინდივიდუალური შეფასების გარეშე მკურნალობის წინასწარ განსაზღვრა",
+                "აუხსნელი პროფესიული ჟარგონი ან ზედმეტი ტექნიკური დატვირთვა",
+                "აგრესიული, გადაუდებლობაზე ხელოვნურად დაფუძნებული ან ზეწოლის შემცველი მოწოდებები",
+                "მიმდინარე ეტაპისგან მოწყვეტილი გაყიდვითი შეტყობინებები",
+                "ფრაგმენტული კომუნიკაცია, რომელშიც გაურკვეველია საერთო გეგმა, სპეციალისტების როლები ან შემდეგი ნაბიჯი",
+                "ფასის, შედეგის, მტკიცებულების, გამოცდილების, ჩვენების ან გარანტიის შესახებ არარსებული ინფორმაციის დამატება"
+            ],
+            "rationale": "საერთო კომუნიკაცია უნდა დარჩეს მშვიდი, მკაფიო და პროფესიულად თავდაჯერებული, ხოლო კლინიკური სიღრმე ხელმისაწვდომი გახადოს ახსნილი ტერმინებით. რადგან ყველა პროფილი მნიშვნელოვნად უნდა იყოს გათვალისწინებული, კონვერტი აერთიანებს პირველადი შეფასების სიცხადეს, ვარიანტების დასაბუთებულ შედარებასა და მკურნალობის უწყვეტობის ჩვენებას. საკონსულტაციო CTA და დაბალი გაყიდვითი წნეხი ყველაზე უსაფრთხო საერთო ნაგულისხმევია; უფრო პირდაპირი მოქმედების მოწოდება შეიძლება მოგვიანებით განისაზღვროს კონკრეტული აუდიტორიისა და კონტექსტის მიხედვით."
+        }
+    }
+}
