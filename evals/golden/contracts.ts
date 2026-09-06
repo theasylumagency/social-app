@@ -223,3 +223,50 @@ export type ContentWriterGoldenEvaluation = {
     readonly summary:
     string
 }
+export type ContentRepairGoldenScores = {
+    /**
+     * Did the repair actually fix the identified defect?
+     */
+    readonly repairEffectiveness:
+    GoldenScore
+
+    /**
+     * Did the repair preserve everything that was supposed
+     * to remain intact and avoid unnecessary rewriting?
+     */
+    readonly preservationDiscipline:
+    GoldenScore
+
+    /**
+     * Does the repaired copy remain fully supported,
+     * without invented or strengthened claims?
+     */
+    readonly evidenceDiscipline:
+    GoldenScore
+
+    /**
+     * Did the repair stay inside the original Brief,
+     * Execution Spec, CTA intent, audience, and other
+     * upstream authority?
+     */
+    readonly strategyFidelity:
+    GoldenScore
+
+    /**
+     * Is the repaired result natural, coherent,
+     * publishable communication?
+     */
+    readonly editorialQuality:
+    GoldenScore
+}
+
+export type ContentRepairGoldenEvaluation = {
+    readonly scores:
+    ContentRepairGoldenScores
+
+    readonly regressions:
+    readonly GoldenRegression[]
+
+    readonly summary:
+    string
+}

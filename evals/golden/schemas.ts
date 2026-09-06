@@ -1992,3 +1992,135 @@ export const CONTENT_WRITER_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
+export const CONTENT_REPAIR_GOLDEN_EVALUATION_SCHEMA = {
+    type:
+        "object",
+
+    additionalProperties:
+        false,
+
+    properties: {
+        scores: {
+            type:
+                "object",
+
+            additionalProperties:
+                false,
+
+            properties: {
+                repairEffectiveness: {
+                    type:
+                        "integer",
+
+                    enum:
+                        [0, 1, 2],
+                },
+
+                preservationDiscipline: {
+                    type:
+                        "integer",
+
+                    enum:
+                        [0, 1, 2],
+                },
+
+                evidenceDiscipline: {
+                    type:
+                        "integer",
+
+                    enum:
+                        [0, 1, 2],
+                },
+
+                strategyFidelity: {
+                    type:
+                        "integer",
+
+                    enum:
+                        [0, 1, 2],
+                },
+
+                editorialQuality: {
+                    type:
+                        "integer",
+
+                    enum:
+                        [0, 1, 2],
+                },
+            },
+
+            required: [
+                "repairEffectiveness",
+                "preservationDiscipline",
+                "evidenceDiscipline",
+                "strategyFidelity",
+                "editorialQuality",
+            ],
+        },
+
+        regressions: {
+            type:
+                "array",
+
+            items: {
+                type:
+                    "object",
+
+                additionalProperties:
+                    false,
+
+                properties: {
+                    category: {
+                        type:
+                            "string",
+
+                        enum: [
+                            "STRUCTURAL",
+                            "EVIDENCE",
+                            "SEGMENTATION",
+                            "BUSINESS_SPECIFICITY",
+                            "AUTHORITY",
+                            "BRAND_PRESERVATION",
+                            "CROSS_AUDIENCE_SYNTHESIS",
+                            "MANAGERIAL_USEFULNESS",
+                            "GENERIC_AI_OUTPUT",
+                        ],
+                    },
+
+                    severity: {
+                        type:
+                            "string",
+
+                        enum: [
+                            "critical",
+                            "major",
+                            "minor",
+                        ],
+                    },
+
+                    explanation: {
+                        type:
+                            "string",
+                    },
+                },
+
+                required: [
+                    "category",
+                    "severity",
+                    "explanation",
+                ],
+            },
+        },
+
+        summary: {
+            type:
+                "string",
+        },
+    },
+
+    required: [
+        "scores",
+        "regressions",
+        "summary",
+    ],
+} as const satisfies JsonSchema

@@ -24,7 +24,7 @@ export type TaskId = DomainId<"TaskId">
 export type ContentId = DomainId<"ContentId">
 export type ReviewItemId = DomainId<"ReviewItemId">
 export type IngestionRunId = DomainId<"IngestionRunId">
-
+export type ActorId = DomainId<"ActorId">
 // Time / immutable capture
 export type IsoDate = DomainScalar<string, "IsoDate">
 export type IsoDateTime = DomainScalar<string, "IsoDateTime">

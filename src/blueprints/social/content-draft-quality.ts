@@ -140,8 +140,19 @@ export type SocialContentDraftQualityRun = {
 // Provenance validation
 // -----------------------------------------------------------------------------
 
-function assertMatchingProvenance(
-    input: EvaluateSocialContentDraftQualityInput,
+export type SocialContentDraftQualityProvenanceInput = {
+    readonly draft:
+    SocialContentDraft
+
+    readonly contentBrief:
+    ContentBrief
+
+    readonly contentExecutionSpec:
+    ContentExecutionSpec
+}
+
+export function assertSocialContentDraftQualityProvenance(
+    input: SocialContentDraftQualityProvenanceInput,
 ): void {
     const {
         draft,
@@ -252,7 +263,7 @@ export async function evaluateSocialContentDraftQuality(
     reviewEditorialQuality:
         SocialContentDraftEditorialQualityReviewer,
 ): Promise<SocialContentDraftQualityRun> {
-    assertMatchingProvenance(
+    assertSocialContentDraftQualityProvenance(
         input,
     )
 
