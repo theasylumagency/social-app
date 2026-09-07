@@ -12,7 +12,7 @@ export const understanding: BrandUnderstanding = {
   positioning: "ნივთის შენარჩუნების ალტერნატივა მისი ახლით ჩანაცვლების ნაცვლად.", valueProposition: "მფლობელმა წინასწარ გაიგოს, რა შეიძლება აღდგეს.",
   offers: [{ name: "Leather bags, shoes, and accessories repair", description: "ტყავის ნივთების შეკეთება", ...citation }],
   distinctiveSignals: [{ statement: "ფაქტურის შენარჩუნება", sourceKey: "founder", exactExcerpt: "We retain patina and show stitching before and after repair." }], audienceSignals: [],
-  voice: { traits: ["საგნობრივი", "ხელობის დეტალებზე ორიენტირებული"], principles: ["ახსენით რა აღდგება", "აჩვენეთ მასალის მდგომარეობა"], examples: [] },
+  voice: { traits: ["საგნობრივი", "ხელობის დეტალებზე ორიენტირებული"], principles: ["ახსენით რა აღდგება", "აჩვენეთ მასალის მდგომარეობა"], examples: [], behaviors: [] },
   constraints: [], openQuestions: [{ question: "რომელ დაზიანებას ვერ აკეთებთ?", whyItMatters: "შეფასების მოლოდინი უნდა იყოს რეალისტური." }],
 }
 export function fixtureOutput(call: BrandModelCall): unknown {

@@ -10,7 +10,7 @@ import { readWeeklyBrief } from "../src/infrastructure/postgres/dashboard-store"
 import { advanceWeeklyPlanning } from "../src/application/weekly-planning/advance"
 import { completePlanningFixture, discoveryFixture, planningReasoner } from "./weekly-planning-fixture"
 import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, mutatePostAsset, readPostAsset, listPostAssets } from "../src/infrastructure/postgres/weekly-posts-store"
-import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
+import { scheduleFixture, copyFixture, editorialFixture } from "./weekly-posts-fixture"
 import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
@@ -207,7 +207,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
     const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
     requests.push({ step, model: body.model })
     if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
-    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : copyFixture()
+    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
     return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
   })
   await runWeeklyPosts(pool, "owner", runtime.id)
@@ -224,6 +224,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal(requests.filter((r) => r.step === "post_writer_p3").length, 3)
   assert.ok(requests.filter((r) => r.step.startsWith("post_writer_")).every((r) => r.model === "test-writer"))
   assert.deepEqual(requests.filter((r) => r.step === "post_review"), [{ step: "post_review", model: "test-reviewer" }])
+  assert.deepEqual(requests.filter((r) => r.step === "post_editorial"), [{ step: "post_editorial", model: "test-reviewer" }])
+  assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.payload.review?.editorial?.posts.length, 3)
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
   await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=$1", [brandId])
   assert.equal((await readPlanningView(pool, "owner", brandId, "2026-09-14")).stale, true)

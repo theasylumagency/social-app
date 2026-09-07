@@ -5,10 +5,18 @@ import { POST_SCHEDULE_SCHEMA, POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePo
 import { POST_SCHEDULE_PROMPT, POST_WRITER_PROMPT, POSTS_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/posts"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
+import { compilePostGenerationContext, compilePostEditorialContext } from "../../blueprints/social/weekly-planning/post-context"
+import { POST_EDITORIAL_PROMPT, POST_EDITORIAL_SCHEMA, validatePostEditorialReview, consolidatePostReviews, type PostEditorialReview } from "../../blueprints/social/weekly-planning/post-editorial"
 
 export function postsContext(run: PlanningRun) {
   const context = compilePlanningContext(run)
-  return { ...context, requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: { channelsAreRecommendations: true, publishingEnabled: false, imageGenerationEnabled: false, founderUploadAvailable: true, trialIncludesGeneration: false } }
+  const focus = run.payload.focus
+  const audienceKeys = focus ? [focus.primaryAudienceKey, ...focus.secondaryAudienceKeys] : context.audiences.map((a) => a.audienceKey)
+  return { ...context,
+    selectedBrandGoals: context.selectedBrandGoals.filter((g) => !run.payload.review || run.payload.review.brandGoalKeys.includes(g.goalKey)),
+    audiences: context.audiences.filter((a) => audienceKeys.includes(a.audienceKey)),
+    communicationProfiles: context.communicationProfiles.filter((p) => audienceKeys.includes(p.audienceKey)),
+    requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: { channelsAreRecommendations: true, publishingEnabled: false, imageGenerationEnabled: false, founderUploadAvailable: true, trialIncludesGeneration: false } }
 }
 function keys(run: PlanningRun) {
   const c = compilePlanningContext(run)
@@ -17,7 +25,7 @@ function keys(run: PlanningRun) {
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
-  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v2", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
+  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v3", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
     const value = combine(v as PostSchedule)
     return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
   } })
@@ -25,9 +33,19 @@ export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner
 }
 export async function writePost(run: PlanningRun, payload: PostsPayload, key: string, reason: BrandReasoner) {
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
-  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v1", prompt: POST_WRITER_PROMPT, input: { ...postsContext(run), weeklyOutline: payload.outline, post, previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...validatePlanningProse(v, keys(run))] })
+  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v2", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(run, post), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...validatePlanningProse(v, keys(run))] })
 }
 export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner) {
   const postKeys = payload.outline!.posts.map((_, i) => `p${i + 1}`)
-  return reason<PostsReview>({ step: "post_review", version: "founder-post-review-v1", prompt: POSTS_REVIEW_PROMPT, input: { ...postsContext(run), weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] })
+  const editorialPosts = payload.outline!.posts.map((post, i) => ({ postKey: postKeys[i]!, ...compilePostEditorialContext(run, post), draft: payload.copies[postKeys[i]!]! }))
+  if (editorialPosts.some((p) => !p.draft)) throw Error("Cannot review incomplete post copies")
+  // Independent calls share the existing worker stage/lease budget and one repair pass.
+  const results = await Promise.allSettled([
+    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v2", prompt: POSTS_REVIEW_PROMPT, input: { postContexts: payload.outline!.posts.map((p, i) => ({ postKey: postKeys[i], ...compilePostGenerationContext(run, p) })), weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v1", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
+  ])
+  const [safety, editorial] = results
+  if (safety.status === "rejected") throw safety.reason
+  if (editorial.status === "rejected") throw editorial.reason
+  return consolidatePostReviews(safety.value, editorial.value)
 }

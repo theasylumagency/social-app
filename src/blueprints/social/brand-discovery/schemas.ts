@@ -1,3 +1,5 @@
+import { VOICE_DIMENSIONS } from "../brand-voice"
+
 export type JsonSchema = Readonly<Record<string, unknown>>
 
 export const AUDIENCE_HYPOTHESIS_OUTPUT_SCHEMA = {
@@ -353,7 +355,7 @@ export const BUSINESS_UNDERSTANDING_SCHEMA = object({
   offers: list(object({ name: text(140), description: text(600), ...citation }), 1, 30),
   distinctiveSignals: list(object({ statement: text(500), ...citation }), 1, 6),
   audienceSignals: list(object({ statement: text(500), ...citation }), 0, 6),
-  voice: object({ traits: list(text(120), 2, 5), principles: list(text(400), 2, 5), examples: list(object(citation), 0, 3) }),
+  voice: object({ traits: list(text(120), 2, 5), principles: list(text(400), 2, 5), examples: list(object(citation), 0, 3), behaviors: list(object({ dimension: { type: "string", enum: VOICE_DIMENSIONS }, instruction: text(400), ...citation }), 0, 8) }),
   constraints: list(text(400), 0, 8),
   openQuestions: list(object({ question: text(250), whyItMatters: text(400) }), 0, 3),
 })

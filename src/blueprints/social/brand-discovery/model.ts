@@ -1,4 +1,5 @@
 import type { AudienceHypothesis, AudienceLandscape, AudienceCommunicationProfile, CommunicationEnvelope, FounderAudienceStance, FounderProvidedAudience } from "../audience"
+import type { VoiceBehavior } from "../brand-voice"
 
 export type DiscoverySource = { key: string; url: string | null; title: string; text: string; capturedAt: string }
 export type SourceCitation = { sourceKey: string; exactExcerpt: string }
@@ -12,7 +13,7 @@ export type BrandUnderstanding = {
   offers: (SourceCitation & { name: string; description: string })[]
   distinctiveSignals: GroundedSignal[]
   audienceSignals: GroundedSignal[]
-  voice: { traits: string[]; principles: string[]; examples: SourceCitation[] }
+  voice: { traits: string[]; principles: string[]; examples: SourceCitation[]; behaviors?: VoiceBehavior[] }
   constraints: string[]
   openQuestions: { question: string; whyItMatters: string }[]
 }

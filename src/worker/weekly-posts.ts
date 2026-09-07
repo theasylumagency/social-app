@@ -1,6 +1,7 @@
 import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
 import { createPostSchedule, writePost, reviewPosts } from "../application/weekly-planning/posts"
+import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
 import { readPlanningRun, recordPlanningModelRun } from "../infrastructure/postgres/weekly-planning-store"
 import { claimWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, readWeeklyPosts } from "../infrastructure/postgres/weekly-posts-store"
@@ -30,13 +31,7 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
         payload.copies = latest!.payload.copies
         if (Object.keys(payload.copies).length === payload.outline!.posts.length) step = "review"
       } else if (step === "review") {
-        payload.review = await reviewPosts(run, payload, reason)
-        const blocked = payload.review.issues.filter((i) => i.severity === "blocking")
-        if (blocked.length && payload.repairs < 1) {
-          payload.repairDrafts ??= {}
-          for (const issue of blocked) { const previous = payload.copies[issue.postKey]; if (previous) payload.repairDrafts[issue.postKey] = previous; delete payload.copies[issue.postKey] }
-          payload.repairs++; step = "writing"
-        } else step = "ready"
+        step = applyPostReview(payload, await reviewPosts(run, payload, reason))
       }
       if (!await saveWeeklyPosts(pool, id, claim.token, payload, step)) throw Error("MODEL_LOST_LEASE")
       if (step === "ready") return

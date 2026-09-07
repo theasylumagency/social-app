@@ -14,6 +14,7 @@ import { validateReferences, validateUnderstanding } from "../../blueprints/soci
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
 import type { WebsiteCorpusPage } from "../../infrastructure/web/brand-model-extraction"
 import type { BrandId, IsoDateTime } from "../../core/domain"
+import { compileBrandVoice } from "../../blueprints/social/brand-voice"
 
 export type DiscoveryAdvanceDependencies = { reason: BrandReasoner; capture: (url: string) => Promise<readonly WebsiteCorpusPage[]>; now?: () => string }
 
@@ -25,7 +26,7 @@ export function compileBusinessContext(payload: DiscoveryPayload) {
     business: { name: u.name, description: u.summary, businessModel: u.businessModel },
     offers: u.offers.map(({ name, description }) => ({ name, description })),
     positioning: { corePosition: u.positioning, valuePropositions: [u.valueProposition], differentiators: u.distinctiveSignals.map((signal) => signal.statement) },
-    voice: { primaryTone: u.voice.traits, languageRules: u.voice.principles },
+    voice: compileBrandVoice(u.voice, payload.sources),
     evidenceSummary: payload.evidence.map(({ key, statement }) => ({ evidenceKey: key, statement, strength: "medium" })),
     existingAudienceSignals: u.audienceSignals.map((signal) => ({ statement: signal.statement, evidenceKey: payload.evidence.find((e) => e.statement === signal.statement)?.key })),
     constraints: u.constraints,
@@ -65,7 +66,7 @@ export async function advanceDiscovery(session: DiscoverySession, deps: Discover
     return { payload: p, step: "understanding" }
   }
   if (session.step === "understanding") {
-    p.understanding = await deps.reason<BrandUnderstanding>({ step: "understanding", version: "business-understanding-v1", prompt: BUSINESS_UNDERSTANDING_PROMPT, input: { locale: "ka", sources: p.sources }, schema: BUSINESS_UNDERSTANDING_SCHEMA,
+    p.understanding = await deps.reason<BrandUnderstanding>({ step: "understanding", version: "business-understanding-v2", prompt: BUSINESS_UNDERSTANDING_PROMPT, input: { locale: "ka", sources: p.sources }, schema: BUSINESS_UNDERSTANDING_SCHEMA,
       validate: (value) => validateUnderstanding(value as BrandUnderstanding, p.sources) })
     const u = p.understanding
     const signals = [...u.offers.map((offer) => ({ statement: `${offer.name}: ${offer.description}`, sourceKey: offer.sourceKey, exactExcerpt: offer.exactExcerpt })), ...u.distinctiveSignals, ...u.audienceSignals, ...u.voice.examples.map((citation) => ({ ...citation, statement: citation.exactExcerpt }))]
@@ -113,7 +114,7 @@ export async function advanceDiscovery(session: DiscoverySession, deps: Discover
       const i = entries.findIndex((entry) => entry.audience.id === audience.id)
       return { ...profile, audienceKey: context.audiences[i]!.audienceKey, influence: entries[i]!.influence, founderStance: context.audiences[i]!.founderStance ?? null, founderNote: context.audiences[i]!.founderNote }
     })
-    const proposal = await deps.reason<CommunicationEnvelopeModelOutput>({ step: "envelope", version: "communication-envelope-v1", prompt: COMMUNICATION_ENVELOPE_SYSTEM_PROMPT, input: { ...context, profiles }, schema: COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA })
+    const proposal = await deps.reason<CommunicationEnvelopeModelOutput>({ step: "envelope", version: "communication-envelope-v2", prompt: COMMUNICATION_ENVELOPE_SYSTEM_PROMPT, input: { ...context, profiles }, schema: COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA })
     p.envelope = { ...proposal.envelope, id: `envelope:${prefix}` as CommunicationEnvelope["id"], brandId, landscapeVersion: session.revision, profileIds: p.profiles.map((profile) => profile.id), generatedAt: now } as CommunicationEnvelope
     return { payload: p, step: "goals" }
   }

@@ -27,6 +27,9 @@ BRAND VOICE IS A HARD BOUNDARY
 
 Brand Voice remains authoritative.
 
+Preserve its source-supported behaviors and independent dimensions. Epistemic openness is not low rhetorical intensity. Do not turn a forceful thesis or fair argument into compulsory neutral balance. Explanation depth governs context, not assertiveness. Adapt only where the actual voice supports it; ordinary brands do not need manufactured distinctiveness.
+Audience-specific communication goals (orientation, explaining the project, returning-reader continuity) are not universal obligations. Keep them in profiles. Shared rules must be conditional on the content job; do not require every post to explain the brand, connect all formats or add a promotional ending.
+
 The Envelope may narrow or operationalize communication choices, but it must
 not replace, contradict, exaggerate, or reinvent Brand Voice.
 

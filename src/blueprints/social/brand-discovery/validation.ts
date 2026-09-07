@@ -35,7 +35,7 @@ export const normalizeExcerpt = (value: string) => value.normalize("NFKC").repla
 export function validateUnderstanding(value: BrandUnderstanding, sources: readonly DiscoverySource[]): string[] {
   const errors: string[] = []
   const sourceMap = new Map(sources.map((source) => [source.key, normalizeExcerpt(source.text)]))
-  for (const citation of [...value.offers, ...value.distinctiveSignals, ...value.audienceSignals, ...value.voice.examples]) {
+  for (const citation of [...value.offers, ...value.distinctiveSignals, ...value.audienceSignals, ...value.voice.examples, ...(value.voice.behaviors ?? [])]) {
     const source = sourceMap.get(citation.sourceKey)
     const quote = normalizeExcerpt(citation.exactExcerpt)
     if (!source || quote.length < 12 || !source.includes(quote)) errors.push(`Unverifiable source excerpt: ${citation.sourceKey}`)

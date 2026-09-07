@@ -1,4 +1,5 @@
 import type { JsonSchema } from "../brand-discovery/schemas"
+import type { PostEditorialReview } from "./post-editorial"
 
 export type PostChannel = "facebook" | "instagram"
 export type PostCadence = Record<PostChannel, number>
@@ -21,11 +22,26 @@ export type PostOutline = {
 export type PostVariant = { channel: PostChannel; caption: string; frames: { heading: string; body: string }[]; script: string; onScreenText: string[] }
 export type PostCopy = { variants: PostVariant[] }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
-export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[] }
+export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence }
 export type PostsBatch = { runId: string; status: "queued" | "running" | "ready" | "failed"; step: "outline" | "writing" | "review" | "ready"; payload: PostsPayload; error: string | null; leaseUntil: string | null; approvedAt: string | null; updatedAt: string }
 export type PostAsset = { id: string; postKey: string; slot: number; width: number; height: number; name: string }
 export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, review: null, repairs: 0 })
+
+/** One consolidated automatic Writer repair; unresolved issues remain approval blockers. */
+export function applyPostReview(payload: PostsPayload, review: PostsReview): "writing" | "ready" {
+  payload.review = review
+  const blocked = review.issues.filter((i) => i.severity === "blocking")
+  if (!blocked.length || payload.repairs >= 1) return "ready"
+  payload.repairDrafts ??= {}
+  for (const key of new Set(blocked.map((i) => i.postKey))) {
+    const previous = payload.copies[key]
+    if (previous) payload.repairDrafts[key] = previous
+    delete payload.copies[key]
+  }
+  payload.repairs++
+  return "writing"
+}
 
 const str = (maxLength = 1000, minLength = 1) => ({ type: "string", minLength, maxLength })
 const list = (items: JsonSchema, minItems = 0, maxItems = 6) => ({ type: "array", items, minItems, maxItems })
