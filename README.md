@@ -92,6 +92,38 @@ Social account connection, real publishing, analytics, billing and trial
 activation remain future work. Recommended channels and days are not presented
 as connected accounts or scheduled publication.
 
+The Phase 1 social provider foundation is available in
+`src/application/social-connections`, `src/infrastructure/postgres/social-connections-store.ts`
+and `src/infrastructure/zernio`. Migration `0011_social_connections.sql` separates
+stable UNDA publishing accounts from historical provider bindings. Composite
+foreign keys enforce brand and channel agreement; replacing a binding preserves
+the canonical account ID and requires verified native identity. Replacement is
+blocked while any existing attempt has no result or an `unknownOutcome` result.
+Phase 3 will account for durable reconciliations and acquire the same brand lock
+when capturing a binding for a new attempt.
+
+The Zernio client is transport-only, with bounded JSON requests/responses, a
+whole-request timeout, no redirects/retries, and redacted errors. Configuration
+uses the existing `BETTER_AUTH_URL` origin policy. The provider API defaults to
+`https://zernio.com/api/v1`; only local test servers may override it outside
+production. `readZernioEnvironment` defaults publishing off and validates all
+required secrets when enabled. It is not yet wired to a server/worker startup
+path. There are no OAuth, publishing, scheduling, webhook, or analytics calls.
+The connection-intent table and encryption-key configuration reserve the schema
+for Phase 2; no OAuth credential handling is implemented yet.
+
+Phase 1 verification (requires the local test database):
+
+```bash
+npm run check
+npm run lint
+npm run test:social:foundation
+npm run test:integration
+```
+
+The focused test creates and removes only a randomly named isolated PostgreSQL
+schema. It fails, rather than skips persistence coverage, without `DATABASE_URL`.
+
 ## Local commands
 
 ```bash
