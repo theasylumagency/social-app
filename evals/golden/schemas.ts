@@ -300,44 +300,7 @@ export const COMMUNICATION_ENVELOPE_GOLDEN_EVALUATION_SCHEMA = {
     ],
 } as const satisfies JsonSchema
 
-export const WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-
-    properties: {
-        focus: {
-            type: "object",
-            additionalProperties: false,
-
-            properties: {
-                primaryAudienceKey: {
-                    type: "string",
-                },
-
-                secondaryAudienceKeys: {
-                    type: "array",
-                    maxItems: 1,
-
-                    items: {
-                        type: "string",
-                    },
-                },
-
-                rationale: {
-                    type: "string",
-                },
-            },
-
-            required: [
-                "primaryAudienceKey",
-                "secondaryAudienceKeys",
-                "rationale",
-            ],
-        },
-    },
-
-    required: ["focus"],
-} as const satisfies JsonSchema
+export { WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA } from "../../src/blueprints/social/weekly-planning/schemas"
 
 export const WEEKLY_AUDIENCE_FOCUS_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
@@ -440,62 +403,7 @@ export const WEEKLY_AUDIENCE_FOCUS_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
-export const CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-
-    properties: {
-        directions: {
-            type: "array",
-
-            items: {
-                type: "object",
-                additionalProperties: false,
-
-                properties: {
-                    contentDirectionKey: {
-                        type: "string",
-                    },
-
-                    primaryAudienceKey: {
-                        type: "string",
-                    },
-
-                    secondaryAudienceKeys: {
-                        type: "array",
-                        maxItems: 1,
-
-                        items: {
-                            type: "string",
-                        },
-                    },
-
-                    bias: {
-                        type: "string",
-                        enum: [
-                            "balanced",
-                            "moreExplanatory",
-                            "moreDecisionOriented",
-                            "moreTrustFocused",
-                            "morePractical",
-                        ],
-                    },
-                },
-
-                required: [
-                    "contentDirectionKey",
-                    "primaryAudienceKey",
-                    "secondaryAudienceKeys",
-                    "bias",
-                ],
-            },
-        },
-    },
-
-    required: [
-        "directions",
-    ],
-} as const satisfies JsonSchema
+export { CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA } from "../../src/blueprints/social/weekly-planning/schemas"
 export const CONTENT_AUDIENCE_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
     additionalProperties: false,
@@ -597,45 +505,7 @@ export const CONTENT_AUDIENCE_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
-export const WEEKLY_OBJECTIVE_OUTPUT_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-
-    properties: {
-        weeklyObjective: {
-            type: "object",
-            additionalProperties: false,
-
-            properties: {
-                objective: {
-                    type: "string",
-                },
-
-                rationale: {
-                    type: "string",
-                },
-
-                deliberateOmissions: {
-                    type: "array",
-
-                    items: {
-                        type: "string",
-                    },
-                },
-            },
-
-            required: [
-                "objective",
-                "rationale",
-                "deliberateOmissions",
-            ],
-        },
-    },
-
-    required: [
-        "weeklyObjective",
-    ],
-} as const satisfies JsonSchema
+export { WEEKLY_OBJECTIVE_OUTPUT_SCHEMA } from "../../src/blueprints/social/weekly-planning/schemas"
 export const WEEKLY_OBJECTIVE_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
     additionalProperties: false,
@@ -737,47 +607,7 @@ export const WEEKLY_OBJECTIVE_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
-export const CONTENT_DIRECTION_OUTPUT_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-
-    properties: {
-        directions: {
-            type: "array",
-            minItems: 3,
-            maxItems: 5,
-
-            items: {
-                type: "object",
-                additionalProperties: false,
-
-                properties: {
-                    direction: {
-                        type: "string",
-                    },
-
-                    purpose: {
-                        type: "string",
-                    },
-
-                    rationale: {
-                        type: "string",
-                    },
-                },
-
-                required: [
-                    "direction",
-                    "purpose",
-                    "rationale",
-                ],
-            },
-        },
-    },
-
-    required: [
-        "directions",
-    ],
-} as const satisfies JsonSchema
+export { CONTENT_DIRECTION_OUTPUT_SCHEMA } from "../../src/blueprints/social/weekly-planning/schemas"
 
 export const CONTENT_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
@@ -880,92 +710,7 @@ export const CONTENT_DIRECTION_GOLDEN_EVALUATION_SCHEMA = {
         "summary",
     ],
 } as const satisfies JsonSchema
-export const EXPERIMENT_DECISION_OUTPUT_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-
-    properties: {
-        experimentDecision: {
-            type: "object",
-            additionalProperties: false,
-
-            properties: {
-                decision: {
-                    type: "string",
-                    enum: [
-                        "noExperiment",
-                        "experiment",
-                    ],
-                },
-
-                rationale: {
-                    type: "string",
-                },
-
-                experiment: {
-                    type: "object",
-                    additionalProperties: false,
-
-                    properties: {
-                        hypothesis: {
-                            type: [
-                                "string",
-                                "null",
-                            ],
-                        },
-
-                        variable: {
-                            type: [
-                                "string",
-                                "null",
-                            ],
-                        },
-
-                        comparison: {
-                            type: [
-                                "string",
-                                "null",
-                            ],
-                        },
-
-                        learningSignal: {
-                            type: [
-                                "string",
-                                "null",
-                            ],
-                        },
-
-                        guardrails: {
-                            type: "array",
-
-                            items: {
-                                type: "string",
-                            },
-                        },
-                    },
-
-                    required: [
-                        "hypothesis",
-                        "variable",
-                        "comparison",
-                        "learningSignal",
-                        "guardrails",
-                    ],
-                },
-            },
-
-            required: [
-                "decision",
-                "rationale",
-                "experiment",
-            ],
-        },
-    },
-
-    required: [
-        "experimentDecision",
-    ],
-} as const satisfies JsonSchema
+export { EXPERIMENT_DECISION_OUTPUT_SCHEMA } from "../../src/blueprints/social/weekly-planning/schemas"
 export const EXPERIMENT_DECISION_GOLDEN_EVALUATION_SCHEMA = {
     type: "object",
     additionalProperties: false,

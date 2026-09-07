@@ -1,3 +1,4 @@
+import { readPlanningView } from "../../../infrastructure/postgres/weekly-planning-store"
 import { readBrandDossier, readDossierHistory } from "../../../infrastructure/postgres/brand-discovery-store"
 import { publicDiscoveryPayload } from "../../../blueprints/social/brand-discovery/model"
 import "../../discovery.css"
@@ -11,6 +12,7 @@ import { ACTIVE_BRAND_COOKIE } from "../../_server/active-brand"
 import { sectionLabels, WorkspaceShell } from "../shell"
 import { BrandView, ConnectionsView, ContentView, ResultsView, SettingsView, WeekView } from "../views"
 import "../workspace.css"
+import "../weekly-planning.css"
 
 type Props = { params: Promise<{ section?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -30,15 +32,16 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   if (!brand || !brand.ready) redirect("/onboarding")
   const today = currentWeek()
   const week = isWeek(query.week) ? query.week : today
-  const [sources, brief, dossier, history] = await Promise.all([
+  const [sources, brief, dossier, history, planning] = await Promise.all([
     listDashboardSources(pool, session.user.id, brand.id),
     section === "week" ? readWeeklyBrief(pool, session.user.id, brand.id, week) : Promise.resolve(null),
     section === "brand" ? readBrandDossier(pool, session.user.id, brand.id) : Promise.resolve(null),
     section === "brand" && query.view === "history" ? readDossierHistory(pool, session.user.id, brand.id) : Promise.resolve([]),
+    section === "week" ? readPlanningView(pool, session.user.id, brand.id, week) : Promise.resolve(null),
   ])
   const textParam = (name: string) => typeof query[name] === "string" ? query[name] as string : ""
   return <WorkspaceShell section={section as DashboardSection} brands={brands} brand={brand} user={session.user}>
-    {section === "week" ? <WeekView brand={brand} sources={sources} week={week} today={today} brief={brief} /> : null}
+    {section === "week" ? <WeekView planning={planning!} ownerId={session.user.id} brand={brand} sources={sources} week={week} today={today} brief={brief} /> : null}
     {section === "content" ? <ContentView filter={textParam("filter")} view={textParam("view")} week={week} /> : null}
     {section === "results" ? <ResultsView /> : null}
     {section === "brand" ? <BrandView history={history} dossier={dossier ? { ...dossier, payload: publicDiscoveryPayload(dossier.payload) } : null} brand={brand} sources={sources} view={textParam("view")} /> : null}

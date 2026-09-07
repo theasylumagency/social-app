@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "worker:operator": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
     "worker:discovery": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
+    "test:planning": "node --env-file=.env.local --import tsx --test tests/weekly-planning.test.mts tests/weekly-planning.integration.test.mts",
     "test:discovery": "node --env-file=.env.local --import tsx --test tests/brand-discovery.test.mts tests/brand-discovery.integration.test.mts",
     "build": "next build",
     "build:domain": "tsc -p tsconfig.domain-build.json",

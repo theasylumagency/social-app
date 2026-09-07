@@ -3,6 +3,11 @@ import type { BrandUnderstanding, DiscoverySource } from "./model"
 type Schema = { type?: string | string[]; properties?: Record<string, Schema>; required?: readonly string[]; additionalProperties?: boolean; items?: Schema; enum?: readonly unknown[]; minItems?: number; maxItems?: number; minLength?: number; maxLength?: number }
 
 export function validateSchema(value: unknown, schema: Schema, path = "output"): string[] {
+  if (Array.isArray(schema.type)) {
+    if (value === null && schema.type.includes("null")) return []
+    const type = schema.type.find((type) => type === typeof value)
+    return type ? validateSchema(value, { ...schema, type }, path) : [`${path}: invalid nullable value`]
+  }
   const errors: string[] = []
   if (schema.enum && !schema.enum.includes(value)) return [`${path}: invalid enum`]
   if (schema.type === "object") {

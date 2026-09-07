@@ -4,7 +4,8 @@ import type { BrandDossier } from "../../blueprints/social/brand-discovery/model
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { displayDate, knowledgeList, knowledgeText, safeSourceUrl, shiftWeek, weekLabel, type DashboardBrand, type DashboardSource, type WeeklyBrief } from "../../application/dashboard/model"
-import { ObjectiveEditor } from "./controls"
+import { WeeklyPlanningClient } from "./weekly-planning-client"
+import type { PlanningView } from "../../blueprints/social/weekly-planning/model"
 import { Icon, type IconName } from "./icons"
 
 export function PageHeading({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
@@ -15,33 +16,8 @@ function EmptyState({ icon, title, children, compact = false }: { icon: IconName
   return <div className={`ws-empty ${compact ? "ws-empty-compact" : ""}`}><span className="ws-empty-icon"><Icon name={icon} /></span><h3>{title}</h3>{children}</div>
 }
 
-export function WeekView({ brand, sources, week, today, brief }: { brand: DashboardBrand; sources: DashboardSource[]; week: string; today: string; brief: WeeklyBrief }) {
-  const current = week === today
-  return <>
-    <PageHeading eyebrow="თქვენი კვირა, ერთი შეხედვით" title={current ? "კარგი კვირა აქ იწყება." : "კვირის სამუშაო სივრცე"} description={`${brand.name} · ${current ? "მიმდინარე კვირის მიზანი და შემდეგი ნაბიჯები" : "არჩეული კვირის მიზანი და კონტენტი"}`}>
-      <div className="ws-week-picker"><Link href={`/workspace?week=${shiftWeek(week, -1)}`} aria-label="წინა კვირა"><Icon name="chevron" style={{ transform: "rotate(180deg)" }} /></Link><span><Icon name="week" />{weekLabel(week)}</span><Link href={`/workspace?week=${shiftWeek(week, 1)}`} aria-label="შემდეგი კვირა"><Icon name="chevron" /></Link></div>
-    </PageHeading>
-    {!current ? <Link className="ws-back-current" href="/workspace">მიმდინარე კვირაზე დაბრუნება <Icon name="arrow" /></Link> : null}
-    <div className="ws-work-grid"><div className="ws-work-primary">
-      <section className="ws-operator-status" aria-labelledby="operator-status-title">
-        <div className="ws-status-top"><span className="ws-status-label"><span />საწყისი ეტაპი</span><span className="ws-status-code">01 / 05</span></div>
-        <div className="ws-status-body"><div><h2 id="operator-status-title">ბრენდი მზადაა.<br />წინ პირველი კვირაა.</h2><p>ბრენდის საწყისი ინფორმაცია შენახულია.<br />შემდეგი ნაბიჯია კვირის გეგმა და პირველი კონტენტი.</p></div><span className="ws-status-symbol"><Icon name="spark" /></span></div>
-        <div className="ws-status-footer"><span><Icon name="check" />ბრენდის საფუძველი შექმნილია</span><Link href="/workspace/brand">ბრენდის ნახვა <Icon name="arrow" /></Link></div>
-      </section>
-      <ObjectiveEditor key={`${brand.id}:${week}`} brandId={brand.id} week={week} brief={brief} />
-      <section className="ws-card ws-workflow" aria-labelledby="workflow-title"><div className="ws-card-heading"><h2 id="workflow-title">კვირის სამუშაო ციკლი</h2><span className="ws-subtle">გეგმიდან გამოქვეყნებამდე</span></div>
-        <ol>{["გეგმა", "მომზადება", "განხილვა", "დაგეგმვა", "გამოქვეყნება"].map((step, index) => <li key={step} className={index === 0 ? "is-next" : ""}><span>{String(index + 1).padStart(2, "0")}</span><strong>{step}</strong><small>{index === 0 ? "შემდეგი ნაბიჯი" : "ჯერ არ დაწყებულა"}</small></li>)}</ol>
-      </section>
-      <section className="ws-card ws-week-content"><div className="ws-card-heading"><h2>ამ კვირის კონტენტი <span className="ws-count">0</span></h2><Link className="ws-text-link" href="/workspace/content">ყველა კონტენტი <Icon name="arrow" /></Link></div>
-        <EmptyState icon="content" title="პირველი პოსტები ჯერ წინ არის" compact><p>ამ კვირისთვის კონტენტი ჯერ არ შექმნილა.<br />გეგმის მომზადების შემდეგ აქ გამოჩნდება პოსტები და მათი მდგომარეობა.</p><span className="ws-availability-note">გეგმის ავტომატური მომზადება ჯერ არ არის ჩართული.</span></EmptyState>
-      </section>
-    </div><aside className="ws-context-rail" aria-label="შემდეგი ნაბიჯები და აქტივობა">
-      <section className="ws-attention"><span className="ws-rail-label"><Icon name="check" />თქვენგან ამ ეტაპზე</span><h2>გადასაწყვეტი<br />არაფერია.</h2><p>განსახილველი გეგმა ან პოსტი ჯერ არ არის. მნიშვნელოვანი გადაწყვეტილება აქ გამოჩნდება.</p><div className="ws-attention-bottom">შეგიძლიათ კვირის მიზანი დაამატოთ.</div></section>
-      <section className="ws-rail-section"><div className="ws-rail-heading"><h2>შემდეგი ნაბიჯი</h2><Icon name="arrow" /></div><div className="ws-next-step"><span className="ws-step-dot" /><div><h3>პირველი კვირის გეგმა</h3><p>მიზანი, კონტენტის მიმართულებები და თითოეული პოსტის როლი.</p><span className="ws-subtle">ჯერ არ მომზადებულა</span></div></div></section>
-      <section className="ws-rail-section"><div className="ws-rail-heading"><h2>ბრენდის საფუძველი</h2><Icon name="brand" /></div><div className="ws-foundation-row"><span>შეთავაზება</span><Icon name="check" /></div><div className="ws-foundation-row"><span>კონტენტის ენა</span><Icon name="check" /></div><div className="ws-foundation-row"><span>წყაროები</span><strong>{sources.length}</strong></div><Link className="ws-text-link" href="/workspace/brand?view=sources">ცოდნისა და წყაროების ნახვა <Icon name="arrow" /></Link></section>
-      <section className="ws-rail-section"><div className="ws-rail-heading"><h2>ბოლო მოქმედებები</h2><Icon name="clock" /></div><ol className="ws-activity">{brief ? <li><span /><div><h3>კვირის მიზანი შეინახეთ</h3><time dateTime={brief.updatedAt}>{displayDate(brief.updatedAt, { hour: "2-digit", minute: "2-digit" })}</time></div></li> : null}<li><span /><div><h3>ბრენდის საფუძველი შეიქმნა</h3><p>{sources.length} წყარო შენახულია</p><time dateTime={brand.createdAt}>{displayDate(brand.createdAt)}</time></div></li></ol></section>
-    </aside></div>
-  </>
+export function WeekView({ brand, week, today, brief, planning, ownerId }: { brand: DashboardBrand; sources: DashboardSource[]; week: string; today: string; brief: WeeklyBrief; planning: PlanningView; ownerId: string }) {
+  return <><PageHeading eyebrow="ბრენდის ხედვიდან — კვირის გადაწყვეტილებამდე" title={week === today ? "თქვენი კვირის გეგმა" : "კვირის სამუშაო სივრცე"} description={`${brand.name} · ერთი მიზანი, მკაფიო ფოკუსი და დასაბუთებული მიმართულებები`}><div className="ws-week-picker"><Link href={`/workspace?week=${shiftWeek(week, -1)}`} aria-label="წინა კვირა"><Icon name="chevron" style={{ transform: "rotate(180deg)" }} /></Link><span><Icon name="week" />{weekLabel(week)}</span><Link href={`/workspace?week=${shiftWeek(week, 1)}`} aria-label="შემდეგი კვირა"><Icon name="chevron" /></Link></div></PageHeading>{week !== today ? <Link className="ws-back-current" href="/workspace">მიმდინარე კვირაზე დაბრუნება <Icon name="arrow" /></Link> : null}<WeeklyPlanningClient key={`${brand.id}:${week}`} initial={planning} initialPriority={brief?.objective ?? ""} brandId={brand.id} week={week} ownerId={ownerId} /></>
 }
 
 const filters = [{ id: "all", label: "ყველა" }, { id: "review", label: "განსახილველი" }, { id: "approved", label: "დამტკიცებული" }, { id: "scheduled", label: "დაგეგმილი" }, { id: "published", label: "გამოქვეყნებული" }, { id: "draft", label: "მონახაზი" }]
