@@ -1,0 +1,75 @@
+.fp-app { min-width:0; }
+.fp-week-summary { display:flex; align-items:center; justify-content:space-between; gap:32px; padding:32px; border-radius:18px; background:#203f31; color:#f7faef; }
+.fp-week-summary .wp-eyebrow { color:#c4d794; }
+.fp-week-summary h2 { font-size:28px; line-height:1.65; margin:10px 0 15px; }
+.fp-week-summary p:not(.wp-eyebrow) { color:#ccdac0; font-size:13px; line-height:1.9; max-width:690px; }
+.fp-week-stats { display:flex; gap:24px; flex-shrink:0; text-align:center; }
+.fp-week-stats strong { font-size:38px; font-weight:500; }
+.fp-week-stats span { display:block; font-size:10px; color:#b9cd9b; margin-top:4px; }
+.fp-decisions { display:grid; grid-template-columns:1fr 1fr; gap:26px; padding:25px 5px; }
+.fp-decisions h3 { margin:0 0 10px; font-size:13px; }
+.fp-decisions p { font-size:12px; color:#687b5b; line-height:1.95; }
+.ws-shell .fp-proposal-note { font-size:11px; color:#7b886e; line-height:1.9; margin:0 0 23px; }
+.fp-agenda { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:28px; }
+.fp-agenda a { display:flex; flex-direction:column; gap:10px; padding:17px; border:1px solid #dbe4ce; border-radius:10px; background:#f1f5e8; text-decoration:none; color:#304d35; }
+.fp-agenda a:hover { background:#e7eedb; }
+.fp-agenda span,.fp-agenda small { font-size:10px; color:#7b8d64; line-height:1.7; }
+.fp-agenda strong { font-size:12px; line-height:1.8; font-weight:500; }
+.fp-agenda small { margin-top:auto; }
+.fp-post { background:#fffefb; border:1px solid #dbe3cf; border-radius:16px; margin-top:26px; overflow:hidden; scroll-margin-top:25px; }
+.fp-post-heading { display:flex; gap:17px; align-items:start; padding:27px 27px 12px; }
+.fp-number { color:#879c66; font-size:23px; font-weight:300; line-height:1.6; }
+.fp-day { font-size:10px; color:#768c5c; line-height:1.8; }
+.fp-day span { color:#9aa58b; }
+.fp-post h3 { font-size:20px; line-height:1.7; margin:10px 0 0; }
+.fp-format { flex-shrink:0; margin-left:auto; padding:6px 10px; background:#edf2e3; border-radius:6px; color:#718555; font-size:10px; line-height:1.8; }
+.ws-shell .fp-why { padding:0 27px 22px 67px; font-size:12px; line-height:1.9; color:#728261; }
+.fp-post-body { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr); border-top:1px solid #e3e8da; }
+.fp-post-body.fp-text-only { grid-template-columns:1fr; }
+.fp-copy { padding:25px 28px; min-width:0; }
+.fp-channel-tabs { display:flex; gap:8px; }
+.fp-channel-tabs button { display:flex; align-items:center; gap:8px; font:inherit; font-size:11px; color:#657655; background:transparent; border:1px solid #dde4d3; border-radius:7px; padding:7px 12px; cursor:pointer; }
+.fp-channel-tabs button[aria-pressed=true] { background:#edf3e2; border-color:#b6c99b; color:#304e34; }
+.fp-channel-icon { display:grid; place-items:center; font-family:Arial,sans-serif; font-weight:700; font-size:15px; width:20px; height:20px; background:#e4ead9; border-radius:5px; }
+.fp-channel-icon.facebook { color:#2263ac; }.fp-channel-icon.instagram { color:#974e7f; }
+.ws-shell .fp-channel-reason { font-size:10px; line-height:1.8; color:#849172; margin:13px 0 23px; }
+.fp-caption { white-space:pre-wrap; font-size:14px; line-height:2.05; color:#314735; overflow-wrap:anywhere; }
+.fp-caption:empty { display:none; }
+.fp-copy-frames { display:grid; gap:14px; margin-top:20px; }
+.fp-copy-frames section { padding:20px; border:1px solid #dde5d1; border-radius:10px; background:#f6f8ef; }
+.fp-copy-frames span { font-size:10px; color:#829663; }.fp-copy-frames h4 { font-size:15px; line-height:1.8; margin:10px 0; }
+.fp-copy-frames p,.fp-script p { white-space:pre-wrap; font-size:13px; line-height:1.95; color:#637656; }
+.fp-script h4 { font-size:12px; margin:22px 0 12px; }.fp-script ol { color:#637656; font-size:12px; line-height:1.9; }
+.fp-copy-button { margin-top:25px; color:#5f783f; border:1px solid #d2dfbf; background:#f5f8ed; font:inherit; font-size:11px; padding:10px 15px; border-radius:7px; cursor:pointer; }
+.fp-visual { padding:26px; border-left:1px solid #e1e7d7; background:#f8f9f2; min-width:0; }
+.fp-visual h4 { font-size:13px; line-height:1.9; margin:8px 0 15px; }.fp-visual h4 span { color:#879773; font-size:11px; font-weight:400; white-space:nowrap; }
+.fp-visual p { font-size:11px; line-height:1.95; color:#718460; }
+.fp-visual-slot { margin-top:21px; border-top:1px solid #e1e7d7; padding-top:17px; }
+.fp-visual-slot>strong { display:block; font-size:10px; color:#84986b; margin-bottom:10px; }
+.fp-visual-placeholder { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; min-height:130px; border:1px dashed #cddaba; border-radius:10px; background:#f0f4e7; }
+.fp-visual-placeholder svg { width:55px; fill:none; stroke:#a4b88a; stroke-width:1.5; }
+.fp-visual-placeholder span { font-size:10px; color:#8a9b76; }
+.ws-shell .fp-visual-slot>p { margin:12px 0; }
+.fp-uploaded-image img { display:block; width:100%; height:auto; max-height:340px; object-fit:contain; border-radius:8px; background:#e9eedd; }
+.fp-decisions-detail { margin:12px 0; padding:0 5px; border-bottom:1px solid #e0e6d7; }
+.fp-visual-slot small { display:block; overflow-wrap:anywhere; font-size:9px; color:#8a9a78; line-height:1.7; margin-top:7px; }
+.fp-asset-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.wp-app .fp-upload-button { display:inline-flex; position:relative; overflow:hidden; align-items:center; min-height:40px; padding:8px 12px; font-size:10px; font-weight:500; color:#4c6a35; border:1px solid #c7d6b4; border-radius:7px; cursor:pointer; background:#fffef9; }
+.fp-upload-button:focus-within { outline:3px solid #729650; outline-offset:3px; }
+.fp-upload-button input { position:absolute; inset:0; opacity:0; width:100%; cursor:pointer; }.fp-upload-button[aria-disabled=true] { opacity:.6; }
+.fp-asset-actions button { font:inherit; font-size:10px; border:0; background:transparent; color:#8c7250; cursor:pointer; }
+.fp-file-hint { display:block; font-size:9px; line-height:1.8; color:#8a997b; margin-top:15px; }
+.fp-generation { border-top:1px solid #dde5d0; margin-top:22px; padding-top:19px; }
+.fp-generation button { width:100%; border:1px solid #d8dfcc; border-radius:8px; padding:12px; font:inherit; font-size:11px; line-height:1.9; background:#edf1e5; color:#94a080; cursor:not-allowed; }
+.fp-generation button span { display:block; font-size:9px; }.ws-shell .fp-generation p { margin-top:10px; font-size:9px; }
+.fp-post-details { border-top:1px solid #e3e8da; padding:7px 27px; }
+.fp-progress,.fp-copy-pending { display:flex; align-items:center; gap:12px; padding:18px; color:#708852; background:#eef4e2; border-radius:9px; font-size:11px; line-height:1.9; margin:20px 0; }
+.fp-pulse { width:7px; height:7px; flex-shrink:0; border-radius:50%; background:#93ad69; animation:fp-breathe 1.6s ease-in-out infinite; }
+@keyframes fp-breathe { 50% { opacity:.35; } }
+.fp-empty { padding:30px; border:1px solid #dbe5ca; border-radius:15px; background:#f1f6e7; }.fp-empty h2 { margin:10px 0 15px; font-size:26px; line-height:1.6; }.fp-empty p:not(.wp-eyebrow) { font-size:13px; color:#70835c; line-height:1.9; }.fp-empty button { margin-top:23px; }
+.fp-strategy { margin:32px 0 0; padding:12px 22px; border:1px solid #d9e2cd; border-radius:12px; background:#f8faf3; }
+.fp-strategy>summary { font-size:12px; font-weight:600; }.fp-strategy .wp-report { margin-top:20px; }.fp-strategy .wp-objective h2 { font-size:22px; }.fp-strategy .wp-report { font-size:12px; }
+.fp-copy-review { margin-top:22px; padding-inline:8px; }
+@media(max-width:1150px) { .fp-post-body { grid-template-columns:1fr; }.fp-visual { border-left:0; border-top:1px solid #e1e7d7; }.fp-week-summary { align-items:start; }.fp-week-stats { gap:18px; }.fp-post-heading { flex-wrap:wrap; }.fp-format { margin-left:40px; } }
+@media(max-width:700px) { .fp-week-summary { flex-direction:column; padding:24px; gap:24px; }.fp-week-summary h2 { font-size:23px; }.fp-week-stats { gap:35px; }.fp-week-stats strong { font-size:29px; }.fp-decisions { grid-template-columns:1fr; gap:20px; padding:23px 0; }.fp-agenda { grid-template-columns:1fr; }.fp-agenda a { gap:5px; }.fp-post-heading { padding:22px 20px 12px; }.fp-post h3 { font-size:18px; }.ws-shell .fp-why { padding:0 20px 20px; }.fp-copy,.fp-visual { padding:22px 20px; }.fp-caption { font-size:13px; }.fp-post-details { padding-inline:20px; }.fp-strategy { padding:10px 15px; }.fp-strategy .wp-objective { padding:20px; } }
+@media(prefers-reduced-motion:reduce) { .fp-pulse { animation:none; } }

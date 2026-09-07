@@ -9,6 +9,9 @@ import { readPlanningRun, readPlanningView, beginWeeklyPlanning, claimPlanningRu
 import { readWeeklyBrief } from "../src/infrastructure/postgres/dashboard-store"
 import { advanceWeeklyPlanning } from "../src/application/weekly-planning/advance"
 import { completePlanningFixture, discoveryFixture, planningReasoner } from "./weekly-planning-fixture"
+import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, mutatePostAsset, readPostAsset, listPostAssets } from "../src/infrastructure/postgres/weekly-posts-store"
+import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
+import sharp from "sharp"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -43,11 +46,38 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await failPlanningStep(pool, failure.run, failure.token, "Test outage")
   await retryPlanningRun(pool, "owner", first.id, 1)
   const recovered = (await claimPlanningRun(pool, "owner", first.id))!
-  assert.equal(recovered.run.step, "focus")
+  assert.equal(recovered.run.step, "review")
   assert.deepEqual(recovered.run.payload.objective, objective.payload.objective)
   assert.equal(await finishPlanningStep(pool, failure.run, failure.token, failure.run.payload, "focus"), false)
   const ready = await completePlanningFixture(recovered.run)
   await finishPlanningStep(pool, recovered.run, recovered.token, ready.payload, "ready")
+  await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 1), /პოსტების/)
+  assert.equal((await readWeeklyPosts(pool, "owner", first.id))?.step, "outline")
+  assert.equal(await readWeeklyPosts(pool, "other", first.id), null)
+  await assert.rejects(() => beginWeeklyPosts(pool, "other", first.id, 1))
+  const postClaims = await Promise.all([claimWeeklyPosts(pool, "owner", first.id), claimWeeklyPosts(pool, "owner", first.id)])
+  assert.equal(postClaims.filter(Boolean).length, 1)
+  const pc = postClaims.find(Boolean)!
+  const postPayload = { ...pc.batch.payload, outline: scheduleFixture() }
+  await saveWeeklyPosts(pool, first.id, pc.token, postPayload, "writing")
+  const wc = (await claimWeeklyPosts(pool, "owner", first.id))!
+  await Promise.all([savePostCopy(pool, first.id, wc.token, "p1", copyFixture()), savePostCopy(pool, first.id, wc.token, "p2", copyFixture())])
+  await failWeeklyPosts(pool, first.id, wc.token)
+  await beginWeeklyPosts(pool, "owner", first.id, 1, true)
+  assert.equal(Object.keys((await readWeeklyPosts(pool, "owner", first.id))!.payload.copies).length, 2)
+  const resumed = (await claimWeeklyPosts(pool, "owner", first.id))!
+  assert.equal(await savePostCopy(pool, first.id, wc.token, "p3", copyFixture()), false)
+  const completePosts = { ...resumed.batch.payload, copies: { p1: copyFixture(), p2: copyFixture(), p3: copyFixture() }, review: { summary: "ტექსტები შემოწმებულია", issues: [] } }
+  await saveWeeklyPosts(pool, first.id, resumed.token, completePosts, "ready")
+  const content = await sharp({ create: { width: 20, height: 25, channels: 3, background: "#46754a" } }).webp().toBuffer()
+  await assert.rejects(() => mutatePostAsset(pool, "other", first.id, "p1", 0, { content, width: 20, height: 25, name: "qa.webp" }))
+  await assert.rejects(() => mutatePostAsset(pool, "owner", first.id, "p1", 4, { content, width: 20, height: 25, name: "qa.webp" }))
+  await mutatePostAsset(pool, "owner", first.id, "p1", 0, { content, width: 20, height: 25, name: "qa.webp" })
+  const asset = (await listPostAssets(pool, "owner", first.id))[0]!
+  assert.deepEqual(await readPostAsset(pool, "owner", asset.id), content)
+  assert.equal(await readPostAsset(pool, "other", asset.id), null)
+  await mutatePostAsset(pool, "owner", first.id, "p1", 0, null)
+  assert.equal((await listPostAssets(pool, "owner", first.id)).length, 0)
   await assert.rejects(() => approvePlanningRun(pool, "other", first.id, 1))
   await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 2))
   await Promise.all([approvePlanningRun(pool, "owner", first.id, 1), approvePlanningRun(pool, "owner", first.id, 1)])
@@ -69,6 +99,9 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await assert.rejects(() => approvePlanningRun(pool, "owner", revision.id, 2))
   ready2.payload.review!.concerns = []
   await pool.query("UPDATE weekly_planning_runs SET payload=$2::jsonb WHERE id=$1", [revision.id, JSON.stringify(ready2.payload)])
+  await beginWeeklyPosts(pool, "owner", revision.id, 2)
+  const secondPosts = (await claimWeeklyPosts(pool, "owner", revision.id))!
+  await saveWeeklyPosts(pool, revision.id, secondPosts.token, completePosts, "ready")
   // A forced failure during the new approval must also roll back superseding the old one.
   await pool.query("CREATE FUNCTION reject_test_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status='approved' THEN RAISE EXCEPTION 'test approval failure'; END IF; RETURN NEW; END $$")
   await pool.query("CREATE TRIGGER test_approval_failure BEFORE UPDATE ON weekly_planning_runs FOR EACH ROW EXECUTE FUNCTION reject_test_approval()")

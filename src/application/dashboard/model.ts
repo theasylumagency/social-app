@@ -56,9 +56,13 @@ export function isWeek(value: unknown): value is string {
 }
 
 export function displayDate(value: string, options: Intl.DateTimeFormatOptions = {}): string {
-  return new Intl.DateTimeFormat("ka-GE", {
-    day: "numeric", month: "long", timeZone: "Asia/Tbilisi", ...options,
-  }).format(new Date(value.length === 10 ? `${value}T12:00:00Z` : value))
+  // Some embedded browsers lack Georgian ICU data. Numeric parts + explicit labels
+  // keep Georgian dates identical during server rendering and hydration.
+  const parts = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: options.timeZone ?? "Asia/Tbilisi" }).formatToParts(new Date(value.length === 10 ? `${value}T12:00:00Z` : value))
+  const part = (name: string) => parts.find((p) => p.type === name)!.value
+  const months = ["იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი", "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"]
+  const month = options.month === "numeric" || options.month === "2-digit" ? part("month") : months[Number(part("month")) - 1]
+  return `${part("day")} ${month}${options.year ? `, ${part("year")}` : ""}${options.hour ? `, ${part("hour")}:${part("minute")}` : ""}`
 }
 
 export function weekLabel(week: string): string {

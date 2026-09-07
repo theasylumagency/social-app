@@ -6,7 +6,7 @@
     "dev": "next dev",
     "worker:operator": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
     "worker:discovery": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
-    "test:planning": "node --env-file=.env.local --import tsx --test tests/weekly-planning.test.mts tests/weekly-planning.integration.test.mts",
+    "test:planning": "node --env-file=.env.local --import tsx --test tests/weekly-planning.test.mts tests/weekly-posts.test.mts tests/weekly-planning.integration.test.mts",
     "test:discovery": "node --env-file=.env.local --import tsx --test tests/brand-discovery.test.mts tests/brand-discovery.integration.test.mts",
     "build": "next build",
     "build:domain": "tsc -p tsconfig.domain-build.json",
@@ -44,7 +44,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "resend": "^6.26.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

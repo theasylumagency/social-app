@@ -5,6 +5,8 @@ import { isWeek } from "../../../application/dashboard/model"
 import { isDiscoveryId } from "../../../infrastructure/postgres/brand-discovery-store"
 import { approvePlanningRun, beginWeeklyPlanning, PlanningConflict, readPlanningRun, readPlanningView, retryPlanningRun, type BeginPlanningInput } from "../../../infrastructure/postgres/weekly-planning-store"
 import { runWeeklyPlanning } from "../../../worker/weekly-planning"
+import { runWeeklyPosts } from "../../../worker/weekly-posts"
+import { beginWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-store"
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
       run = await readPlanningRun(pool, ownerId, body.id)
       if (!run) return Response.json({ message: "გეგმა ვერ მოიძებნა." }, { status: 404 })
       if (body.action === "approve") await approvePlanningRun(pool, ownerId, body.id, body.version as number)
+      else if (body.action === "posts" || body.action === "retry-posts") await beginWeeklyPosts(pool, ownerId, body.id, body.version as number, body.action === "retry-posts")
       else if (body.action === "retry") await retryPlanningRun(pool, ownerId, body.id, body.version as number)
       else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")
     }
@@ -47,6 +50,9 @@ export async function POST(request: Request) {
     if (view.run && ["queued", "running"].includes(view.run.status)) {
       const id = view.run.id
       after(() => runWeeklyPlanning(pool, ownerId, id))
+    } else if (view.run && view.posts && ["queued", "running"].includes(view.posts.status)) {
+      const id = view.run.id
+      after(() => runWeeklyPosts(pool, ownerId, id))
     }
     return Response.json(view)
   } catch (error) {

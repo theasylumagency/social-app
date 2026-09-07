@@ -13,6 +13,7 @@ import { sectionLabels, WorkspaceShell } from "../shell"
 import { BrandView, ConnectionsView, ContentView, ResultsView, SettingsView, WeekView } from "../views"
 import "../workspace.css"
 import "../weekly-planning.css"
+import "../weekly-posts.css"
 
 type Props = { params: Promise<{ section?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 

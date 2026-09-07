@@ -19,6 +19,7 @@ import { CONTENT_DIRECTION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-
 import { CONTENT_AUDIENCE_DIRECTION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/content-audience-direction"
 import { EXPERIMENT_DECISION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/experiment-decision"
 import { WEEKLY_PLAN_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/review"
+import { COMPACT_STRATEGY_PROMPT, COMPACT_STRATEGY_SCHEMA, validateCompactStrategy, type CompactStrategy } from "../../blueprints/social/weekly-planning/compact-strategy"
 import { WEEKLY_OBJECTIVE_OUTPUT_SCHEMA, WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA, CONTENT_DIRECTION_OUTPUT_SCHEMA, CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA, EXPERIMENT_DECISION_OUTPUT_SCHEMA, WEEKLY_PLAN_REVIEW_SCHEMA } from "../../blueprints/social/weekly-planning/schemas"
 
 export function planningAudienceRefs(p: PlanningPayload) {
@@ -79,6 +80,11 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
   const audienceKeys = context.audiences.map((a) => a.audienceKey)
   const proseKeys = [...audienceKeys, ...context.selectedBrandGoals.map((g) => g.goalKey), ...context.contentDirections.map((d) => d.contentDirectionKey)]
   const runModel: BrandReasoner = (call) => reason({ ...call, validate: (value) => [...(call.validate?.(value) ?? []), ...validatePlanningProse(value, proseKeys)] })
+  if (run.step === "objective" && p.founderPosts) {
+    const s = await runModel<CompactStrategy>({ step: "weekly_strategy", version: "founder-weekly-strategy-v1", prompt: COMPACT_STRATEGY_PROMPT, input: context, schema: COMPACT_STRATEGY_SCHEMA, validate: (v) => validateCompactStrategy(v as CompactStrategy, audienceKeys) })
+    p.objective = s.weeklyObjective; p.focus = s.focus; p.directions = s.directions; p.adaptation = s.audienceDirections; p.experiment = s.experimentDecision
+    return { payload: p, step: "review" }
+  }
   if (run.step === "objective") {
     const output = await runModel<WeeklyObjectiveModelOutput>({ step: "weekly_objective", version: "weekly-objective-v2", prompt: WEEKLY_OBJECTIVE_SYSTEM_PROMPT, input: context, schema: WEEKLY_OBJECTIVE_OUTPUT_SCHEMA })
     p.objective = output.weeklyObjective

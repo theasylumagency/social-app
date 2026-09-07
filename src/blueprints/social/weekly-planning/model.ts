@@ -5,6 +5,7 @@ import type { WeeklyAudienceFocusProposal } from "./weekly-audience-focus-contra
 import type { ContentDirectionProposal } from "./content-direction-contract"
 import type { ContentAudienceDirectionProposal } from "./content-audience-direction-contract"
 import type { ExperimentDecisionStructuredProposal } from "./experiment-decision-contract"
+import type { PostsBatch, PostAsset } from "./posts"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -16,6 +17,7 @@ export type PlanningReview = {
 }
 export type PlanOutline = { week: string; objective: string; directions: string[]; experiment: string | null }
 export type PlanningPayload = {
+  founderPosts?: boolean
   basis: BrandDossier
   priority: string
   revisionNote: string
@@ -44,7 +46,7 @@ export type PlanningRun = {
   createdAt: string
   updatedAt: string
 }
-export type PlanningView = { run: PlanningRun | null; approved: PlanningRun | null; history: { id: string; version: number; status: PlanningRun["status"]; updatedAt: string; objective: string | null }[]; basis: BrandDossier | null; stale: boolean }
+export type PlanningView = { run: PlanningRun | null; approved: PlanningRun | null; history: { id: string; version: number; status: PlanningRun["status"]; updatedAt: string; objective: string | null }[]; basis: BrandDossier | null; stale: boolean; posts?: PostsBatch | null; assets?: PostAsset[]; approvedPosts?: PostsBatch | null; approvedAssets?: PostAsset[] }
 
 export function summarizePlan(plan: WeeklyPlan): PlanOutline {
   return { week: plan.startsOn, objective: plan.objective.objective, directions: plan.contentDirections.map((d) => d.direction), experiment: plan.experimentDecision.experiment?.hypothesis ?? null }

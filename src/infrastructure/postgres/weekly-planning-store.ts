@@ -9,6 +9,8 @@ import { approveWeeklyPlan, requestWeeklyPlanChanges, supersedeWeeklyPlan } from
 import { isWeek } from "../../application/dashboard/model"
 import type { BrandModelRun } from "../models/brand-reasoning"
 import { isDiscoveryId } from "./brand-discovery-store"
+import { emptyPosts, type PostsPayload } from "../../blueprints/social/weekly-planning/posts"
+import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
 
 type Row = { id: string; owner_user_id: string; brand_id: string; week: string; version: number; status: PlanningRun["status"]; step: PlanningRun["step"]; payload: PlanningPayload; error: string | null; lease_until: Date | null; created_at: Date; updated_at: Date }
 const fields = "r.*,to_char(r.week_start,'YYYY-MM-DD') AS week"
@@ -59,7 +61,10 @@ export async function readPlanningView(pool: Pool, ownerId: string, brandId: str
     basis(pool, ownerId, brandId),
   ])
   const run = r.rows[0] ? fromRow(r.rows[0]) : null
-  return { run, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!run && (run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
+  const [posts, assets] = run ? await Promise.all([readWeeklyPosts(pool, ownerId, run.id), listPostAssets(pool, ownerId, run.id)]) : [null, []]
+  const previousId = approved.rows[0]?.id
+  const [approvedPosts, approvedAssets] = previousId && previousId !== run?.id ? await Promise.all([readWeeklyPosts(pool, ownerId, previousId), listPostAssets(pool, ownerId, previousId)]) : [null, []]
+  return { run, posts, assets, approvedPosts, approvedAssets, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!run && (run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
 }
 
 export type BeginPlanningInput = { id: string; brandId: string; week: string; priority: string; parentId?: string; parentVersion?: number; revisionNote?: string }
@@ -83,6 +88,7 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     const prior = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start<$2::date AND r.status='approved' ORDER BY r.week_start DESC LIMIT 3`, [input.brandId, input.week])
     const payload: PlanningPayload = { basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan)] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
     const now = new Date().toISOString() as IsoDateTime
+    payload.founderPosts = true
     if (previous && previous.status !== "approved") {
       const oldPayload = { ...previous.payload }
       if (oldPayload.plan?.state === "awaitingReview") oldPayload.plan = requestWeeklyPlanChanges(oldPayload.plan, payload.revisionNote, now).plan
@@ -106,6 +112,7 @@ export async function finishPlanningStep(pool: Pool, run: PlanningRun, token: st
   return transaction(pool, async (c) => {
     const changed = await c.query("UPDATE weekly_planning_runs SET payload=$4::jsonb,step=$5,status=$6,lease_token=NULL,lease_until=NULL,error=NULL,updated_at=now() WHERE id=$1 AND version=$2 AND lease_token=$3 RETURNING id", [run.id, run.version, token, JSON.stringify(payload), step, step === "ready" ? "ready" : "queued"])
     if (!changed.rowCount) return false
+    if (step === "ready" && payload.founderPosts && !payload.review?.concerns.some((c) => c.severity === "blocking")) await c.query("INSERT INTO weekly_post_batches(run_id,status,step,payload) VALUES($1,'queued','outline',$2::jsonb) ON CONFLICT(run_id) DO NOTHING", [run.id, JSON.stringify(emptyPosts())])
     await event(c, run.id, `completed:${run.step}`, { step, ...(step === "ready" ? { plan: payload.plan, review: payload.review } : {}) })
     return true
   })
@@ -135,13 +142,20 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
     const found = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.id=$2 FOR UPDATE`, [ownerId, id])
     const run = found.rows[0] ? fromRow(found.rows[0]) : null
     if (!run || run.version !== version) throw new PlanningConflict("გეგმის ვერსია შეიცვალა. განაახლეთ გვერდი.")
-    if (run.status === "approved") return
+    const posts = await c.query<{ status: string; payload: PostsPayload; approved_at: Date | null }>("SELECT status,payload,approved_at FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [id])
+    if (run.status === "approved" && (!posts.rowCount || posts.rows[0]?.approved_at)) return
     const latest = await c.query<{ id: string }>("SELECT id FROM weekly_planning_runs WHERE brand_id=$1 AND week_start=$2::date ORDER BY version DESC LIMIT 1", [run.brandId, run.week])
-    if (latest.rows[0]?.id !== id || run.status !== "ready" || !run.payload.plan || !run.payload.review) throw new PlanningConflict("მხოლოდ დასრულებული მიმდინარე ვერსიის დადასტურებაა შესაძლებელი.")
+    if (latest.rows[0]?.id !== id || !["ready", "approved"].includes(run.status) || !run.payload.plan || !run.payload.review) throw new PlanningConflict("მხოლოდ დასრულებული მიმდინარე ვერსიის დადასტურებაა შესაძლებელი.")
     const current = await basis(c, ownerId, run.brandId)
     if (current?.sessionId !== run.payload.basis.sessionId || current.revision !== run.payload.basis.revision) throw new PlanningConflict("ბრენდის საფუძველი განახლდა. ჯერ გეგმა ახალ ცოდნაზე განაახლეთ.")
     if (run.payload.review.concerns.some((issue) => issue.severity === "blocking")) throw new PlanningConflict("ჯერ გეგმის შემოწმებისას აღმოჩენილი საკითხები დააზუსტეთ.")
+    if ((run.payload.founderPosts || posts.rowCount) && (posts.rows[0]?.status !== "ready" || !posts.rows[0].payload.review || posts.rows[0].payload.review.issues.some((i) => i.severity === "blocking"))) throw new PlanningConflict("ჯერ პოსტების ტექსტების მომზადება და შემოწმება დაასრულეთ.")
     const now = new Date().toISOString() as IsoDateTime
+    if (posts.rowCount) {
+      await c.query("UPDATE weekly_post_batches SET approved_at=now(),updated_at=now() WHERE run_id=$1", [id])
+      await event(c, id, "posts-approved", { decidedBy: ownerId, posts: posts.rows[0]!.payload })
+    }
+    if (run.status === "approved") return
     const prior = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date AND r.id<>$3 AND r.status IN ('approved','changesRequested') FOR UPDATE`, [run.brandId, run.week, id])
     for (const row of prior.rows) {
       const old = fromRow(row)
