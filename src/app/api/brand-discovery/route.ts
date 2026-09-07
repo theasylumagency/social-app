@@ -1,14 +1,11 @@
-import { after } from "next/server"
 import { authenticateWorkRequest, currentSession } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { rememberBrand } from "../../_server/active-brand"
 import { ensurePersonalWorkspace } from "../../../infrastructure/postgres/workspace-store"
 import { confirmDiscovery, DiscoveryConflict, isDiscoveryId, readDiscovery, retryDiscovery, reviseDiscovery, saveDiscoveryDraft, startDiscovery } from "../../../infrastructure/postgres/brand-discovery-store"
-import { runBrandDiscovery } from "../../../worker/brand-discovery"
 import type { DiscoverySession } from "../../../blueprints/social/brand-discovery/model"
 
 export const runtime = "nodejs"
-export const maxDuration = 300
 
 function publicSession(session: DiscoverySession | null) {
   return session ? { ...session, payload: { ...session.payload, sources: session.payload.sources.map((source) => ({ ...source, text: "" })) } } : null
@@ -56,7 +53,6 @@ export async function POST(request: Request) {
     } else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")
     const current = await readDiscovery(pool, ownerId, id)
     if (!current) return Response.json({ message: "სესია ვერ მოიძებნა." }, { status: 404 })
-    if (["queued", "running"].includes(current.status)) after(() => runBrandDiscovery(pool, ownerId, id))
     return Response.json({ session: publicSession(current) })
   } catch (error) {
     if (error instanceof DiscoveryConflict) return Response.json({ message: error.message }, { status: 409 })

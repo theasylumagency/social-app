@@ -1,3 +1,4 @@
+import { OPERATOR_LEASE_MS } from "../models/runtime-policy"
 import { createHash, randomUUID } from "node:crypto"
 import type { Pool, PoolClient } from "pg"
 import type { BrandId, ContentHash, EvidenceId, IsoDateTime, SourceId, SourceSnapshotId } from "../../core/domain"
@@ -154,7 +155,7 @@ export async function retryDiscovery(pool: Pool, ownerId: string, id: string, re
 
 export async function claimDiscovery(pool: Pool, ownerId: string, id: string): Promise<{ session: DiscoverySession; token: string } | null> {
   const token = randomUUID()
-  const result = await pool.query<Row>(`UPDATE brand_discovery_sessions s SET status='running',lease_token=$3,lease_until=now()+interval '4 minutes',updated_at=now() WHERE ${readable} AND s.id=$2 AND (s.status='queued' OR (s.status='running' AND s.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING s.*`, [ownerId, id, token])
+  const result = await pool.query<Row>(`UPDATE brand_discovery_sessions s SET status='running',lease_token=$3,lease_until=now()+interval '${OPERATOR_LEASE_MS} milliseconds',updated_at=now() WHERE ${readable} AND s.id=$2 AND (s.status='queued' OR (s.status='running' AND s.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING s.*`, [ownerId, id, token])
   return result.rows[0] ? { session: sessionFromRow(result.rows[0]), token } : null
 }
 

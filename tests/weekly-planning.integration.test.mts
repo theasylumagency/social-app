@@ -13,6 +13,8 @@ import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, s
 import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
 import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
+import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
+import { runWeeklyPosts } from "../src/worker/weekly-posts"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -27,6 +29,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await saveDiscoveryDraft(pool, "owner", discovery.id, discovery.payload.input, null)
   await startDiscovery(pool, "owner", discovery.id, 1, discovery.payload.input)
   const d = (await claimDiscovery(pool, "owner", discovery.id))!
+  assert.ok(Date.parse(d.session.leaseUntil!) - Date.now() > MODEL_CALL_MAX_MS)
   await finishDiscoveryStep(pool, d.session, d.token, discovery.payload, "ready")
   const brandId = await confirmDiscovery(pool, "owner", discovery.id, 1, [discovery.payload.goals[0]!.id], "ka")
   const originalBrand = (await pool.query("SELECT payload FROM brand_dossiers WHERE brand_id=$1", [brandId])).rows[0].payload
@@ -41,6 +44,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const claims = await Promise.all([claimPlanningRun(pool, "owner", first.id), claimPlanningRun(pool, "owner", first.id)])
   assert.equal(claims.filter(Boolean).length, 1)
   const one = claims.find(Boolean)!
+  assert.ok(Date.parse(one.run.leaseUntil!) - Date.now() > MODEL_CALL_MAX_MS)
   const objective = await advanceWeeklyPlanning(one.run, planningReasoner())
   await finishPlanningStep(pool, one.run, one.token, objective.payload, objective.step)
   const failure = (await claimPlanningRun(pool, "owner", first.id))!
@@ -59,6 +63,10 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const postClaims = await Promise.all([claimWeeklyPosts(pool, "owner", first.id), claimWeeklyPosts(pool, "owner", first.id)])
   assert.equal(postClaims.filter(Boolean).length, 1)
   const pc = postClaims.find(Boolean)!
+  assert.ok(Date.parse(pc.batch.leaseUntil!) - Date.now() > MODEL_CALL_MAX_MS)
+  // Simulate the end of the longest legitimate call; a second worker still cannot claim it.
+  await pool.query("UPDATE weekly_post_batches SET lease_until=now()+($2 * interval '1 millisecond') WHERE run_id=$1", [first.id, OPERATOR_LEASE_MS - MODEL_CALL_MAX_MS])
+  assert.equal(await claimWeeklyPosts(pool, "owner", first.id), null)
   const postPayload = { ...pc.batch.payload, outline: scheduleFixture() }
   await saveWeeklyPosts(pool, first.id, pc.token, postPayload, "writing")
   const wc = (await claimWeeklyPosts(pool, "owner", first.id))!
@@ -177,6 +185,45 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await mutatePostAsset(pool, "owner", restart.id, "p10", 0, { content, width: 20, height: 25, name: "tenth.webp" })
   assert.equal((await listPostAssets(pool, "owner", restart.id))[0]!.postKey, "p10")
   await assert.rejects(() => mutatePostAsset(pool, "owner", restart.id, "p11", 0, { content, width: 20, height: 25, name: "invalid.webp" }))
+  // Exercise the real worker + model adapter with fake HTTP, including one saved sibling.
+  const runtime = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-10-05" })
+  const runtimeClaim = (await claimPlanningRun(pool, "owner", runtime.id))!
+  const runtimePlan = await completePlanningFixture(runtimeClaim.run)
+  await finishPlanningStep(pool, runtimeClaim.run, runtimeClaim.token, runtimePlan.payload, "ready")
+  await runWeeklyPosts(pool, "owner", runtime.id, MODEL_STAGE_RESERVE_MS - 1)
+  assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.status, "queued", "insufficient execution budget must not claim")
+  const runtimePosts = (await claimWeeklyPosts(pool, "owner", runtime.id))!
+  await saveWeeklyPosts(pool, runtime.id, runtimePosts.token, { ...runtimePosts.batch.payload, outline: scheduleFixture(), copies: { p1: copyFixture() } }, "writing")
+  const envKeys = ["OPENAI_API_KEY", "OPENAI_POST_WRITER_MODEL", "OPENAI_POST_REVIEW_MODEL"]
+  const savedEnv = envKeys.map((key) => process.env[key])
+  t.after(() => { envKeys.forEach((key, i) => { if (savedEnv[i] === undefined) delete process.env[key]; else process.env[key] = savedEnv[i] }) })
+  process.env.OPENAI_API_KEY = "test-only"
+  process.env.OPENAI_POST_WRITER_MODEL = "test-writer"
+  process.env.OPENAI_POST_REVIEW_MODEL = "test-reviewer"
+  const requests: { step: string; model: string }[] = []
+  let providerDown = true
+  t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
+    assert.equal(url, "https://api.openai.com/v1/responses")
+    const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
+    requests.push({ step, model: body.model })
+    if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
+    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : copyFixture()
+    return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
+  })
+  await runWeeklyPosts(pool, "owner", runtime.id)
+  const failedRuntime = (await readWeeklyPosts(pool, "owner", runtime.id))!
+  assert.equal(failedRuntime.status, "failed")
+  assert.deepEqual(Object.keys(failedRuntime.payload.copies).sort(), ["p1", "p2"])
+  assert.equal(requests.filter((r) => r.step === "post_writer_p3").length, 2)
+  providerDown = false
+  await beginWeeklyPosts(pool, "owner", runtime.id, 1, true)
+  await runWeeklyPosts(pool, "owner", runtime.id)
+  assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.status, "ready")
+  assert.equal(requests.filter((r) => r.step === "post_writer_p1").length, 0)
+  assert.equal(requests.filter((r) => r.step === "post_writer_p2").length, 1)
+  assert.equal(requests.filter((r) => r.step === "post_writer_p3").length, 3)
+  assert.ok(requests.filter((r) => r.step.startsWith("post_writer_")).every((r) => r.model === "test-writer"))
+  assert.deepEqual(requests.filter((r) => r.step === "post_review"), [{ step: "post_review", model: "test-reviewer" }])
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
   await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=$1", [brandId])
   assert.equal((await readPlanningView(pool, "owner", brandId, "2026-09-14")).stale, true)

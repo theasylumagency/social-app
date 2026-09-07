@@ -1,3 +1,4 @@
+import { OPERATOR_LEASE_MS } from "../models/runtime-policy"
 import { randomUUID } from "node:crypto"
 import type { Pool } from "pg"
 import { emptyPosts, type PostsBatch, type PostsPayload, type PostAsset } from "../../blueprints/social/weekly-planning/posts"
@@ -27,7 +28,7 @@ export async function beginWeeklyPosts(pool: Pool, ownerId: string, runId: strin
 }
 export async function claimWeeklyPosts(pool: Pool, ownerId: string, runId: string) {
   const token = randomUUID()
-  const rows = await pool.query<Row>(`UPDATE weekly_post_batches p SET status='running',lease_token=$3,lease_until=now()+interval '4 minutes',updated_at=now() FROM weekly_planning_runs r WHERE r.id=p.run_id AND ${access} AND r.id=$2 AND r.status IN ('ready','approved') AND NOT EXISTS(SELECT 1 FROM weekly_planning_runs n WHERE n.brand_id=r.brand_id AND n.week_start=r.week_start AND n.version>r.version) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) AND (p.status='queued' OR (p.status='running' AND p.lease_until<now())) RETURNING p.*`, [ownerId, runId, token])
+  const rows = await pool.query<Row>(`UPDATE weekly_post_batches p SET status='running',lease_token=$3,lease_until=now()+interval '${OPERATOR_LEASE_MS} milliseconds',updated_at=now() FROM weekly_planning_runs r WHERE r.id=p.run_id AND ${access} AND r.id=$2 AND r.status IN ('ready','approved') AND NOT EXISTS(SELECT 1 FROM weekly_planning_runs n WHERE n.brand_id=r.brand_id AND n.week_start=r.week_start AND n.version>r.version) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) AND (p.status='queued' OR (p.status='running' AND p.lease_until<now())) RETURNING p.*`, [ownerId, runId, token])
   return rows.rows[0] ? { batch: fromRow(rows.rows[0]), token } : null
 }
 export async function saveWeeklyPosts(pool: Pool, runId: string, token: string, payload: PostsPayload, step: PostsBatch["step"]) {

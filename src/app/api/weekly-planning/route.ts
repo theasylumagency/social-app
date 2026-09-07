@@ -1,18 +1,14 @@
-import { after } from "next/server"
 import { authenticateWorkRequest, currentSession } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { isWeek } from "../../../application/dashboard/model"
 import { isDiscoveryId } from "../../../infrastructure/postgres/brand-discovery-store"
 import { approvePlanningRun, beginWeeklyPlanning, PlanningConflict, readPlanningRun, readPlanningView, retryPlanningRun, type BeginPlanningInput } from "../../../infrastructure/postgres/weekly-planning-store"
-import { runWeeklyPlanning } from "../../../worker/weekly-planning"
-import { runWeeklyPosts } from "../../../worker/weekly-posts"
 import { beginWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-store"
 import { repairWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-repair"
 import { changeWeeklyCadence } from "../../../infrastructure/postgres/weekly-planning-store"
 import { isPostCadence } from "../../../blueprints/social/weekly-planning/posts"
 
 export const runtime = "nodejs"
-export const maxDuration = 300
 export async function GET(request: Request) {
   const auth = await currentSession()
   if (!auth?.user.emailVerified) return Response.json({ message: "გაგრძელებისთვის შედით ანგარიშში." }, { status: 401 })
@@ -54,13 +50,6 @@ export async function POST(request: Request) {
       else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")
     }
     const view = await readPlanningView(pool, ownerId, run.brandId, run.week)
-    if (view.run && ["queued", "running"].includes(view.run.status)) {
-      const id = view.run.id
-      after(() => runWeeklyPlanning(pool, ownerId, id))
-    } else if (view.run && view.posts && ["queued", "running"].includes(view.posts.status)) {
-      const id = view.run.id
-      after(() => runWeeklyPosts(pool, ownerId, id))
-    }
     return Response.json(view)
   } catch (error) {
     if (error instanceof PlanningConflict) return Response.json({ message: error.message }, { status: 409 })

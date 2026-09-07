@@ -1,3 +1,4 @@
+import { OPERATOR_LEASE_MS } from "../models/runtime-policy"
 import { randomUUID } from "node:crypto"
 import type { Pool, PoolClient } from "pg"
 import type { IsoDateTime } from "../../core/domain"
@@ -171,7 +172,7 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
 
 export async function claimPlanningRun(pool: Pool, ownerId: string, id: string) {
   const token = randomUUID()
-  const result = await pool.query<Row>(`UPDATE weekly_planning_runs r SET status='running',lease_token=$3,lease_until=now()+interval '4 minutes',updated_at=now() WHERE ${owned} AND r.id=$2 AND (r.status='queued' OR (r.status='running' AND r.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING ${fields}`, [ownerId, id, token])
+  const result = await pool.query<Row>(`UPDATE weekly_planning_runs r SET status='running',lease_token=$3,lease_until=now()+interval '${OPERATOR_LEASE_MS} milliseconds',updated_at=now() WHERE ${owned} AND r.id=$2 AND (r.status='queued' OR (r.status='running' AND r.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING ${fields}`, [ownerId, id, token])
   return result.rows[0] ? { run: fromRow(result.rows[0]), token } : null
 }
 export async function finishPlanningStep(pool: Pool, run: PlanningRun, token: string, payload: PlanningPayload, step: PlanningRun["step"]) {

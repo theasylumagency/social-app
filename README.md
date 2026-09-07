@@ -30,7 +30,7 @@ content, and have the Operator publish that content automatically.
 - `src/app/` contains the Next.js UI and request surfaces.
 - `src/infrastructure/` contains request-time storage, website, and model
   adapters used by synchronous flows such as onboarding.
-- `worker/` will execute background provider and model work.
+- `worker/` executes queued brand discovery, weekly planning and post generation through the persistent `npm run worker:operator` process. The discovery and weekly API routes only validate and persist state; they do not launch heavy model calls.
 
 The core rule is that language models handle ambiguous semantic reasoning while
 deterministic application code owns IDs, validation, authority, state changes,

@@ -1,3 +1,4 @@
+import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
 import { advanceDiscovery } from "../application/brand-discovery/advance"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
@@ -13,9 +14,9 @@ export function discoveryErrorMessage(error: unknown): string {
 }
 
 /** Durable leases fence stale workers. Each stage is persisted before continuing. */
-export async function runBrandDiscovery(pool: Pool, ownerId: string, id: string, budgetMs = 290_000): Promise<void> {
+export async function runBrandDiscovery(pool: Pool, ownerId: string, id: string, budgetMs = OPERATOR_WORKER_BUDGET_MS): Promise<void> {
   const deadline = Date.now() + budgetMs
-  while (Date.now() < deadline - 185_000) {
+  while (Date.now() < deadline - MODEL_STAGE_RESERVE_MS) {
     const claim = await claimDiscovery(pool, ownerId, id)
     if (!claim) return
     const { session, token } = claim
@@ -27,7 +28,7 @@ export async function runBrandDiscovery(pool: Pool, ownerId: string, id: string,
       if (!await finishDiscoveryStep(pool, session, token, next.payload, next.step) || next.step === "ready") return
     } catch (error) {
       // Provider responses, credentials and source material never enter user-visible errors.
-      console.error("Brand discovery stage failed", { sessionId: id, step: session.step, error: error instanceof Error ? error.name : "unknown" })
+      console.error("Brand discovery stage failed", { sessionId: id, step: session.step, ...modelFailure(error) })
       await failDiscoveryStep(pool, session, token, discoveryErrorMessage(error))
       return
     }
