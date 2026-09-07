@@ -14,6 +14,7 @@ import { emptyPosts, isPostCadence, countPostChannels, type PostsPayload, type P
 import { resizePostSchedule, spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
 import { assemblePlanningRun } from "../../application/weekly-planning/advance"
 import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
+import { sequenceIssues } from "../../blueprints/social/weekly-planning/sequence"
 
 type Row = { id: string; owner_user_id: string; brand_id: string; week: string; version: number; status: PlanningRun["status"]; step: PlanningRun["step"]; payload: PlanningPayload; error: string | null; lease_until: Date | null; created_at: Date; updated_at: Date }
 const fields = "r.*,to_char(r.week_start,'YYYY-MM-DD') AS week"
@@ -88,8 +89,10 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (input.parentId && (!previous || previous.id !== input.parentId || previous.version !== input.parentVersion || !["ready", "approved", "failed"].includes(previous.status))) throw new PlanningConflict("გეგმა სხვა ჩანართში შეიცვალა ან ჯერ მზადდება. განაახლეთ გვერდი.")
     const foundation = await basis(c, ownerId, input.brandId)
     assertBasis(foundation)
-    const prior = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start<$2::date AND r.status='approved' ORDER BY r.week_start DESC LIMIT 3`, [input.brandId, input.week])
-    const payload: PlanningPayload = { basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan)] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
+    // Include generated proposals: founders can compare two weeks before approving either.
+    // One current usable version per recent week; failed/rejected/superseded plans are not exposure.
+    const prior = await c.query<Row & { posts_payload: PostsPayload | null }>(`SELECT DISTINCT ON (r.week_start) ${fields},p.payload AS posts_payload FROM weekly_planning_runs r LEFT JOIN weekly_post_batches p ON p.run_id=r.id WHERE r.brand_id=$1 AND r.owner_user_id=$3 AND r.week_start<$2::date AND r.week_start>=$2::date-28 AND r.status IN ('ready','approved') ORDER BY r.week_start DESC,r.version DESC LIMIT 3`, [input.brandId, input.week, ownerId])
+    const payload: PlanningPayload = { basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
     const now = new Date().toISOString() as IsoDateTime
     payload.founderPosts = true
     if (previous?.payload.cadence) payload.cadence = previous.payload.cadence
@@ -218,6 +221,7 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
     if (current?.sessionId !== run.payload.basis.sessionId || current.revision !== run.payload.basis.revision) throw new PlanningConflict("ბრენდის საფუძველი განახლდა. ჯერ გეგმა ახალ ცოდნაზე განაახლეთ.")
     if (run.payload.review.concerns.some((issue) => issue.severity === "blocking")) throw new PlanningConflict("ჯერ გეგმის შემოწმებისას აღმოჩენილი საკითხები დააზუსტეთ.")
     if ((run.payload.founderPosts || posts.rowCount) && (posts.rows[0]?.status !== "ready" || !posts.rows[0].payload.review || posts.rows[0].payload.review.issues.some((i) => i.severity === "blocking"))) throw new PlanningConflict("ჯერ პოსტების ტექსტების მომზადება და შემოწმება დაასრულეთ.")
+    if (posts.rows[0]?.payload.sequenceReview && sequenceIssues(posts.rows[0].payload.sequenceReview).length) throw new PlanningConflict("კვირის პოსტები ერთსა და იმავე საქმეს იმეორებს. ჯერ გეგმა დააზუსტეთ.")
     const now = new Date().toISOString() as IsoDateTime
     if (posts.rowCount) {
       await c.query("UPDATE weekly_post_batches SET approved_at=now(),updated_at=now() WHERE run_id=$1", [id])

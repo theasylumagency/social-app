@@ -12,6 +12,7 @@ import { assembleWeeklyPlan } from "../../blueprints/social/weekly-plan-assembly
 import { submitWeeklyPlanForReview } from "../../blueprints/social/weekly-plan-lifecycle"
 import { validateReferences } from "../../blueprints/social/brand-discovery/validation"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
+import { recentEditorialWork } from "../../blueprints/social/weekly-planning/sequence"
 import { compileLandscapeContext } from "../brand-discovery/advance"
 import { WEEKLY_OBJECTIVE_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/weekly-objective"
 import { WEEKLY_AUDIENCE_FOCUS_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/weekly-audience-focus"
@@ -45,6 +46,7 @@ export function compilePlanningContext(run: PlanningRun) {
     week: { startsOn: run.week, endsOn: end.toISOString().slice(0, 10), plannedOn: p.plannedOn, timezone: "Asia/Tbilisi" },
     userPriority: p.priority || null, revisionNote: p.revisionNote || null,
     previousVersion: p.previousVersion, priorPlans: p.priorWeeks,
+    recentEditorialWork: recentEditorialWork(p, run.week),
     recentResults: [], recentSignals: [], channelContext: { confirmedDestinations: [], publishingSchedule: null },
     dataAvailability: { performance: "notSupplied", proof: "notSupplied", priorPlansAreResults: false },
     weeklyObjective: p.objective,
@@ -81,17 +83,17 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
   const proseKeys = [...audienceKeys, ...context.selectedBrandGoals.map((g) => g.goalKey), ...context.contentDirections.map((d) => d.contentDirectionKey)]
   const runModel: BrandReasoner = (call) => reason({ ...call, validate: (value) => [...(call.validate?.(value) ?? []), ...validatePlanningProse(value, proseKeys)] })
   if (run.step === "objective" && p.founderPosts) {
-    const s = await runModel<CompactStrategy>({ step: "weekly_strategy", version: "founder-weekly-strategy-v1", prompt: COMPACT_STRATEGY_PROMPT, input: context, schema: COMPACT_STRATEGY_SCHEMA, validate: (v) => validateCompactStrategy(v as CompactStrategy, audienceKeys) })
+    const s = await runModel<CompactStrategy>({ step: "weekly_strategy", version: "founder-weekly-strategy-v2", prompt: COMPACT_STRATEGY_PROMPT, input: context, schema: COMPACT_STRATEGY_SCHEMA, validate: (v) => validateCompactStrategy(v as CompactStrategy, audienceKeys) })
     p.objective = s.weeklyObjective; p.focus = s.focus; p.directions = s.directions; p.adaptation = s.audienceDirections; p.experiment = s.experimentDecision
     return { payload: p, step: "review" }
   }
   if (run.step === "objective") {
-    const output = await runModel<WeeklyObjectiveModelOutput>({ step: "weekly_objective", version: "weekly-objective-v2", prompt: WEEKLY_OBJECTIVE_SYSTEM_PROMPT, input: context, schema: WEEKLY_OBJECTIVE_OUTPUT_SCHEMA })
+    const output = await runModel<WeeklyObjectiveModelOutput>({ step: "weekly_objective", version: "weekly-objective-v3", prompt: WEEKLY_OBJECTIVE_SYSTEM_PROMPT, input: context, schema: WEEKLY_OBJECTIVE_OUTPUT_SCHEMA })
     p.objective = output.weeklyObjective
     return { payload: p, step: "focus" }
   }
   if (run.step === "focus") {
-    const output = await runModel<WeeklyAudienceFocusModelOutput>({ step: "weekly_focus", version: "weekly-focus-v2", prompt: WEEKLY_AUDIENCE_FOCUS_SYSTEM_PROMPT, input: context, schema: WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA, validate: (value) => {
+    const output = await runModel<WeeklyAudienceFocusModelOutput>({ step: "weekly_focus", version: "weekly-focus-v3", prompt: WEEKLY_AUDIENCE_FOCUS_SYSTEM_PROMPT, input: context, schema: WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA, validate: (value) => {
       const f = (value as WeeklyAudienceFocusModelOutput).focus
       return [...validateReferences([f.primaryAudienceKey, ...f.secondaryAudienceKeys], audienceKeys, "weekly audiences"), ...(f.secondaryAudienceKeys.length > 1 ? ["Select at most one secondary audience"] : [])]
     } })
@@ -99,7 +101,7 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
     return { payload: p, step: "directions" }
   }
   if (run.step === "directions") {
-    const output = await runModel<ContentDirectionModelOutput>({ step: "weekly_directions", version: "content-direction-v2", prompt: CONTENT_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
+    const output = await runModel<ContentDirectionModelOutput>({ step: "weekly_directions", version: "content-direction-v3", prompt: CONTENT_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
       const d = (value as ContentDirectionModelOutput).directions
       return [...(d.length < 3 || d.length > 5 ? ["Return 3–5 distinct directions"] : []), ...(new Set(d.map((d) => d.direction.trim().toLocaleLowerCase())).size !== d.length ? ["Duplicate content directions"] : [])]
     } })
@@ -108,7 +110,7 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
   }
   if (run.step === "adaptation") {
     const allowed = [p.focus!.primaryAudienceKey, ...p.focus!.secondaryAudienceKeys]
-    const output = await runModel<ContentAudienceDirectionModelOutput>({ step: "weekly_adaptation", version: "content-audience-direction-v2", prompt: CONTENT_AUDIENCE_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
+    const output = await runModel<ContentAudienceDirectionModelOutput>({ step: "weekly_adaptation", version: "content-audience-direction-v3", prompt: CONTENT_AUDIENCE_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
       const d = (value as ContentAudienceDirectionModelOutput).directions
       return [...validateReferences(d.map((d) => d.contentDirectionKey), context.contentDirections.map((d) => d.contentDirectionKey), "directions"), ...(d.length !== p.directions.length ? ["Cover every content direction exactly once"] : []), ...d.flatMap((d) => [...validateReferences([d.primaryAudienceKey, ...d.secondaryAudienceKeys], allowed, "focus audiences"), ...(d.secondaryAudienceKeys.length > 1 ? ["At most one secondary audience per direction"] : [])])]
     } })
@@ -116,7 +118,7 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
     return { payload: p, step: "experiment" }
   }
   if (run.step === "experiment") {
-    const output = await runModel<ExperimentDecisionModelOutput>({ step: "weekly_experiment", version: "experiment-decision-v2", prompt: EXPERIMENT_DECISION_SYSTEM_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation }, schema: EXPERIMENT_DECISION_OUTPUT_SCHEMA, validate: (value) => {
+    const output = await runModel<ExperimentDecisionModelOutput>({ step: "weekly_experiment", version: "experiment-decision-v3", prompt: EXPERIMENT_DECISION_SYSTEM_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation }, schema: EXPERIMENT_DECISION_OUTPUT_SCHEMA, validate: (value) => {
       const d = (value as ExperimentDecisionModelOutput).experimentDecision
       const e = d.experiment; const fields = [e.hypothesis, e.variable, e.comparison, e.learningSignal]
       return d.decision === "noExperiment" ? fields.some((v) => v !== null) || e.guardrails.length ? ["No experiment requires null experiment fields and empty guardrails"] : [] : fields.some((v) => typeof v !== "string" || !v.trim()) || !e.guardrails.length ? ["Experiment requires a hypothesis, variable, comparison, signal and guardrails"] : []
@@ -125,7 +127,7 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
     return { payload: p, step: "review" }
   }
   if (run.step === "review") {
-    p.review = await runModel<PlanningReview>({ step: "weekly_review", version: "weekly-plan-review-v1", prompt: WEEKLY_PLAN_REVIEW_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation, experimentDecision: p.experiment }, schema: WEEKLY_PLAN_REVIEW_SCHEMA, validate: (value) => {
+    p.review = await runModel<PlanningReview>({ step: "weekly_review", version: "weekly-plan-review-v2", prompt: WEEKLY_PLAN_REVIEW_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation, experimentDecision: p.experiment }, schema: WEEKLY_PLAN_REVIEW_SCHEMA, validate: (value) => {
       const review = value as PlanningReview
       return [...validateReferences(review.brandGoalKeys, context.selectedBrandGoals.map((g) => g.goalKey), "brand goals"), ...review.concerns.flatMap((c) => validateReferences(c.directionKeys, context.contentDirections.map((d) => d.contentDirectionKey), "review directions"))]
     } })

@@ -5,7 +5,7 @@ import type { WeeklyAudienceFocusProposal } from "./weekly-audience-focus-contra
 import type { ContentDirectionProposal } from "./content-direction-contract"
 import type { ContentAudienceDirectionProposal } from "./content-audience-direction-contract"
 import type { ExperimentDecisionStructuredProposal } from "./experiment-decision-contract"
-import type { PostsBatch, PostAsset, PostCadence } from "./posts"
+import type { PostsBatch, PostAsset, PostCadence, PostsPayload } from "./posts"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -15,7 +15,13 @@ export type PlanningReview = {
   checks: { brandSpecificity: string; focusCoherence: string; voiceCompatibility: string; evidenceDiscipline: string; priorityResponse: string }
   concerns: { severity: "blocking" | "advisory"; message: string; directionKeys: string[] }[]
 }
-export type PlanOutline = { week: string; objective: string; directions: string[]; experiment: string | null }
+export type PlanOutline = {
+  week: string; objective: string; directions: string[]; experiment: string | null
+  // Optional for existing snapshots. Editorial history is intention, never brand knowledge or results.
+  status?: "ready" | "approved"
+  directionDetails?: { direction: string; purpose: string; rationale: string }[]
+  posts?: { title: string; job: string; takeaway: string; points: string[] }[]
+}
 export type PlanningPayload = {
   founderPosts?: boolean
   cadence?: PostCadence
@@ -49,6 +55,10 @@ export type PlanningRun = {
 }
 export type PlanningView = { run: PlanningRun | null; approved: PlanningRun | null; history: { id: string; version: number; status: PlanningRun["status"]; updatedAt: string; objective: string | null }[]; basis: BrandDossier | null; stale: boolean; posts?: PostsBatch | null; assets?: PostAsset[]; approvedPosts?: PostsBatch | null; approvedAssets?: PostAsset[] }
 
-export function summarizePlan(plan: WeeklyPlan): PlanOutline {
-  return { week: plan.startsOn, objective: plan.objective.objective, directions: plan.contentDirections.map((d) => d.direction), experiment: plan.experimentDecision.experiment?.hypothesis ?? null }
+export function summarizePlan(plan: WeeklyPlan, posts?: PostsPayload, status?: PlanOutline["status"]): PlanOutline {
+  return { week: plan.startsOn, objective: plan.objective.objective, directions: plan.contentDirections.map((d) => d.direction), experiment: plan.experimentDecision.experiment?.hypothesis ?? null,
+    ...(status ? { status } : {}),
+    directionDetails: plan.contentDirections.map(({ direction, purpose, rationale }) => ({ direction, purpose, rationale })),
+    posts: posts?.outline?.posts.map((p) => ({ title: p.title, job: p.brief.job, takeaway: p.brief.takeaway, points: p.brief.points })) ?? [],
+  }
 }

@@ -226,14 +226,10 @@ Do not generate weak directions merely to make the set look diverse.
 
 REPETITION
 
-Rational repetition is allowed.
-
-If a previously useful communication territory remains relevant to the current
-objective, it may reappear.
-
-Do not treat "we used this before" as a reason to exclude it.
-
-But do not duplicate directions inside the same weekly set.
+A useful communication territory may reappear with substantive progress or a
+specific recurring need grounded in supplied context. Continuing relevance alone
+does not justify repeating the same reader work. Compare recent jobs and takeaways,
+not just titles. Do not duplicate directions inside the same weekly set.
 
 
 AUTHORITY

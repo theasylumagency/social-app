@@ -1,6 +1,7 @@
 import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
-import { createPostSchedule, writePost, reviewPosts } from "../application/weekly-planning/posts"
+import { createPostSchedule, writePost, reviewPosts, reviewPostSequence } from "../application/weekly-planning/posts"
+import { applySequenceReview } from "../blueprints/social/weekly-planning/sequence"
 import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
 import { readPlanningRun, recordPlanningModelRun } from "../infrastructure/postgres/weekly-planning-store"
@@ -11,14 +12,23 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
   while (Date.now() < deadline - MODEL_STAGE_RESERVE_MS) {
     const claim = await claimWeeklyPosts(pool, ownerId, id)
     if (!claim) return
-    const model = postStageModel(claim.batch.step)
+    const needsSequence = ["writing", "review"].includes(claim.batch.step) && !claim.batch.payload.sequenceReview && !!claim.batch.payload.outline?.posts.length
+    const model = postStageModel(needsSequence ? "review" : claim.batch.step)
     try {
       const run = await readPlanningRun(pool, ownerId, id)
       if (!run) throw Error("Missing owned plan")
       const payload = structuredClone(claim.batch.payload)
       const reason = createBrandReasoner((r) => recordPlanningModelRun(pool, id, r), { model, reasoningEffort: "low" })
       let step = claim.batch.step
-      if (step === "outline") { payload.outline = await createPostSchedule(run, reason, payload); step = "writing" }
+      if (step === "outline") {
+        payload.sequenceRetainedCount = payload.outline?.posts.length ?? 0
+        payload.outline = await createPostSchedule(run, reason, payload)
+        delete payload.sequenceReview
+        step = "writing"
+      }
+      else if (needsSequence) {
+        step = applySequenceReview(payload, await reviewPostSequence(run, payload, reason))
+      }
       else if (step === "writing") {
         const pending = payload.outline!.posts.map((_, i) => `p${i + 1}`).filter((key) => !payload.copies[key]).slice(0, 3)
         const results = await Promise.allSettled(pending.map(async (key) => {

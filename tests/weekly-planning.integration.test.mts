@@ -15,6 +15,7 @@ import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
 import { runWeeklyPosts } from "../src/worker/weekly-posts"
+import { distinctSequence } from "./weekly-sequence-fixture"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -132,11 +133,16 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal((await readPlanningView(pool, "owner", brandId, input.week)).approved?.id, revision.id)
   const following = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-09-14" })
   assert.equal(following.payload.priorWeeks[0]?.objective, ready2.payload.objective?.objective)
+  assert.equal(following.payload.priorWeeks.length, 1, "history includes only one version of a week")
+  assert.equal(following.payload.priorWeeks[0]?.posts?.[0]?.job, completePosts.outline!.posts[0]!.brief.job)
+  assert.equal(following.payload.priorWeeks[0]?.status, "approved")
   const three = (await claimPlanningRun(pool, "owner", following.id))!
   const ready3 = await completePlanningFixture(three.run)
   await finishPlanningStep(pool, three.run, three.token, ready3.payload, "ready")
   // Quantity edits reuse strategy and assets, including while a writer is running.
   const cadenceBase = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-09-21" })
+  assert.equal(cadenceBase.payload.priorWeeks[0]?.status, "ready", "an unapproved generated week is still editorial history")
+  assert.equal(cadenceBase.payload.priorWeeks[0]?.week, "2026-09-14")
   const cc = (await claimPlanningRun(pool, "owner", cadenceBase.id))!
   const cadenceReady = await completePlanningFixture(cc.run)
   await finishPlanningStep(pool, cc.run, cc.token, cadenceReady.payload, "ready")
@@ -207,7 +213,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
     const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
     requests.push({ step, model: body.model })
     if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
-    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
+    const input = JSON.parse(body.input)
+    const result = step === "post_sequence" ? distinctSequence(3, input.recentEditorialWork[0]?.historyKey ?? null) : step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
     return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
   })
   await runWeeklyPosts(pool, "owner", runtime.id)
@@ -226,6 +233,14 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.deepEqual(requests.filter((r) => r.step === "post_review"), [{ step: "post_review", model: "test-reviewer" }])
   assert.deepEqual(requests.filter((r) => r.step === "post_editorial"), [{ step: "post_editorial", model: "test-reviewer" }])
   assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.payload.review?.editorial?.posts.length, 3)
+  assert.deepEqual(requests.filter((r) => r.step === "post_sequence"), [{ step: "post_sequence", model: "test-reviewer" }], "sequence review persists across a writer outage")
+  const finished = (await readWeeklyPosts(pool, "owner", runtime.id))!.payload
+  const sequenceBlocked = structuredClone(finished)
+  sequenceBlocked.sequenceReview!.pairs[0]!.relationship = "duplicate"
+  await pool.query("UPDATE weekly_post_batches SET payload=$2::jsonb WHERE run_id=$1", [runtime.id, JSON.stringify(sequenceBlocked)])
+  await assert.rejects(() => approvePlanningRun(pool, "owner", runtime.id, 1), /იმეორებს/, "a clean copy review cannot override sequence blockers")
+  await assert.rejects(() => repairWeeklyPosts(pool, "owner", runtime.id, 1), /გეგმაშია/, "copy repair cannot bypass rejected planning jobs")
+  await pool.query("UPDATE weekly_post_batches SET payload=$2::jsonb WHERE run_id=$1", [runtime.id, JSON.stringify(finished)])
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
   await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=$1", [brandId])
   assert.equal((await readPlanningView(pool, "owner", brandId, "2026-09-14")).stale, true)

@@ -1,5 +1,6 @@
 import type { JsonSchema } from "../brand-discovery/schemas"
 import type { PostEditorialReview } from "./post-editorial"
+import type { SequenceReview } from "./sequence"
 
 export type PostChannel = "facebook" | "instagram"
 export type PostCadence = Record<PostChannel, number>
@@ -23,7 +24,12 @@ export type PostVariant = { channel: PostChannel; caption: string; frames: { hea
 export type PostCopy = { variants: PostVariant[] }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
-export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence }
+export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  sequenceReview?: SequenceReview
+  sequenceRepairs?: number
+  sequenceRetainedCount?: number
+  sequenceFeedback?: { rejectedPosts: PostOutline[]; review: SequenceReview }
+}
 export type PostsBatch = { runId: string; status: "queued" | "running" | "ready" | "failed"; step: "outline" | "writing" | "review" | "ready"; payload: PostsPayload; error: string | null; leaseUntil: string | null; approvedAt: string | null; updatedAt: string }
 export type PostAsset = { id: string; postKey: string; slot: number; width: number; height: number; name: string }
 export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, review: null, repairs: 0 })
@@ -69,6 +75,9 @@ export function validatePostSchedule(value: PostSchedule, directions: string[]):
     if (p.format === "reel" && (p.visual.kind !== "video" || p.visual.aspectRatio !== "9:16" || !p.visual.frames.length)) errors.push("Reel requires vertical footage / scene briefs")
   })
   if (new Set(value.posts.map((p) => p.title.trim().toLowerCase())).size !== value.posts.length) errors.push("Posts must have distinct titles and communication jobs")
+  const normalize = (v: string) => v.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ")
+  const jobs = value.posts.map((p) => JSON.stringify([normalize(p.brief.job), normalize(p.brief.takeaway)]))
+  if (new Set(jobs).size !== jobs.length) errors.push("Duplicate post job and takeaway; change reader value, not the title or format")
   return errors
 }
 export function validatePostCopy(value: PostCopy, post: PostOutline): string[] {

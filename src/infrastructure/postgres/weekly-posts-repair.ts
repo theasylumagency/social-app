@@ -1,5 +1,6 @@
 import type { Pool } from "pg"
 import type { PostsPayload } from "../../blueprints/social/weekly-planning/posts"
+import { sequenceIssues } from "../../blueprints/social/weekly-planning/sequence"
 
 export async function repairWeeklyPosts(pool: Pool, ownerId: string, runId: string, version: number) {
   const c = await pool.connect()
@@ -13,6 +14,7 @@ export async function repairWeeklyPosts(pool: Pool, ownerId: string, runId: stri
     const count = await c.query<{ n: number }>("SELECT count(*)::int n FROM weekly_planning_events WHERE run_id=$1 AND kind='posts-repaired' AND created_at>now()-interval '1 hour'", [runId])
     if (count.rows[0]!.n >= 5) throw Error("გასწორების ლიმიტი ამოიწურა. მოგვიანებით სცადეთ.")
     const p = r.rows[0].payload
+    if (p.sequenceReview && sequenceIssues(p.sequenceReview).length) throw Error("გამეორება პოსტების გეგმაშია. ტექსტის გადაწერის ნაცვლად კვირის გეგმა დააზუსტეთ.")
     const keys = [...new Set(p.review?.issues.filter((i) => i.severity === "blocking").map((i) => i.postKey) ?? [])]
     if (!keys.length) throw Error("დასაზუსტებელი ტექსტი არ მოიძებნა.")
     p.repairDrafts ??= {}

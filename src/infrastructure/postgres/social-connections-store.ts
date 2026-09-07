@@ -28,9 +28,17 @@ function assertHealth(health: ProviderBindingHealth) {
 
 /** Owner-scoped application port, using the same brand/workspace ownership as other stores. */
 export class PostgresSocialConnectionsStore implements SocialConnectionsStore {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool | PoolClient) {}
 
   private async transaction<T>(scope: SocialConnectionScope, work: (c: PoolClient) => Promise<T>): Promise<T> {
+    // A connection-flow transaction can reuse this port and commit the account,
+    // binding, and consumed intent together. It already holds the brand lock.
+    if ("release" in this.pool) {
+      const access = await this.pool.query(`SELECT b.id FROM brands b JOIN workspaces w ON w.id=b.workspace_id
+        WHERE b.id=$1 AND w.owner_user_id=$2 FOR UPDATE OF b`, [scope.brandId, scope.ownerId])
+      if (!access.rowCount) throw new Error("Brand access denied")
+      return work(this.pool)
+    }
     const c = await this.pool.connect()
     try {
       await c.query("BEGIN")

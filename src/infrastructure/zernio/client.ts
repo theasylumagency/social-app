@@ -16,6 +16,8 @@ export type ZernioRequest = {
   readonly path: string
   readonly query?: Readonly<Record<string, string>>
   readonly body?: unknown
+  readonly connectToken?: string
+  readonly idempotencyKey?: string
 }
 
 export type ZernioClientOptions = {
@@ -47,6 +49,9 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
         || !["GET", "POST"].includes(input.method) || (input.method === "GET" && input.body !== undefined)) {
         throw new ZernioClientError("invalidRequest")
       }
+      for (const header of [input.connectToken, input.idempotencyKey]) {
+        if (header !== undefined && (!header || header.length > 8000 || /[\r\n\u0000]/u.test(header))) throw new ZernioClientError("invalidRequest")
+      }
       const url = new URL(input.path, base)
       for (const [key, value] of Object.entries(input.query ?? {})) url.searchParams.set(key, value)
       let body: string | undefined
@@ -61,7 +66,9 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
       const execute = async () => {
         const response = await fetchRequest(url, {
           method: input.method, signal: controller.signal, redirect: "manual", cache: "no-store",
-          headers: { Authorization: authorization, Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+          headers: { Authorization: authorization, Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+            ...(input.connectToken ? { "X-Connect-Token": input.connectToken } : {}),
+            ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}) },
           ...(body === undefined ? {} : { body }),
         })
         // Never follow a redirect carrying credentials, or expose an error response body.

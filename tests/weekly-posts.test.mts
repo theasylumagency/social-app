@@ -80,7 +80,7 @@ test("schedule additions enforce exact counts and preserve retained post positio
     calls++
     assert.equal((call.input as { retainedPosts: unknown[] }).retainedPosts.length, 3)
     const value = scheduleFixture()
-    value.posts = [{ ...value.posts[0]!, title: "დამატებითი განსხვავებული კითხვა", channels: [value.posts[0]!.channels[0]!] }]
+    value.posts = [{ ...value.posts[0]!, title: "დამატებითი განსხვავებული კითხვა", brief: { ...value.posts[0]!.brief, job: "ზედაპირის მოვლის მოლოდინი", takeaway: "მოვლის სურვილი შეფასებისას განიხილეთ" }, channels: [value.posts[0]!.channels[0]!] }]
     assert.deepEqual(validateSchema(value, call.schema), [])
     assert.deepEqual(call.validate!(value), [])
     assert.ok(call.validate!({ ...value, posts: [] }).length)

@@ -1,0 +1,617 @@
+{
+  "evaluatedAt": "2026-09-07T20:11:53.503Z",
+  "results": [
+    {
+      "name": "almost-another-cross-week",
+      "expected": "block",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "დებულების სტატუსებისა და ფიქციური ფორმის საზღვრების განმარტება",
+            "contribution": "მკითხველს აძლევს ოთხნაწილიან ჩარჩოს: ფაქტი, ინტერპრეტაცია, ღია კითხვა და პოლიტიკური იდეის ფიქციური გამოცდა; უსვამს ხაზს, რომ ფიქცია ემპირიული მტკიცებულება არ არის.",
+            "closestRecentKey": "h1p1",
+            "relationship": "repeats",
+            "addedValue": "none",
+            "reason": "ფაქტის, ინტერპრეტაციისა და ღია კითხვის გამიჯვნა უკვე ახსნილია უახლოეს მასალაში, ხოლო ფიქციის არამტკიცებულებითი სტატუსი სხვა ბოლოდროინდელ მასალაში. მათი ერთ ჩარჩოდ შეკრება ახალ დამოუკიდებელ მკითხველურ სამუშაოს არ ქმნის."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "პოლიტიკური დაშვების ფიქციურ კონფლიქტად გარდაქმნის პროცესის ახსნა",
+            "contribution": "ხსნის ჯაჭვს, სადაც ძალაუფლებრივი კითხვა და დაპირისპირებული დაშვებები პერსონაჟის არჩევნად, ინსტიტუციურ კონფლიქტად და შესაძლო სოციალურ შედეგად იქცევა; აზუსტებს, რომ სცენარი მტკიცებულება და პროგნოზი არ არის.",
+            "closestRecentKey": "h1p2",
+            "relationship": "repeats",
+            "addedValue": "incidental",
+            "reason": "ბოლოდროინდელი მასალა უკვე აღწერს პოლიტიკური კითხვის პერსონაჟების, ინტერესთა კონფლიქტისა და შესაძლო შედეგების ფიქციურ გამოცდას და მკაფიოდ გამიჯნავს მას რეალური სამყაროს მტკიცებისგან. ნაბიჯებად დალაგება მხოლოდ მცირე პროცესულ დაზუსტებას ამატებს."
+          },
+          {
+            "postKey": "p3",
+            "contentRole": "ესესა და დიალოგის დამოუკიდებელი ინტელექტუალური ფუნქციების შედარება",
+            "contribution": "განასხვავებს ესეს არგუმენტის თანმიმდევრულ განვითარებას დიალოგის დამოუკიდებელი პოზიციების კონფლიქტისგან და აჩვენებს, რომ დიალოგს წინასწარ დანიშნული გამარჯვებული არ ჰყავს.",
+            "closestRecentKey": "h1p3",
+            "relationship": "repeats",
+            "addedValue": "none",
+            "reason": "უახლოესი ბოლოდროინდელი მასალა უკვე იმავე დასკვნამდე მიჰყავს მკითხველი: დიალოგი ესეს თეატრალური გამეორება არ არის, ხმები საკუთარ ლოგიკას იცავენ და გამარჯვებული წინასწარ არ ინიშნება. ესეს ფუნქციის გამოკვეთა ახალ ძირითად სამუშაოს არ ამატებს."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "overlap",
+            "addedValue": "substantive",
+            "reason": "ორივე ხსნის ფიქციის როლსა და მის არამტკიცებულებით საზღვარს. პირველი პოსტი ასწავლის ფორმების სტატუსის გარჩევას, მეორე კი ცალკე ხსნის, როგორ გარდაიქმნება პოლიტიკური დაშვება არჩევანად და შესაძლო შედეგად; ეს დამატებით, დამოუკიდებელ პროცესულ გაგებას იძლევა."
+          },
+          {
+            "leftKey": "p1",
+            "rightKey": "p3",
+            "relationship": "distinct",
+            "addedValue": "substantive",
+            "reason": "პირველი პოსტის სამუშაოა ფაქტის, ინტერპრეტაციის, ღია კითხვისა და ფიქციის გარჩევა. მესამე პოსტის სამუშაოა ესესა და დიალოგის არგუმენტაციული ფუნქციების შედარება; მკითხველის სასარგებლო ამოცანები განსხვავდება."
+          },
+          {
+            "leftKey": "p2",
+            "rightKey": "p3",
+            "relationship": "distinct",
+            "addedValue": "substantive",
+            "reason": "მეორე პოსტი ხსნის პოლიტიკური იდეის ფიქციურ სცენარად და შედეგად ქცევის პროცესს. მესამე პოსტი ხსნის, როგორ უპირისპირებს დიალოგი დამოუკიდებელ პოზიციებს ესესგან განსხვავებით; ისინი სხვადასხვა ფორმის განსხვავებულ სამუშაოს ეხება."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "cd8be0a5-1869-49a3-a31d-0355d3e88faf",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "c5557bef5a77b15549e0df184e6f62c473bd6d7520d851cf0dc01e8f9b3f770a",
+          "durationMs": 27805,
+          "usage": {
+            "input_tokens": 4023,
+            "input_tokens_details": {
+              "cache_write_tokens": 4020,
+              "cached_tokens": 0
+            },
+            "output_tokens": 1273,
+            "output_tokens_details": {
+              "reasoning_tokens": 430
+            },
+            "total_tokens": 5296
+          },
+          "validationErrors": [
+            "output.posts[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.posts[1].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.posts[2].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[1].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[2].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "fed247f4-5020-4d8b-933b-fbb6cd7a4f0d",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "c5557bef5a77b15549e0df184e6f62c473bd6d7520d851cf0dc01e8f9b3f770a",
+          "durationMs": 30998,
+          "usage": {
+            "input_tokens": 5026,
+            "input_tokens_details": {
+              "cache_write_tokens": 5023,
+              "cached_tokens": 0
+            },
+            "output_tokens": 1333,
+            "output_tokens_details": {
+              "reasoning_tokens": 435
+            },
+            "total_tokens": 6359
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "almost-another-within-week",
+      "expected": "block",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "განმარტებითი ჩარჩო",
+            "contribution": "მკითხველს ასწავლის პოლიტიკური დებულების სამი სტატუსის — დადასტურებული ინფორმაციის, ინტერპრეტაციისა და ღია კითხვის — გარჩევას და თითოეულისადმი შესაბამისი სიზუსტით მიდგომას.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ბოლო სარედაქციო სამუშაო არ არის მოცემული; პოსტი დამოუკიდებელ, პრაქტიკულ კითხვას პასუხობს: როგორ განვასხვაოთ მტკიცებულება, არგუმენტირებული წაკითხვა და დაუდგენელი საკითხი."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "განმარტებითი ჩარჩო",
+            "contribution": "მკითხველს აცნობს ფაქტის, ინტერპრეტაციისა და ღია კითხვის გარჩევას, ხოლო ფიქციას წარმოაჩენს როგორც პოლიტიკური იდეის მხატვრულ გამოცდას და არა მტკიცებულებას.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ბოლო სარედაქციო სამუშაო არ არის მოცემული; დამოუკიდებლად აღებული პოსტი მკითხველს სთავაზობს გამოსადეგ ჩარჩოს, მათ შორის ფიქციისა და ემპირიული მტკიცებულების გამიჯვნას."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "duplicate",
+            "addedValue": "none",
+            "reason": "ორივე პოსტის ძირითადი სამუშაოა ერთიდაიგივე: ფაქტის, ინტერპრეტაციისა და ღია კითხვის სტატუსების გარჩევის ახსნა, რათა მკითხველმა პოლიტიკურ დებულებებს სწორი მოლოდინით მიუდგეს. მეორე პოსტში დამატებული ფიქციის კატეგორია მხოლოდ მცირე გაფართოებაა; ის არ ცვლის ძირითად, უკვე სრულად ახსნილ კლასიფიკაციურ სამუშაოს და დამოუკიდებელ ახალ მთავარ შედეგს არ ქმნის."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "51304131-d281-4f9c-a5da-edc36ac65fcf",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "17db603ccf2f713179583d5b9936c3b4672b03c2f02abbf02563f068d767c760",
+          "durationMs": 15192,
+          "usage": {
+            "input_tokens": 2251,
+            "input_tokens_details": {
+              "cache_write_tokens": 2248,
+              "cached_tokens": 0
+            },
+            "output_tokens": 527,
+            "output_tokens_details": {
+              "reasoning_tokens": 69
+            },
+            "total_tokens": 2778
+          },
+          "validationErrors": [
+            "output.pairs[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "92541f46-b7be-49fd-8931-b1e20e13e62d",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "17db603ccf2f713179583d5b9936c3b4672b03c2f02abbf02563f068d767c760",
+          "durationMs": 13418,
+          "usage": {
+            "input_tokens": 2752,
+            "input_tokens_details": {
+              "cache_write_tokens": 2749,
+              "cached_tokens": 0
+            },
+            "output_tokens": 451,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 3203
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "almost-another-substantive-progress",
+      "expected": "pass",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "პოლიტიკური ცნების ანალიზი ჰიპოთეტური შემთხვევით",
+            "contribution": "არჩევს მატერიალური შემოსავლის ქონას იმ წესებზე გავლენისგან, რომლებიც ამ შემოსავალს განსაზღვრავს; აჩვენებს, რომ შემოსავლის გარანტია პოლიტიკური ავტონომიის საკმარისი პირობა არ არის.",
+            "closestRecentKey": "h1p3",
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "უახლოესი ისტორიული ნამუშევარი შრომისა და შემოსავლის თემას დიალოგის ფორმის ასახსნელად იყენებს. ეს პოსტი კი დამოუკიდებლად აანალიზებს მოქალაქის ძალაუფლებას განაწილების წესებზე."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "პოლიტიკური კონფლიქტის ცნებითი გაშლა",
+            "contribution": "არჩევს მოსახლეობის საჭიროებების ეფექტიან ადმინისტრირებას მოქალაქის თვითმმართველობის უფლებიდან და აყენებს დაძაბულობას ზრუნვის სისტემასა და პოლიტიკურ მონაწილეობას შორის.",
+            "closestRecentKey": "h1p1",
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "უახლოესი ისტორიული ნამუშევარი ასწავლის ფაქტის, ინტერპრეტაციისა და ღია კითხვის გარჩევას. ეს პოსტი კი დამოუკიდებლად ამუშავებს კონკრეტულ პოლიტიკურ კითხვას აღრიცხვასა და მოქალაქეობას შორის."
+          },
+          {
+            "postKey": "p3",
+            "contentRole": "პოლიტიკური შედეგის ანალიზი ჰიპოთეტური შემთხვევით",
+            "contribution": "არჩევს სამუშაოს შემცირებას დროის საკუთარი განკარგვისგან და აჩვენებს, რომ ავტომატიზაციით დაზოგილი დრო შეიძლება კვლავ გარე მოთხოვნებმა აკონტროლოს.",
+            "closestRecentKey": "h1p3",
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "უახლოესი ისტორიული ნამუშევარი შრომისა და შემოსავლის გამიჯვნას მხოლოდ დიალოგის ფორმის საილუსტრაციოდ ახსენებს. აქ მკითხველი ცალკე იკვლევს თავისუფალი დროისა და მუდმივი ხელმისაწვდომობის ძალაუფლებრივ კონფლიქტს."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "overlap",
+            "addedValue": "substantive",
+            "reason": "ორივე არჩევს სისტემის მიერ უზრუნველყოფილ სიკეთეს მოქალაქის გადაწყვეტილების უფლებიდან. პირველი შემოსავლის განაწილების წესებზე კონტროლს იკვლევს, მეორე კი ადმინისტრაციულ აღრიცხვასა და თვითმმართველობას; მეორე პოსტს დამოუკიდებელი პოლიტიკური კითხვა აქვს."
+          },
+          {
+            "leftKey": "p1",
+            "rightKey": "p3",
+            "relationship": "overlap",
+            "addedValue": "substantive",
+            "reason": "ორივე ამოწმებს, იქცევა თუ არა შრომისგან გათავისუფლება რეალურ ავტონომიად. პირველი შემოსავლის წესების პოლიტიკურ კონტროლს ეხება, მესამე — დაზოგილი დროისა და ხელმისაწვდომობის კონტროლს; დროის ავტონომია ცალკე სასარგებლო საკითხია."
+          },
+          {
+            "leftKey": "p2",
+            "rightKey": "p3",
+            "relationship": "overlap",
+            "addedValue": "substantive",
+            "reason": "საერთო სამუშაოა იმის გარჩევა, რასაც სისტემა ადამიანს სთავაზობს, იმისგან, რასაც იგი თავად წყვეტს. მეორე პოსტში საკითხია მოქალაქის მონაწილეობის უფლება ადმინისტრაციული ზრუნვის პირობებში, მესამეში კი პირადი დროის განკარგვა სამუშაოს შემცირების პირობებში; განსხვავება არსებითია, თუმცა ავტონომიისა და სისტემური მართვის დაძაბულობა მეორდება."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "8aeab736-4e49-4f30-947f-d2873c76f29f",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "7ec69dd400a6b4a124185fd3de4f49944f2a38b12038af2e31dfb91e9161da70",
+          "durationMs": 29566,
+          "usage": {
+            "input_tokens": 2882,
+            "input_tokens_details": {
+              "cache_write_tokens": 2879,
+              "cached_tokens": 0
+            },
+            "output_tokens": 1119,
+            "output_tokens_details": {
+              "reasoning_tokens": 200
+            },
+            "total_tokens": 4001
+          },
+          "validationErrors": [
+            "output.pairs[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[1].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[2].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "f445b17b-e63b-410b-965b-6d08f60947a7",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "7ec69dd400a6b4a124185fd3de4f49944f2a38b12038af2e31dfb91e9161da70",
+          "durationMs": 26082,
+          "usage": {
+            "input_tokens": 3892,
+            "input_tokens_details": {
+              "cache_write_tokens": 3889,
+              "cached_tokens": 0
+            },
+            "output_tokens": 989,
+            "output_tokens_details": {
+              "reasoning_tokens": 171
+            },
+            "total_tokens": 4881
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "ordinary-within-week-paraphrase",
+      "expected": "block",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "განმარტება",
+            "contribution": "უხსნის მკითხველს, რომ ფოტოზე დაფუძნებული წინასწარი შეფასება მხოლოდ ხილულ ზედაპირულ ნიშნებს ეყრდნობა და ფარულ დაზიანებას ვერ გამორიცხავს.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორია ცარიელია; პოსტი დამოუკიდებლად ამზადებს მკითხველს ფოტო-შეფასების შეზღუდვების გასაგებად."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "განმარტება",
+            "contribution": "იმეორებს, რომ დისტანციური გამოსახულება აჩვენებს მხოლოდ ხილულ მდგომარეობას, ვერ ადასტურებს შიდა დაზიანებას და ვერ იძლევა შედეგის დაპირებას.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორია ცარიელია, თუმცა კვირის პირველ პოსტთან შედარებით დამოუკიდებელი ახალი მკითხველის სამუშაო არ აქვს."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "duplicate",
+            "addedValue": "none",
+            "reason": "ორივე პოსტის მკითხველის სამუშაო და მთავარი დასკვნა ერთია: ფოტოდან ჩანს მხოლოდ ზედაპირი, ფარული ან შიდა მდგომარეობა უცნობია და შეფასება ან შედეგი გარანტირებული ვერ იქნება. განსხვავება მხოლოდ ფორმულირებაშია — „ფოტო“ და „დისტანციური დათვალიერება“ ერთსა და იმავე შეზღუდვას აღწერს."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "13bb4667-db8d-4b62-a6cc-87343f9b1ed3",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "441858591c2d4f8b12e4410cce9fa6e41fb24ba1a039765dfbedc50713babecf",
+          "durationMs": 10895,
+          "usage": {
+            "input_tokens": 1235,
+            "input_tokens_details": {
+              "cache_write_tokens": 1232,
+              "cached_tokens": 0
+            },
+            "output_tokens": 379,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 1614
+          },
+          "validationErrors": [
+            "output.posts[1].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "61fe0423-4f2a-4a78-9cd6-3e1d2f155d69",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "441858591c2d4f8b12e4410cce9fa6e41fb24ba1a039765dfbedc50713babecf",
+          "durationMs": 10628,
+          "usage": {
+            "input_tokens": 1658,
+            "input_tokens_details": {
+              "cache_write_tokens": 1655,
+              "cached_tokens": 0
+            },
+            "output_tokens": 411,
+            "output_tokens_details": {
+              "reasoning_tokens": 53
+            },
+            "total_tokens": 2069
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "ordinary-cross-week-paraphrase",
+      "expected": "block",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "ფოტოთი დისტანციური შეფასების შეზღუდვის განმარტება",
+            "contribution": "განმარტავს, რომ ზედაპირის ნიშნების მიუხედავად, გამოსახულებით ფარული მდგომარეობა და შეკეთების შედეგი ვერ დასტურდება.",
+            "closestRecentKey": "h1p1",
+            "relationship": "repeats",
+            "addedValue": "none",
+            "reason": "უახლოესი მასალა იმავე კითხვას, იმავე დასკვნასა და იმავე საყრდენ პუნქტებს უკვე ფარავს: ფოტო ვერ ავლენს ფარულ დაზიანებას და ვერ იძლევა გარანტიას. ახალი დამოუკიდებელი მკითხველის სარგებელი არ ჩანს."
+          }
+        ],
+        "pairs": []
+      },
+      "audit": [
+        {
+          "id": "9d1381fe-377c-442c-8a75-a1a05f220727",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "2f8b3fec321ad41c69ef7fcb47a13e1e3574991cca5d5f81504656b01f55e18a",
+          "durationMs": 6397,
+          "usage": {
+            "input_tokens": 1251,
+            "input_tokens_details": {
+              "cache_write_tokens": 1248,
+              "cached_tokens": 0
+            },
+            "output_tokens": 191,
+            "output_tokens_details": {
+              "reasoning_tokens": 21
+            },
+            "total_tokens": 1442
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "ordinary-narrow-useful-week",
+      "expected": "pass",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "პრაქტიკული მომზადების ინსტრუქცია",
+            "contribution": "მკითხველს აძლევს ფოტოების ორ აუცილებელ ხედს, რათა დაზიანება საწყისად გასაგები გახდეს.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორია ცარიელია; ეს არის დამოუკიდებელი, პრაქტიკული ნაბიჯი შეფასებამდე."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "შეფასების საზღვრების განმარტება",
+            "contribution": "მკითხველს უხსნის, რომ ფოტოთი მხოლოდ ხილული ნიშნები ჩანს და ფარული დაზიანება შეიძლება დარჩეს უცნობი.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორია ცარიელია; ფოტოების გაგზავნის ინსტრუქციისგან განსხვავებით, ეს მართავს მოლოდინს იმის შესახებ, რას ვერ დაადგენს ფოტო."
+          },
+          {
+            "postKey": "p3",
+            "contentRole": "შეკეთების მიზნის განსაზღვრის დახმარება",
+            "contribution": "მკითხველს ეხმარება განასხვაოს ნივთზე არსებული სასურველი ძველი კვალი ახალი, შესაცვლელი დაზიანებისგან.",
+            "closestRecentKey": null,
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორია ცარიელია; ეს დამოუკიდებელი გადაწყვეტილებაა სასურველი შედეგის შესახებ და არა ფოტოს ხარისხის ან მისი შეზღუდვის საკითხი."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "overlap",
+            "addedValue": "substantive",
+            "reason": "ორივე შეფასებისთვის მომზადებისას ფოტოების გამოყენებას ეხება: პირველი ასწავლის, რა კადრები მოამზადოს მფლობელმა, ხოლო მეორე განმარტავს, რა დასკვნას ვერ უზრუნველყოფს ეს კადრები. მეორის დამოუკიდებელი, არსებითი სარგებელი მოლოდინის მართვაა."
+          },
+          {
+            "leftKey": "p1",
+            "rightKey": "p3",
+            "relationship": "distinct",
+            "addedValue": "substantive",
+            "reason": "პირველის სამუშაოა შეფასებისთვის ვიზუალური ინფორმაციის მომზადება; მესამის — სასურველი ჩარევის საზღვრის განსაზღვრა. ორივე წინასწარ მომზადებას ემსახურება, მაგრამ მკითხველს განსხვავებულ საქმეს აკეთებინებს."
+          },
+          {
+            "leftKey": "p2",
+            "rightKey": "p3",
+            "relationship": "distinct",
+            "addedValue": "substantive",
+            "reason": "მეორე ხსნის ფოტოზე დაფუძნებული შეფასების ცოდნის საზღვრებს, ხოლო მესამე ეხმარება მფლობელს გადაწყვიტოს, რომელი ნიშნებია შესანარჩუნებელი. საერთო კონტექსტის მიუხედავად, მათი ძირითადი მკითხველის სამუშაო განსხვავებულია."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "3989c40a-c076-4b06-ba9e-abf8b5f1d31b",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "a3287d228cce95eca18a03a467f2b11b50cea27817434953557eeb4ccf2a8309",
+          "durationMs": 15263,
+          "usage": {
+            "input_tokens": 1320,
+            "input_tokens_details": {
+              "cache_write_tokens": 1317,
+              "cached_tokens": 0
+            },
+            "output_tokens": 600,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 1920
+          },
+          "validationErrors": [
+            "output.pairs[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[1].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning",
+            "output.pairs[2].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "dcdde339-54d3-4492-b790-6ded401bc872",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "a3287d228cce95eca18a03a467f2b11b50cea27817434953557eeb4ccf2a8309",
+          "durationMs": 15315,
+          "usage": {
+            "input_tokens": 2013,
+            "input_tokens_details": {
+              "cache_write_tokens": 2010,
+              "cached_tokens": 0
+            },
+            "output_tokens": 596,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 2609
+          },
+          "validationErrors": []
+        }
+      ]
+    },
+    {
+      "name": "ordinary-same-topic-progress",
+      "expected": "pass",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "პრაქტიკული მომზადების ინსტრუქცია",
+            "contribution": "მფლობელს აძლევს ორ აუცილებელ კადრს, რომ დაზიანება შეფასებისთვის უფრო გასაგებად წარმოადგინოს.",
+            "closestRecentKey": "h1p1",
+            "relationship": "advances",
+            "addedValue": "substantive",
+            "reason": "წინა მასალა ხსნის, რას ვერ ადგენს ფოტო; ეს პოსტი ასწავლის, როგორ გადაიღოს ხილული მდგომარეობა სასარგებლოდ. ეს ცალკე, პრაქტიკული მოქმედების სამუშაოა."
+          },
+          {
+            "postKey": "p2",
+            "contentRole": "სასურველი შედეგის განსაზღვრის დახმარება",
+            "contribution": "მფლობელს ეხმარება გაარჩიოს ნივთის არსებული, შესანარჩუნებელი კვალი და ის დაზიანება, რომლის შეცვლაც სურს.",
+            "closestRecentKey": "h1p1",
+            "relationship": "new",
+            "addedValue": "substantive",
+            "reason": "ისტორიული მასალა ფოტოს ინფორმაციულ საზღვრებს ეხება, ხოლო ეს პოსტი მფლობელის პრიორიტეტების წინასწარ განსაზღვრას ემსახურება. კავშირი მხოლოდ შეფასების საერთო კონტექსტია."
+          }
+        ],
+        "pairs": [
+          {
+            "leftKey": "p1",
+            "rightKey": "p2",
+            "relationship": "distinct",
+            "addedValue": "substantive",
+            "reason": "პირველი პოსტი მკითხველს ასწავლის, როგორ მოამზადოს შეფასებისთვის სასარგებლო ფოტოები; მეორე ეხმარება გადაწყვიტოს, რომელი კვალი უნდა დარჩეს და რომელი დაზიანება შეიცვალოს. ეს განსხვავებული მოქმედებები და გადაწყვეტილებებია."
+          }
+        ]
+      },
+      "audit": [
+        {
+          "id": "89c882e1-ebbe-4702-9963-3ec96a450e12",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "3836e2475d7ea36bad11e640a01f49fd7af0e187aef02585cb5cff6c12c2a9ac",
+          "durationMs": 11090,
+          "usage": {
+            "input_tokens": 1336,
+            "input_tokens_details": {
+              "cache_write_tokens": 1333,
+              "cached_tokens": 0
+            },
+            "output_tokens": 428,
+            "output_tokens_details": {
+              "reasoning_tokens": 56
+            },
+            "total_tokens": 1764
+          },
+          "validationErrors": [
+            "output.pairs[0].reason: replace opaque reference keys with the actual audience name, goal title or direction meaning"
+          ]
+        },
+        {
+          "id": "34270831-0a36-48b9-8f6f-f82585c0139c",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "3836e2475d7ea36bad11e640a01f49fd7af0e187aef02585cb5cff6c12c2a9ac",
+          "durationMs": 11487,
+          "usage": {
+            "input_tokens": 1751,
+            "input_tokens_details": {
+              "cache_write_tokens": 1748,
+              "cached_tokens": 0
+            },
+            "output_tokens": 443,
+            "output_tokens_details": {
+              "reasoning_tokens": 77
+            },
+            "total_tokens": 2194
+          },
+          "validationErrors": []
+        }
+      ]
+    }
+  ]
+}

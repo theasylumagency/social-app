@@ -1,0 +1,47 @@
+{
+  "evaluatedAt": "2026-09-07T20:13:12.524Z",
+  "results": [
+    {
+      "name": "ordinary-requested-repeat",
+      "expected": "pass",
+      "passed": true,
+      "review": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "contentRole": "ფოტოთი დისტანციური შეფასების შეზღუდვის განმარტება",
+            "contribution": "უხსნის, რომ გამოსახულება მხოლოდ ზედაპირულ ნიშნებს აჩვენებს, ფარულ მდგომარეობას ვერ ადასტურებს და შედეგის დაპირების საფუძველი არ არის.",
+            "closestRecentKey": "h1p1",
+            "relationship": "necessaryRepeat",
+            "addedValue": "none",
+            "reason": "შინაარსობრივად იმეორებს იმავე სამუშაოს, დასკვნასა და საყრდენ პუნქტებს. გამეორება გამართლებულია მომხმარებლის კონკრეტული მოთხოვნით, რომ ეს განმარტება ახალი მკითხველებისთვის განმეორდეს, თუმცა ახალი დამოუკიდებელი მკითხველის სარგებელი არ ემატება."
+          }
+        ],
+        "pairs": []
+      },
+      "audit": [
+        {
+          "id": "85c3951b-4605-4ca0-8ec9-7213119cfeea",
+          "step": "post_sequence",
+          "promptVersion": "post-sequence-v2",
+          "model": "gpt-5.6-terra",
+          "inputHash": "7101272ab31328137ea1145e453136138f2d3718492caf32f095eb55991253f1",
+          "durationMs": 7501,
+          "usage": {
+            "input_tokens": 1283,
+            "input_tokens_details": {
+              "cache_write_tokens": 1280,
+              "cached_tokens": 0
+            },
+            "output_tokens": 181,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 1464
+          },
+          "validationErrors": []
+        }
+      ]
+    }
+  ]
+}
