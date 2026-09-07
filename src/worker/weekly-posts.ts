@@ -31,7 +31,8 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
         payload.review = await reviewPosts(run, payload, reason)
         const blocked = payload.review.issues.filter((i) => i.severity === "blocking")
         if (blocked.length && payload.repairs < 1) {
-          for (const issue of blocked) delete payload.copies[issue.postKey]
+          payload.repairDrafts ??= {}
+          for (const issue of blocked) { const previous = payload.copies[issue.postKey]; if (previous) payload.repairDrafts[issue.postKey] = previous; delete payload.copies[issue.postKey] }
           payload.repairs++; step = "writing"
         } else step = "ready"
       }

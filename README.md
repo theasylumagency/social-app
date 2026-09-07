@@ -80,16 +80,17 @@ onboarding selects the new brand and provides a link into its weekly workspace.
 Brand switching uses a server-validated, HttpOnly preference cookie. Every
 dashboard query and weekly-goal write checks workspace ownership.
 
-Week displays the real first-cycle state, a Monday-based Tbilisi week picker,
-and an editable, persisted weekly objective. Migration `0005_weekly_briefs.sql`
-stores this user-authored direction separately from Brand Knowledge. Brand
-shows confirmed onboarding information, source capture dates and initial
-history. Content includes list/calendar views and status filters with honest
-empty states; Results and Connections explain their current availability.
-Automated planning, content generation/review/publishing, Meta OAuth, analytics,
-knowledge refinement, billing and trial activation are not implemented by this
-dashboard milestone. No sample posts, live metrics, active jobs or trial
-countdowns are presented as real data.
+Week now turns confirmed brand knowledge into a founder-facing list of proposed
+posts: count and channel rationale, full Facebook/Instagram text, format, visual
+briefs and private image uploads. Strategic explanations remain expandable.
+Independent review, durable parallel writing, targeted repair and explicit
+approval preserve earlier versions. Image generation is deliberately disabled
+during testing. See [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20Posts.md)
+for deployment, model choices, validation and current limits.
+
+Social account connection, real publishing, analytics, billing and trial
+activation remain future work. Recommended channels and days are not presented
+as connected accounts or scheduled publication.
 
 ## Local commands
 

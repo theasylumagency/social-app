@@ -7,6 +7,7 @@ import { approvePlanningRun, beginWeeklyPlanning, PlanningConflict, readPlanning
 import { runWeeklyPlanning } from "../../../worker/weekly-planning"
 import { runWeeklyPosts } from "../../../worker/weekly-posts"
 import { beginWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-store"
+import { repairWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-repair"
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
       if (!run) return Response.json({ message: "გეგმა ვერ მოიძებნა." }, { status: 404 })
       if (body.action === "approve") await approvePlanningRun(pool, ownerId, body.id, body.version as number)
       else if (body.action === "posts" || body.action === "retry-posts") await beginWeeklyPosts(pool, ownerId, body.id, body.version as number, body.action === "retry-posts")
+      else if (body.action === "repair-posts") await repairWeeklyPosts(pool, ownerId, body.id, body.version as number)
       else if (body.action === "retry") await retryPlanningRun(pool, ownerId, body.id, body.version as number)
       else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")
     }

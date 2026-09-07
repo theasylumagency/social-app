@@ -4,6 +4,7 @@ import { validatePostSchedule, validatePostCopy, POST_SCHEDULE_SCHEMA, POST_COPY
 import { validateSchema } from "../src/blueprints/social/brand-discovery/validation"
 import { planningFixture, completePlanningFixture } from "./weekly-planning-fixture"
 import { postsContext } from "../src/application/weekly-planning/posts"
+import { displayDate } from "../src/application/dashboard/model"
 
 import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
 
@@ -37,4 +38,9 @@ test("image generation stays disabled in testing and excluded from trial", () =>
   assert.equal(IMAGE_GENERATION_POLICY.mode, "testing")
   assert.equal(IMAGE_GENERATION_POLICY.trialIncluded, false)
   assert.equal(IMAGE_GENERATION_POLICY.paidPlanned, true)
+})
+
+test("Georgian dates remain deterministic without Georgian browser ICU support", () => {
+  assert.match(displayDate("2026-09-07"), /7 სექტემბერი/)
+  assert.match(displayDate("2026-09-06T21:05:00Z", { year: "numeric", hour: "2-digit" }), /7 სექტემბერი, 2026, 01:05/)
 })

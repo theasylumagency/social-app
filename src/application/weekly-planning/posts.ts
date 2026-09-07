@@ -18,7 +18,7 @@ export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner
 }
 export async function writePost(run: PlanningRun, payload: PostsPayload, key: string, reason: BrandReasoner) {
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
-  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v1", prompt: POST_WRITER_PROMPT, input: { ...postsContext(run), weeklyOutline: payload.outline, post, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...validatePlanningProse(v, keys(run))] })
+  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v1", prompt: POST_WRITER_PROMPT, input: { ...postsContext(run), weeklyOutline: payload.outline, post, previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...validatePlanningProse(v, keys(run))] })
 }
 export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner) {
   const postKeys = payload.outline!.posts.map((_, i) => `p${i + 1}`)

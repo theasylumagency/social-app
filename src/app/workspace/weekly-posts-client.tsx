@@ -65,7 +65,7 @@ function PostCard({ run, post, index, copy, assets, onAssets, readOnly = false }
   </article>
 }
 
-export function WeeklyPostsClient({ run, batch, assets, onAssets, onStart, onRetry, busy, readOnly = false }: { run: PlanningRun; batch: PostsBatch | null | undefined; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; onStart: () => void; onRetry: () => void; busy: boolean; readOnly?: boolean }) {
+export function WeeklyPostsClient({ run, batch, assets, onAssets, onStart, onRetry, onRepair, busy, readOnly = false }: { run: PlanningRun; batch: PostsBatch | null | undefined; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; onStart: () => void; onRetry: () => void; onRepair?: () => void; busy: boolean; readOnly?: boolean }) {
   const outline = batch?.payload.outline
   const issues = batch?.payload.review?.issues ?? []
   if (!batch) return <section className="fp-empty"><p className="wp-eyebrow">ხედვა უკვე გვაქვს. ახლა პოსტები ვნახოთ.</p><h2>რას გამოვაქვეყნებთ ამ კვირაში?</h2><p>მოვამზადებთ პოსტების ჩამონათვალს, სრულ ტექსტებს, Facebook-ისა და Instagram-ის რეკომენდაციებს და ვიზუალურ დავალებებს.</p><button className="wp-button" disabled={busy || run.payload.review?.concerns.some((c) => c.severity === "blocking")} onClick={onStart}>პოსტების მომზადება →</button></section>
@@ -75,7 +75,7 @@ export function WeeklyPostsClient({ run, batch, assets, onAssets, onStart, onRet
     {batch.status === "queued" || batch.status === "running" ? <div className="fp-progress" role="status"><span className="fp-pulse" /><p>{batch.step === "outline" ? "ვაწყობთ პოსტების ჩამონათვალს…" : batch.step === "writing" ? `მზადაა ${Object.keys(batch.payload.copies).length} / ${outline?.posts.length ?? 0} პოსტის ტექსტი. დანარჩენს პარალელურად ვამზადებთ…` : "ყველა ტექსტს ბრენდის ხმასა და ფაქტებს ვუდარებთ…"}</p></div> : null}
     {batch.status === "failed" ? <section className="wp-error" role="alert"><p>{batch.error}</p><button className="wp-button" disabled={busy} onClick={onRetry}>მომზადების გაგრძელება</button></section> : null}
     {outline?.posts.map((post, index) => <PostCard key={`${run.id}:${index}`} run={run} post={post} index={index} copy={batch.payload.copies[`p${index + 1}`]} assets={assets} onAssets={onAssets} readOnly={readOnly} />)}
-    {issues.length ? <section className="wp-concerns"><h2>რა არის გასათვალისწინებელი</h2>{issues.map((issue, i) => <p key={i}><strong>{outline?.posts[Number(issue.postKey.slice(1)) - 1]?.title}:</strong> {issue.message}</p>)}</section> : null}
+    {issues.length ? <section className="wp-concerns"><h2>რა არის გასათვალისწინებელი</h2>{issues.map((issue, i) => <p key={i}><strong>{outline?.posts[Number(issue.postKey.slice(1)) - 1]?.title}:</strong> {issue.message}</p>)}{batch.status === "ready" && issues.some((i) => i.severity === "blocking") && onRepair && !readOnly ? <button className="wp-button" disabled={busy} onClick={onRepair}>მხოლოდ დასაზუსტებელი პოსტების გასწორება</button> : null}</section> : null}
     {batch.status === "ready" ? <details className="wp-details fp-copy-review"><summary>ტექსტების შემოწმება</summary><p>{batch.payload.review?.summary}</p></details> : null}
   </div>
 }

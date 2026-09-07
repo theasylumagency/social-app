@@ -12,6 +12,7 @@ import { completePlanningFixture, discoveryFixture, planningReasoner } from "./w
 import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, mutatePostAsset, readPostAsset, listPostAssets } from "../src/infrastructure/postgres/weekly-posts-store"
 import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
 import sharp from "sharp"
+import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -68,7 +69,14 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const resumed = (await claimWeeklyPosts(pool, "owner", first.id))!
   assert.equal(await savePostCopy(pool, first.id, wc.token, "p3", copyFixture()), false)
   const completePosts = { ...resumed.batch.payload, copies: { p1: copyFixture(), p2: copyFixture(), p3: copyFixture() }, review: { summary: "ტექსტები შემოწმებულია", issues: [] } }
-  await saveWeeklyPosts(pool, first.id, resumed.token, completePosts, "ready")
+  await saveWeeklyPosts(pool, first.id, resumed.token, { ...completePosts, review: { summary: "მეორე პოსტში მაგალითი უნდა მოინიშნოს", issues: [{ postKey: "p2", severity: "blocking", message: "დაამატეთ: მაგალითად" }] } }, "ready")
+  await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 1), /პოსტების/)
+  await assert.rejects(() => repairWeeklyPosts(pool, "other", first.id, 1))
+  await repairWeeklyPosts(pool, "owner", first.id, 1)
+  const repair = (await claimWeeklyPosts(pool, "owner", first.id))!
+  assert.deepEqual(Object.keys(repair.batch.payload.copies), ["p1", "p3"])
+  assert.deepEqual(repair.batch.payload.repairDrafts?.p2, copyFixture())
+  await saveWeeklyPosts(pool, first.id, repair.token, completePosts, "ready")
   const content = await sharp({ create: { width: 20, height: 25, channels: 3, background: "#46754a" } }).webp().toBuffer()
   await assert.rejects(() => mutatePostAsset(pool, "other", first.id, "p1", 0, { content, width: 20, height: 25, name: "qa.webp" }))
   await assert.rejects(() => mutatePostAsset(pool, "owner", first.id, "p1", 4, { content, width: 20, height: 25, name: "qa.webp" }))
@@ -82,6 +90,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 2))
   await Promise.all([approvePlanningRun(pool, "owner", first.id, 1), approvePlanningRun(pool, "owner", first.id, 1)])
   assert.equal((await readPlanningView(pool, "owner", brandId, input.week)).approved?.id, first.id)
+  assert.ok((await readWeeklyPosts(pool, "owner", first.id))?.approvedAt)
+  await assert.rejects(() => repairWeeklyPosts(pool, "owner", first.id, 1))
   assert.equal((await pool.query("SELECT count(*)::int n FROM weekly_planning_events WHERE run_id=$1 AND kind='approved'", [first.id])).rows[0].n, 1)
   assert.deepEqual((await pool.query("SELECT payload FROM brand_dossiers WHERE brand_id=$1", [brandId])).rows[0].payload, originalBrand)
 
