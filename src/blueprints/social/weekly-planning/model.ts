@@ -5,7 +5,7 @@ import type { WeeklyAudienceFocusProposal } from "./weekly-audience-focus-contra
 import type { ContentDirectionProposal } from "./content-direction-contract"
 import type { ContentAudienceDirectionProposal } from "./content-audience-direction-contract"
 import type { ExperimentDecisionStructuredProposal } from "./experiment-decision-contract"
-import type { PostsBatch, PostAsset } from "./posts"
+import type { PostsBatch, PostAsset, PostCadence } from "./posts"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -18,6 +18,7 @@ export type PlanningReview = {
 export type PlanOutline = { week: string; objective: string; directions: string[]; experiment: string | null }
 export type PlanningPayload = {
   founderPosts?: boolean
+  cadence?: PostCadence
   basis: BrandDossier
   priority: string
   revisionNote: string

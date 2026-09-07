@@ -16,6 +16,9 @@ const migrationFiles = (await readdir(migrationDirectory))
 
 const client = new Client({ connectionString })
 await client.connect()
+let applied = 0
+let skipped = 0
+process.stdout.write(`Found ${migrationFiles.length} migration files. Checking database…\n`)
 
 try {
   await client.query(`
@@ -31,6 +34,7 @@ try {
       [migrationFile],
     )
     if (existing.rowCount !== 0) {
+      skipped++
       continue
     }
 
@@ -42,12 +46,14 @@ try {
         migrationFile,
       ])
       await client.query("COMMIT")
+      applied++
       process.stdout.write(`Applied ${migrationFile}\n`)
     } catch (error) {
       await client.query("ROLLBACK")
       throw error
     }
   }
+  process.stdout.write(`Migrations complete: ${applied} applied, ${skipped} already applied. Latest file: ${migrationFiles.at(-1) ?? "none"}.\n`)
 } finally {
   await client.end()
 }

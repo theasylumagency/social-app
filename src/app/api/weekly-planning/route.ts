@@ -8,6 +8,8 @@ import { runWeeklyPlanning } from "../../../worker/weekly-planning"
 import { runWeeklyPosts } from "../../../worker/weekly-posts"
 import { beginWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-store"
 import { repairWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-repair"
+import { changeWeeklyCadence } from "../../../infrastructure/postgres/weekly-planning-store"
+import { isPostCadence } from "../../../blueprints/social/weekly-planning/posts"
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -33,7 +35,10 @@ export async function POST(request: Request) {
   if (!isDiscoveryId(body.id)) return Response.json({ message: "გეგმის მისამართი არასწორია." }, { status: 422 })
   try {
     let run
-    if (body.action === "start" || body.action === "revise") {
+    if (body.action === "cadence") {
+      if (!isDiscoveryId(body.parentId) || !Number.isSafeInteger(body.parentVersion) || !isPostCadence(body.cadence)) throw Error("თითოეულ არხზე აირჩიეთ 0–5 პოსტი.")
+      run = await changeWeeklyCadence(pool, ownerId, body.id, body.parentId, Number(body.parentVersion), body.cadence)
+    } else if (body.action === "start" || body.action === "revise") {
       if (typeof body.brandId !== "string" || !isWeek(body.week) || typeof body.priority !== "string") throw new Error("შეამოწმეთ კვირა და პრიორიტეტი.")
       if (body.action === "revise" && (!isDiscoveryId(body.parentId) || !Number.isSafeInteger(body.parentVersion) || typeof body.revisionNote !== "string")) throw new Error("მიუთითეთ გეგმის დაზუსტება.")
       const input: BeginPlanningInput = { id: body.id, brandId: body.brandId, week: body.week, priority: body.priority, ...(body.action === "revise" ? { parentId: body.parentId as string, parentVersion: body.parentVersion as number, revisionNote: body.revisionNote as string } : {}) }

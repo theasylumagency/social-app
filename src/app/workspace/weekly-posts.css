@@ -73,3 +73,14 @@
 @media(max-width:1150px) { .fp-post-body { grid-template-columns:1fr; }.fp-visual { border-left:0; border-top:1px solid #e1e7d7; }.fp-week-summary { align-items:start; }.fp-week-stats { gap:18px; }.fp-post-heading { flex-wrap:wrap; }.fp-format { margin-left:40px; } }
 @media(max-width:700px) { .fp-week-summary { flex-direction:column; padding:24px; gap:24px; }.fp-week-summary h2 { font-size:23px; }.fp-week-stats { gap:35px; }.fp-week-stats strong { font-size:29px; }.fp-decisions { grid-template-columns:1fr; gap:20px; padding:23px 0; }.fp-agenda { grid-template-columns:1fr; }.fp-agenda a { gap:5px; }.fp-post-heading { padding:22px 20px 12px; }.fp-post h3 { font-size:18px; }.ws-shell .fp-why { padding:0 20px 20px; }.fp-copy,.fp-visual { padding:22px 20px; }.fp-caption { font-size:13px; }.fp-post-details { padding-inline:20px; }.fp-strategy { padding:10px 15px; }.fp-strategy .wp-objective { padding:20px; } }
 @media(prefers-reduced-motion:reduce) { .fp-pulse { animation:none; } }
+
+.fp-content-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 0 0 20px; }
+.fp-content-toolbar .fp-channel-tabs { flex-wrap: wrap; }
+.fp-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+.fp-calendar > div { background: #f5f8f3; border: 1px solid #dae4dc; border-radius: 12px; padding: 12px; min-width: 0; }
+.fp-calendar h3 { font-size: 12px; line-height: 1.7; margin: 0 0 12px; }
+.fp-calendar a { display: block; background: #fff; border: 1px solid #cad8cd; border-radius: 8px; padding: 10px; margin-bottom: 8px; overflow-wrap: anywhere; text-decoration: none; }
+.fp-calendar strong { display: block; font-size: 12px; line-height: 1.7; }
+.fp-calendar small, .fp-calendar p { font-size: 11px; color: #516357; line-height: 1.7; }
+@media (max-width: 1450px) { .fp-calendar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .fp-calendar { grid-template-columns: 1fr; } }

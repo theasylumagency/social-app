@@ -5,7 +5,7 @@ import { readdir, readFile } from "node:fs/promises"
 import { Pool } from "pg"
 import { ensurePersonalWorkspace } from "../src/infrastructure/postgres/workspace-store"
 import { saveDiscoveryDraft, startDiscovery, claimDiscovery, finishDiscoveryStep, confirmDiscovery } from "../src/infrastructure/postgres/brand-discovery-store"
-import { readPlanningRun, readPlanningView, beginWeeklyPlanning, claimPlanningRun, finishPlanningStep, failPlanningStep, retryPlanningRun, approvePlanningRun } from "../src/infrastructure/postgres/weekly-planning-store"
+import { readPlanningRun, readPlanningView, beginWeeklyPlanning, claimPlanningRun, finishPlanningStep, failPlanningStep, retryPlanningRun, approvePlanningRun, changeWeeklyCadence } from "../src/infrastructure/postgres/weekly-planning-store"
 import { readWeeklyBrief } from "../src/infrastructure/postgres/dashboard-store"
 import { advanceWeeklyPlanning } from "../src/application/weekly-planning/advance"
 import { completePlanningFixture, discoveryFixture, planningReasoner } from "./weekly-planning-fixture"
@@ -127,9 +127,60 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const three = (await claimPlanningRun(pool, "owner", following.id))!
   const ready3 = await completePlanningFixture(three.run)
   await finishPlanningStep(pool, three.run, three.token, ready3.payload, "ready")
+  // Quantity edits reuse strategy and assets, including while a writer is running.
+  const cadenceBase = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-09-21" })
+  const cc = (await claimPlanningRun(pool, "owner", cadenceBase.id))!
+  const cadenceReady = await completePlanningFixture(cc.run)
+  await finishPlanningStep(pool, cc.run, cc.token, cadenceReady.payload, "ready")
+  const cb = (await claimWeeklyPosts(pool, "owner", cadenceBase.id))!
+  await saveWeeklyPosts(pool, cadenceBase.id, cb.token, completePosts, "ready")
+  await mutatePostAsset(pool, "owner", cadenceBase.id, "p1", 0, { content, width: 20, height: 25, name: "kept.webp" })
+  await approvePlanningRun(pool, "owner", cadenceBase.id, 1)
+  await assert.rejects(() => changeWeeklyCadence(pool, "other", randomUUID(), cadenceBase.id, 1, { facebook: 1, instagram: 0 }))
+  await assert.rejects(() => changeWeeklyCadence(pool, "owner", randomUUID(), cadenceBase.id, 1, { facebook: 9, instagram: 0 }))
+  assert.equal((await changeWeeklyCadence(pool, "owner", randomUUID(), cadenceBase.id, 1, { facebook: 3, instagram: 3 })).id, cadenceBase.id)
+  const reducedId = randomUUID()
+  const reductions = await Promise.all([changeWeeklyCadence(pool, "owner", reducedId, cadenceBase.id, 1, { facebook: 1, instagram: 0 }), changeWeeklyCadence(pool, "owner", reducedId, cadenceBase.id, 1, { facebook: 1, instagram: 0 })])
+  const reduced = reductions[0]!
+  assert.equal(reductions[1]!.id, reduced.id)
+  assert.equal(reduced.version, 2)
+  assert.deepEqual(reduced.payload.objective, cadenceReady.payload.objective)
+  assert.deepEqual(reduced.payload.review, cadenceReady.payload.review)
+  assert.notEqual(reduced.payload.plan!.id, cadenceReady.payload.plan!.id)
+  const reducedBatch = (await readWeeklyPosts(pool, "owner", reduced.id))!
+  assert.equal(reducedBatch.step, "review")
+  assert.equal(reducedBatch.payload.copies.p1!.variants.length, 1)
+  assert.deepEqual(reducedBatch.payload.copies.p1!.variants[0], completePosts.copies.p1.variants[0])
+  const keptAsset = (await listPostAssets(pool, "owner", reduced.id))[0]!
+  assert.deepEqual(await readPostAsset(pool, "owner", keptAsset.id), content)
+  assert.equal((await listPostAssets(pool, "owner", cadenceBase.id)).length, 1)
+  assert.equal((await readPlanningView(pool, "owner", brandId, cadenceBase.week)).approved?.id, cadenceBase.id)
+  await assert.rejects(() => approvePlanningRun(pool, "owner", reduced.id, reduced.version))
+  const oldLease = (await claimWeeklyPosts(pool, "owner", reduced.id))!
+  const grown = await changeWeeklyCadence(pool, "owner", randomUUID(), reduced.id, 2, { facebook: 4, instagram: 2 })
+  assert.equal((await readWeeklyPosts(pool, "owner", grown.id))?.step, "outline")
+  assert.equal(await savePostCopy(pool, reduced.id, oldLease.token, "p1", copyFixture()), false)
+  assert.equal(await claimWeeklyPosts(pool, "owner", reduced.id), null)
+  await assert.rejects(() => changeWeeklyCadence(pool, "owner", randomUUID(), reduced.id, 2, { facebook: 2, instagram: 1 }))
+  const paused = await changeWeeklyCadence(pool, "owner", randomUUID(), grown.id, 3, { facebook: 0, instagram: 0 })
+  const pauseBatch = (await readWeeklyPosts(pool, "owner", paused.id))!
+  assert.equal(pauseBatch.status, "ready")
+  assert.deepEqual(pauseBatch.payload.outline!.posts, [])
+  assert.equal(await claimWeeklyPosts(pool, "owner", paused.id), null)
+  await approvePlanningRun(pool, "owner", paused.id, 4)
+  assert.equal((await pool.query("SELECT count(*)::int n FROM weekly_planning_model_runs WHERE run_id IN ($1,$2,$3)", [reduced.id, grown.id, paused.id])).rows[0].n, 0)
+  const restart = await changeWeeklyCadence(pool, "owner", randomUUID(), paused.id, 4, { facebook: 5, instagram: 5 })
+  const restartBatch = (await claimWeeklyPosts(pool, "owner", restart.id))!
+  const ten = scheduleFixture()
+  ten.posts = Array.from({ length: 10 }, (_, i) => ({ ...ten.posts[0]!, title: `სხვადასხვა პოსტი ${i + 1}`, channels: [ten.posts[0]!.channels[i % 2]!] }))
+  await saveWeeklyPosts(pool, restart.id, restartBatch.token, { ...restartBatch.batch.payload, outline: ten }, "writing")
+  await mutatePostAsset(pool, "owner", restart.id, "p10", 0, { content, width: 20, height: 25, name: "tenth.webp" })
+  assert.equal((await listPostAssets(pool, "owner", restart.id))[0]!.postKey, "p10")
+  await assert.rejects(() => mutatePostAsset(pool, "owner", restart.id, "p11", 0, { content, width: 20, height: 25, name: "invalid.webp" }))
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
   await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=$1", [brandId])
   assert.equal((await readPlanningView(pool, "owner", brandId, "2026-09-14")).stale, true)
   await assert.rejects(() => approvePlanningRun(pool, "owner", following.id, 1))
+  await assert.rejects(() => changeWeeklyCadence(pool, "owner", randomUUID(), restart.id, restart.version, { facebook: 1, instagram: 1 }), /საფუძველი/)
   assert.equal((await readPlanningRun(pool, "owner", following.id))?.payload.basis.revision, 1)
 })

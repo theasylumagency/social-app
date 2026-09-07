@@ -1,6 +1,16 @@
 import type { JsonSchema } from "../brand-discovery/schemas"
 
 export type PostChannel = "facebook" | "instagram"
+export type PostCadence = Record<PostChannel, number>
+export const MAX_POSTS_PER_CHANNEL = 5
+export function isPostCadence(value: unknown): value is PostCadence {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const v = value as Record<string, unknown>
+  return Object.keys(v).length === 2 && [v.facebook, v.instagram].every((n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= MAX_POSTS_PER_CHANNEL)
+}
+export function countPostChannels(posts: PostOutline[]): PostCadence {
+  return posts.reduce((n, p) => { for (const c of p.channels) n[c.channel]++; return n }, { facebook: 0, instagram: 0 })
+}
 export type PostFormat = "text" | "image" | "carousel" | "story" | "reel"
 export type PostOutline = {
   directionKey: string; dayOffset: number; title: string; why: string; format: PostFormat
@@ -12,7 +22,7 @@ export type PostVariant = { channel: PostChannel; caption: string; frames: { hea
 export type PostCopy = { variants: PostVariant[] }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[] }
-export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number }
+export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence }
 export type PostsBatch = { runId: string; status: "queued" | "running" | "ready" | "failed"; step: "outline" | "writing" | "review" | "ready"; payload: PostsPayload; error: string | null; leaseUntil: string | null; approvedAt: string | null; updatedAt: string }
 export type PostAsset = { id: string; postKey: string; slot: number; width: number; height: number; name: string }
 export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, review: null, repairs: 0 })
@@ -26,7 +36,7 @@ export const POST_SCHEDULE_SCHEMA = obj({ summary: str(250), cadenceReason: str(
   channels: list(obj({ channel: enumeration("facebook", "instagram"), reason: str(350) }), 1, 2),
   brief: obj({ job: str(400), takeaway: str(400), points: list(str(400), 2, 5), mustNotSay: list(str(350), 1, 6) }),
   visual: obj({ kind: enumeration("none", "graphic", "photo", "slides", "video"), description: str(900), aspectRatio: enumeration("none", "1:1", "4:5", "9:16"), frames: list(str(400), 0, 6) }),
-}), 2, 5) })
+}), 1, 10) })
 export const POST_COPY_SCHEMA = obj({ variants: list(obj({ channel: enumeration("facebook", "instagram"), caption: str(3000, 0), frames: list(obj({ heading: str(160, 0), body: str(500) }), 0, 6), script: str(1800, 0), onScreenText: list(str(180), 0, 6) }), 1, 2) })
 export const POSTS_REVIEW_SCHEMA = obj({ summary: str(600), issues: list(obj({ postKey: str(10), severity: enumeration("blocking", "advisory"), message: str(650) }), 0, 10) })
 

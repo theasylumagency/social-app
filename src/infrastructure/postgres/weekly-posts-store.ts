@@ -27,7 +27,7 @@ export async function beginWeeklyPosts(pool: Pool, ownerId: string, runId: strin
 }
 export async function claimWeeklyPosts(pool: Pool, ownerId: string, runId: string) {
   const token = randomUUID()
-  const rows = await pool.query<Row>(`UPDATE weekly_post_batches p SET status='running',lease_token=$3,lease_until=now()+interval '4 minutes',updated_at=now() FROM weekly_planning_runs r WHERE r.id=p.run_id AND ${access} AND r.id=$2 AND r.status IN ('ready','approved') AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) AND (p.status='queued' OR (p.status='running' AND p.lease_until<now())) RETURNING p.*`, [ownerId, runId, token])
+  const rows = await pool.query<Row>(`UPDATE weekly_post_batches p SET status='running',lease_token=$3,lease_until=now()+interval '4 minutes',updated_at=now() FROM weekly_planning_runs r WHERE r.id=p.run_id AND ${access} AND r.id=$2 AND r.status IN ('ready','approved') AND NOT EXISTS(SELECT 1 FROM weekly_planning_runs n WHERE n.brand_id=r.brand_id AND n.week_start=r.week_start AND n.version>r.version) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) AND (p.status='queued' OR (p.status='running' AND p.lease_until<now())) RETURNING p.*`, [ownerId, runId, token])
   return rows.rows[0] ? { batch: fromRow(rows.rows[0]), token } : null
 }
 export async function saveWeeklyPosts(pool: Pool, runId: string, token: string, payload: PostsPayload, step: PostsBatch["step"]) {
@@ -56,7 +56,7 @@ export async function mutatePostAsset(pool: Pool, ownerId: string, runId: string
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`weekly-assets:${ownerId}`])
     const found = await c.query<{ payload: PostsPayload }>(`SELECT p.payload FROM weekly_post_batches p JOIN weekly_planning_runs r ON r.id=p.run_id WHERE ${access} AND r.id=$2 AND r.status IN ('ready','approved') AND NOT EXISTS(SELECT 1 FROM weekly_planning_runs n WHERE n.brand_id=r.brand_id AND n.week_start=r.week_start AND n.version>r.version) FOR UPDATE OF p,r`, [ownerId, runId])
     const post = found.rows[0]?.payload.outline?.posts[Number(key.slice(1)) - 1]
-    if (!/^p[1-5]$/.test(key) || !post || !Number.isInteger(slot) || slot < 0 || slot >= post.visual.frames.length || !["image", "carousel", "story"].includes(post.format)) throw Error("ამ პოსტისთვის გამოსახულების ატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.")
+    if (!/^p([1-9]|10)$/.test(key) || !post || !Number.isInteger(slot) || slot < 0 || slot >= post.visual.frames.length || !["image", "carousel", "story"].includes(post.format)) throw Error("ამ პოსტისთვის გამოსახულების ატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.")
     if (upload) {
       const bytes = await c.query<{ total: string }>("SELECT coalesce(sum(octet_length(a.content)),0)::text total FROM weekly_post_assets a JOIN weekly_planning_runs r ON r.id=a.run_id WHERE r.owner_user_id=$1 AND NOT(a.run_id=$2 AND a.post_key=$3 AND a.slot=$4)", [ownerId, runId, key, slot])
       if (Number(bytes.rows[0]!.total) + upload.content.length > 100 * 1024 * 1024) throw Error("გამოსახულებების საცავი შეივსო. ჯერ წაშალეთ გამოუყენებელი ფაილები.")

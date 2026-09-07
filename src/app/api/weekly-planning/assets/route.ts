@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     while (true) { const { done, value } = await reader.read(); if (done) break; total += value.length; if (total > maxFileBytes + 12000) { await reader.cancel(); throw Error("ფაილი 8 MB-ზე დიდი არ უნდა იყოს.") } parts.push(value) }
     const form = await new Response(Buffer.concat(parts), { headers: { "content-type": request.headers.get("content-type") ?? "" } }).formData()
     const runId = form.get("runId"); const postKey = form.get("postKey"); const slot = Number(form.get("slot"))
-    if (!isDiscoveryId(runId) || typeof postKey !== "string" || !/^p[1-5]$/.test(postKey) || !Number.isInteger(slot) || slot < 0 || slot > 5) throw Error("პოსტი ან გამოსახულების ადგილი არასწორია.")
+    if (!isDiscoveryId(runId) || typeof postKey !== "string" || !/^p([1-9]|10)$/.test(postKey) || !Number.isInteger(slot) || slot < 0 || slot > 5) throw Error("პოსტი ან გამოსახულების ადგილი არასწორია.")
     const pool = getDatabasePool(); const ownerId = access.session.user.id
     if (!await readWeeklyPosts(pool, ownerId, runId)) return Response.json({ message: "პოსტი ვერ მოიძებნა." }, { status: 404 })
     const file = form.get("file")

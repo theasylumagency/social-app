@@ -9,7 +9,9 @@ import { approveWeeklyPlan, requestWeeklyPlanChanges, supersedeWeeklyPlan } from
 import { isWeek } from "../../application/dashboard/model"
 import type { BrandModelRun } from "../models/brand-reasoning"
 import { isDiscoveryId } from "./brand-discovery-store"
-import { emptyPosts, type PostsPayload } from "../../blueprints/social/weekly-planning/posts"
+import { emptyPosts, isPostCadence, countPostChannels, type PostsPayload, type PostCadence } from "../../blueprints/social/weekly-planning/posts"
+import { resizePostSchedule, spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
+import { assemblePlanningRun } from "../../application/weekly-planning/advance"
 import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
 
 type Row = { id: string; owner_user_id: string; brand_id: string; week: string; version: number; status: PlanningRun["status"]; step: PlanningRun["step"]; payload: PlanningPayload; error: string | null; lease_until: Date | null; created_at: Date; updated_at: Date }
@@ -89,17 +91,81 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     const payload: PlanningPayload = { basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan)] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
     const now = new Date().toISOString() as IsoDateTime
     payload.founderPosts = true
+    if (previous?.payload.cadence) payload.cadence = previous.payload.cadence
     if (previous && previous.status !== "approved") {
       const oldPayload = { ...previous.payload }
       if (oldPayload.plan?.state === "awaitingReview") oldPayload.plan = requestWeeklyPlanChanges(oldPayload.plan, payload.revisionNote, now).plan
       await c.query("UPDATE weekly_planning_runs SET status='changesRequested',payload=$2::jsonb,updated_at=now() WHERE id=$1", [previous.id, JSON.stringify(oldPayload)])
     }
     if (previous) await event(c, previous.id, "changes-requested", { note: payload.revisionNote, replacementRunId: input.id, previousPlan: previous.payload.plan })
+    if (previous) await c.query("UPDATE weekly_post_batches SET status='failed',lease_token=NULL,lease_until=NULL,error=$2,updated_at=now() WHERE run_id=$1 AND status IN ('queued','running')", [previous.id, "მომზადება გაგრძელდა ახალ ვერსიაში."])
     const created = await c.query<Row>(`INSERT INTO weekly_planning_runs(id,owner_user_id,brand_id,week_start,version,status,step,payload) VALUES($1,$2,$3,$4::date,$5,'queued','objective',$6::jsonb) RETURNING *,to_char(week_start,'YYYY-MM-DD') AS week`, [input.id, ownerId, input.brandId, input.week, (previous?.version ?? 0) + 1, JSON.stringify(payload)])
     await event(c, input.id, "started", { basisSessionId: foundation.sessionId, basisRevision: foundation.revision, priority: payload.priority, revisionNote: payload.revisionNote })
     if (payload.priority) await c.query("INSERT INTO weekly_briefs(brand_id,week_start,objective,updated_by) VALUES($1,$2::date,$3,$4) ON CONFLICT(brand_id,week_start) DO UPDATE SET objective=excluded.objective,updated_by=excluded.updated_by,updated_at=now()", [input.brandId, input.week, payload.priority, ownerId])
     else await c.query("DELETE FROM weekly_briefs WHERE brand_id=$1 AND week_start=$2::date", [input.brandId, input.week])
     return fromRow(created.rows[0]!)
+  })
+}
+
+/** A cadence edit versions the plan but never re-runs brand discovery or strategy. */
+export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: string, parentId: string, version: number, cadence: PostCadence): Promise<PlanningRun> {
+  if (!isDiscoveryId(id) || !isDiscoveryId(parentId) || !isPostCadence(cadence)) throw Error("თითოეულ არხზე აირჩიეთ 0–5 პოსტი.")
+  const preview = await readPlanningRun(pool, ownerId, parentId)
+  if (!preview) throw Error("გეგმა ვერ მოიძებნა.")
+  return transaction(pool, async (c) => {
+    await budget(c, ownerId)
+    await lockBrandWeek(c, ownerId, preview.brandId, preview.week)
+    const duplicate = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.id=$2`, [ownerId, id])
+    if (duplicate.rows[0]) {
+      const result = fromRow(duplicate.rows[0])
+      if (result.brandId !== preview.brandId || result.week !== preview.week) throw Error("გეგმა ვერ მოიძებნა.")
+      if (result.payload.cadence?.facebook !== cadence.facebook || result.payload.cadence?.instagram !== cadence.instagram) throw new PlanningConflict("წინა ცვლილება უკვე შენახულია. გადაამოწმეთ მიმდინარე რაოდენობა და ხელახლა შეინახეთ.")
+      return result
+    }
+    await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`weekly-assets:${ownerId}`])
+    const latest = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date ORDER BY r.version DESC LIMIT 1 FOR UPDATE`, [preview.brandId, preview.week])
+    const previous = latest.rows[0] ? fromRow(latest.rows[0]) : null
+    if (!previous || previous.id !== parentId || previous.version !== version || !["ready", "approved"].includes(previous.status) || !previous.payload.plan || !previous.payload.review || previous.payload.review.concerns.some((v) => v.severity === "blocking")) throw new PlanningConflict("გეგმა შეიცვალა ან ჯერ დასაზუსტებელია. განაახლეთ გვერდი.")
+    const foundation = await basis(c, ownerId, previous.brandId)
+    if (!foundation || foundation.sessionId !== previous.payload.basis.sessionId || foundation.revision !== previous.payload.basis.revision) throw new PlanningConflict("ბრენდის საფუძველი განახლდა. ჯერ კვირის გეგმა განაახლეთ.")
+    const batch = await c.query<{ payload: PostsPayload }>("SELECT payload FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [parentId])
+    const source = batch.rows[0]?.payload
+    if (!source?.outline) throw new PlanningConflict("ჯერ პოსტების რაოდენობის რეკომენდაციას დაელოდეთ.")
+    const current = source.cadence ?? countPostChannels(source.outline.posts)
+    if (current.facebook === cadence.facebook && current.instagram === cadence.instagram) return previous
+    const resized = resizePostSchedule(source, cadence)
+    const now = new Date().toISOString() as IsoDateTime
+    const note = `პოსტების რაოდენობა: Facebook ${cadence.facebook}, Instagram ${cadence.instagram}.`
+    const payload = structuredClone(previous.payload)
+    payload.cadence = cadence; payload.founderPosts = true
+    payload.previousVersion = summarizePlan(previous.payload.plan)
+    payload.plannedOn = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" })
+    const next: PlanningRun = { ...previous, id, version: version + 1, status: "ready", step: "ready", payload, error: null, leaseUntil: null, createdAt: now, updatedAt: now }
+    payload.plan = assemblePlanningRun(next, now)
+    resized.payload.outline!.posts = spreadPostDays(resized.payload.outline!.posts, next.week, payload.plannedOn)
+    if (previous.status !== "approved") {
+      const old = { ...previous.payload, plan: requestWeeklyPlanChanges(previous.payload.plan, note, now).plan }
+      await c.query("UPDATE weekly_planning_runs SET status='changesRequested',payload=$2::jsonb,updated_at=now() WHERE id=$1", [parentId, JSON.stringify(old)])
+    }
+    // Invalidate a superseded worker's lease before it can save obsolete output.
+    await c.query("UPDATE weekly_post_batches SET status='failed',lease_token=NULL,lease_until=NULL,error=$2,updated_at=now() WHERE run_id=$1 AND status IN ('queued','running')", [parentId, "მომზადება გაგრძელდა ახალ ვერსიაში."])
+    await c.query("INSERT INTO weekly_planning_runs(id,owner_user_id,brand_id,week_start,version,status,step,payload) VALUES($1,$2,$3,$4::date,$5,'ready','ready',$6::jsonb)", [id, ownerId, next.brandId, next.week, next.version, JSON.stringify(payload)])
+    const noPosts = cadence.facebook + cadence.instagram === 0
+    const step = noPosts ? "ready" : resized.needsAdditions ? "outline" : Object.keys(resized.payload.copies).length === resized.payload.outline!.posts.length ? "review" : "writing"
+    await c.query("INSERT INTO weekly_post_batches(run_id,status,step,payload) VALUES($1,$2,$3,$4::jsonb)", [id, noPosts ? "ready" : "queued", step, JSON.stringify(resized.payload)])
+    const total = await c.query<{ bytes: string }>("SELECT coalesce(sum(octet_length(a.content)),0)::text bytes FROM weekly_post_assets a JOIN weekly_planning_runs r ON r.id=a.run_id WHERE r.owner_user_id=$1", [ownerId])
+    let bytes = Number(total.rows[0]!.bytes)
+    for (const m of resized.mapping) {
+      const media = await c.query<{ slot: number; name: string; width: number; height: number; content: Buffer }>("SELECT slot,name,width,height,content FROM weekly_post_assets WHERE run_id=$1 AND post_key=$2", [parentId, m.from])
+      for (const a of media.rows) {
+        bytes += a.content.length
+        if (bytes > 100 * 1024 * 1024) throw Error("ახალი ვერსიის გამოსახულებებისთვის საცავი არასაკმარისია. ჯერ გამოუყენებელი გამოსახულებები წაშალეთ.")
+        await c.query("INSERT INTO weekly_post_assets(id,run_id,post_key,slot,name,width,height,content) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", [randomUUID(), id, m.to, a.slot, a.name, a.width, a.height, a.content])
+      }
+    }
+    await event(c, parentId, "changes-requested", { note, replacementRunId: id })
+    await event(c, id, "started", { cadence, strategyReusedFrom: parentId, retainedPosts: resized.mapping })
+    return next
   })
 }
 
@@ -113,6 +179,7 @@ export async function finishPlanningStep(pool: Pool, run: PlanningRun, token: st
     const changed = await c.query("UPDATE weekly_planning_runs SET payload=$4::jsonb,step=$5,status=$6,lease_token=NULL,lease_until=NULL,error=NULL,updated_at=now() WHERE id=$1 AND version=$2 AND lease_token=$3 RETURNING id", [run.id, run.version, token, JSON.stringify(payload), step, step === "ready" ? "ready" : "queued"])
     if (!changed.rowCount) return false
     if (step === "ready" && payload.founderPosts && !payload.review?.concerns.some((c) => c.severity === "blocking")) await c.query("INSERT INTO weekly_post_batches(run_id,status,step,payload) VALUES($1,'queued','outline',$2::jsonb) ON CONFLICT(run_id) DO NOTHING", [run.id, JSON.stringify(emptyPosts())])
+    if (step === "ready" && payload.cadence?.facebook === 0 && payload.cadence?.instagram === 0) await c.query("UPDATE weekly_post_batches SET status='ready',step='ready',payload=$2::jsonb WHERE run_id=$1", [run.id, JSON.stringify({ ...emptyPosts(), cadence: payload.cadence, outline: { summary: "ამ კვირაში პოსტები არჩეული არ არის.", cadenceReason: "ორივე არხზე თქვენ აირჩიეთ 0 პოსტი.", channelReason: "რაოდენობის შეცვლა კვირის ტაბში შეგიძლიათ.", posts: [] }, review: { summary: "ტექსტები მოსამზადებელი არ არის.", issues: [] } })])
     await event(c, run.id, `completed:${run.step}`, { step, ...(step === "ready" ? { plan: payload.plan, review: payload.review } : {}) })
     return true
   })

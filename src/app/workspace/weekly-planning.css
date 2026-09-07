@@ -116,3 +116,17 @@
 @media(max-width:1100px) { .wp-start { grid-template-columns:1fr; gap:25px; } .wp-start form { max-width:650px; } .wp-review-actions { flex-direction:column; gap:22px; } .wp-review-actions>div:last-child { flex-direction:row; justify-content:start; min-width:0; flex-wrap:wrap; } }
 @media(max-width:700px) { .wp-start { padding:23px; } .wp-start form { padding:20px; } .wp-start h2 { font-size:24px; } .wp-objective { padding:25px; } .wp-objective h2 { font-size:22px; } .wp-objective-reason { font-size:12px; } .wp-section-label { gap:12px; flex-wrap:wrap; } .wp-section-label h2 { font-size:18px; } .wp-count { margin-left:44px; padding:0; } .wp-direction { grid-template-columns:25px 1fr; gap:12px; padding:20px; } .wp-direction h3 { font-size:15px; } .wp-direction-number { font-size:17px; } .wp-lower-grid { grid-template-columns:1fr; } .wp-envelope,.wp-review-actions,.wp-revision,.wp-progress { padding:23px; } .wp-progress h2 { font-size:21px; } .wp-experiment dl>div { grid-template-columns:1fr; gap:4px; } .wp-history time { float:none; display:block; margin-top:5px; } .wp-review-actions>div:last-child { flex-direction:column; } .wp-app textarea { font-size:16px; } }
 @media(prefers-reduced-motion:reduce) { .wp-app * { scroll-behavior:auto!important; transition:none!important; } }
+
+.wp-cadence { padding: 28px; border: 1px solid #d9e3dc; border-radius: 20px; background: #f4f8f3; margin-bottom: 28px; }
+.wp-cadence-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.wp-cadence-heading h2 { margin: 8px 0 12px; font-size: 23px; line-height: 1.5; }
+.wp-cadence-heading p { max-width: 700px; line-height: 1.8; }
+.wp-cadence-heading > a { flex-shrink: 0; }
+.wp-cadence-channels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 22px 0 12px; }
+.wp-cadence-channels label { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: white; border: 1px solid #d9e3dc; padding: 18px; border-radius: 14px; }
+.wp-cadence-channels select { width: 100%; padding: 12px; border: 1px solid #acbdae; border-radius: 8px; background: white; color: #203c2c; font: inherit; }
+.wp-cadence-pending { width: 100%; color: #53695c; font-size: 13px; }
+.wp-cadence-save { border-top: 1px solid #d9e3dc; padding: 15px 0; }
+.wp-cadence-save p { line-height: 1.8; }
+.wp-cadence-save button { margin: 4px 12px 4px 0; }
+@media (max-width: 700px) { .wp-cadence { padding: 18px; } .wp-cadence-heading { flex-direction: column; gap: 8px; } .wp-cadence-channels { grid-template-columns: 1fr; } }

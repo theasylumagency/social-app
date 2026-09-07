@@ -14,6 +14,7 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "node --env-file=.env.local scripts/db/migrate.mjs",
+    "db:status": "node --env-file=.env.local scripts/db/status.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "npm run check && npm run build:domain && node --test tests/primitives.runtime.test.cjs tests/social-blueprint.runtime.test.cjs tests/weekly-plan.runtime.test.cjs tests/content-brief.runtime.test.cjs tests/content-draft-quality.runtime.test.cjs tests/content-draft-validation.runtime.test.cjs tests/content-draft-repair-assembly.runtime.test.cjs tests/content-draft-repair.runtime.test.cjs tests/content-draft-repair-loop.runtime.test.cjs tests/content-draft-evaluation-run.runtime.test.cjs tests/content-draft-repair-contract.runtime.test.cjs tests/content-scheduling-eligibility.runtime.test.cjs tests/content-schedule.runtime.test.cjs tests/content-schedule-lifecycle.runtime.test.cjs tests/content-publish-eligibility.runtime.test.cjs tests/content-publish-attempt.runtime.test.cjs tests/content-publish-result.runtime.test.cjs tests/content-draft-text-projection.runtime.test.cjs tests/content-draft-repair-llm-contract.runtime.test.cjs tests/content-draft-evaluation-audit.runtime.test.cjs tests/content-publish-run.runtime.test.cjs tests/content-publish-run.e2e.test.cjs",
