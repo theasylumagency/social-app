@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { displayDate } from "../../application/dashboard/model"
 import { requireSession } from "../_server/auth"
 import { getDatabasePool } from "../_server/database"
 import { ensurePersonalWorkspace } from "../../infrastructure/postgres/workspace-store"
@@ -21,6 +22,6 @@ export default async function SubscriptionPage() {
   return <main className="subscription-shell"><header><Link className="brand-mark" href="/">UNDA</Link><nav><Link href="/account">ჩემი ანგარიში</Link><SignOutButton /></nav></header>
     <p className="eyebrow">სოციალური ქსელების AI მენეჯერი</p><h1>აირჩიეთ სივრცე თქვენი ბრენდებისთვის.</h1><p>ყველა ტარიფში: ბრენდის გაცნობა, სოციალური სტრატეგია, მიმდინარე კვირის კონტენტი და შედეგებიდან სწავლა.</p>
     <SubscriptionClient subscription={subscription} brandCount={brands.rows[0]!.n} custom={custom.rows[0] ?? null} enabled={process.env.NODE_ENV !== "production" || process.env.BILLING_MODE === "simulated"} />
-    {payments.rowCount ? <details><summary>გადახდების ისტორია</summary><ul>{payments.rows.map((p) => <li key={p.id}>{p.paid_at.toLocaleString("ka-GE", { timeZone: "Asia/Tbilisi" })} · {p.plan} · სატესტო გადახდა</li>)}</ul></details> : null}
+    {payments.rowCount ? <details><summary>გადახდების ისტორია</summary><ul>{payments.rows.map((p) => <li key={p.id}>{displayDate(p.paid_at.toISOString(), { year: "numeric", hour: "2-digit" })} · {p.plan} · სატესტო გადახდა</li>)}</ul></details> : null}
   </main>
 }

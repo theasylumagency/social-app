@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { DiscoveryClient } from "../discovery-client"
-import { requireSession } from "../_server/auth"
+import { requireSession, currentSubscription } from "../_server/auth"
+import { SubscriptionExpiry } from "../subscription/expiry"
 import { getDatabasePool } from "../_server/database"
 import { ensurePersonalWorkspace } from "../../infrastructure/postgres/workspace-store"
 import { listDashboardBrands } from "../../infrastructure/postgres/dashboard-store"
@@ -15,6 +16,7 @@ export const metadata = { title: "ბრენდის გაცნობა �
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ brand?: string }> }) {
   const auth = await requireSession("/onboarding")
+  const subscription = await currentSubscription(auth.user.id)
   const { brand: brandId } = await searchParams
   const pool = getDatabasePool()
   await ensurePersonalWorkspace(pool, auth.user.id)
@@ -29,6 +31,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     language: brand && knowledgeList(brand.knowledge, "identityLanguages").includes("en") ? "en" : "ka",
   }
   return <div className="bd-shell">
+    {subscription ? <SubscriptionExpiry expiresAt={subscription.expiresAt} /> : null}
     <header className="bd-topbar"><Link className="brand-mark" href="/workspace" aria-label="UNDA მთავარი"><span className="brand-symbol" aria-hidden="true">U</span><span>UNDA</span></Link><div className="account-menu"><Link href="/workspace">სამუშაო სივრცე</Link><Link href="/account">ჩემი ანგარიში</Link><SignOutButton /></div></header>
     <main id="main" className="bd-main"><SessionRefresh /><DiscoveryClient initialSession={session ? { ...session, payload: publicDiscoveryPayload(session.payload) } : null} initialInput={initialInput} brandId={brandId ?? null} ownerId={auth.user.id} /></main>
   </div>

@@ -227,7 +227,7 @@ export async function confirmDiscovery(pool: Pool, ownerId: string, id: string, 
     let confirmedBatch: IngestionPersistenceBatch | undefined
     const result = await createBrandOnboarding({
       businessName: p.understanding.name, language, services: p.understanding.offers.map((o) => o.name), description: p.understanding.summary, tones: p.understanding.voice.traits,
-      ...(p.sources.find((s) => s.url)?.url ? { website: p.sources.find((s) => s.url)!.url! } : {}), goals: p.goals.filter((g) => selectedGoals.includes(g.id)).map((g) => g.title), ...(p.understanding.constraints.length ? { avoidTopics: p.understanding.constraints } : {}),
+      ...(p.sources.find((s) => s.url)?.url ? { website: p.sources.find((s) => s.url)!.url! } : {}), ...(selectedGoals.length ? { goals: p.goals.filter((g) => selectedGoals.includes(g.id)).map((g) => g.title) } : {}), ...(p.understanding.constraints.length ? { avoidTopics: p.understanding.constraints } : {}),
     }, {
       async persist(batch) {
         const withSources = { ...batch, supportingSources: sourceGraphs(session, batch.brand.id, now) }

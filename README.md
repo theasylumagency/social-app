@@ -7,9 +7,12 @@ publishes approved work, and improves the next cycle from feedback and results.
 ## Product loop
 
 ```text
-Business
+Subscription (1 / 3 / 10 brands, custom >10; simulated payment)
+→ Business
 → Brand Brain
-→ Weekly Strategy
+→ Public Social Reconnaissance
+→ Founder-approved Social Strategic Objective + Strategic Plan
+→ Current Weekly Plan
 → Content
 → Review
 → Schedule
@@ -66,17 +69,19 @@ The current architecture correction map is in
 `docs/Brand Knowledge Architecture — Amendments & Supersession Map v1.md` and
 takes precedence over older prompt contracts where they conflict.
 
-The agreed account, workspace, Social plan, and 14-day trial requirements are in
-[Access, Plans and Trial — Product Decisions v1](docs/Access%2C%20Plans%20and%20Trial%20%E2%80%94%20Product%20Decisions%20v1.md).
+The current operating and subscription decisions, migration, verification and
+remaining integration boundaries are in [Strategic Operating Flow v1 — implementation](docs/strategic-operating-flow-v1.md).
+This supersedes the older trial and weekly novelty requirements. There is no trial.
 Authentication, private workspace ownership, and protected onboarding are now
 implemented. See [Authentication](docs/Authentication.md) for local setup,
-Google and SMTP configuration, and verification. Subscription limits, billing,
-and the trial lifecycle remain to be implemented.
+Google and SMTP configuration, and verification. Subscription purchase, renewal,
+upgrade, brand limits and expiry access checks are implemented with simulated payments.
 
-The authenticated workspace now opens at `/workspace`, with Week, Content,
+The first authenticated screen without an active subscription is `/subscription`.
+The active workspace opens at `/workspace`, with Strategy, Week, Content,
 Results, Brand, Connections, and Settings. The root route resumes the last
 accessible brand; users without a ready brand go to `/onboarding`. Completing
-onboarding selects the new brand and provides a link into its weekly workspace.
+onboarding selects the new brand and opens its social strategy for approval.
 Brand switching uses a server-validated, HttpOnly preference cookie. Every
 dashboard query and weekly-goal write checks workspace ownership.
 
@@ -89,7 +94,7 @@ during testing. See [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20P
 for deployment, model choices, validation and current limits.
 
 Facebook and Instagram account connection is available when configured. Real
-publishing, analytics, billing and trial activation remain future work. Recommended channels and days are not presented
+publishing, automatic analytics ingestion and real payment processing remain future work. Weekly observations can already be recorded with their sources and used by the next plan. Recommended channels and days are not presented
 as connected accounts or scheduled publication.
 
 The Phase 1 social provider foundation is available in

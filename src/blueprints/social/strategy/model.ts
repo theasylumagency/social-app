@@ -28,6 +28,9 @@ export type SocialStrategy = {
   payload: StrategyPayload; error: string | null; createdAt: string; updatedAt: string
 }
 export type StrategyView = { latest: SocialStrategy | null; active: SocialStrategy | null; legacy: boolean }
+export function operatingChannels(proposal: SocialStrategyProposal | null | undefined): ("facebook" | "instagram")[] {
+  return (["facebook", "instagram"] as const).filter((channel) => proposal?.channels.some((c) => c.channel === channel && c.action !== "doNotUse"))
+}
 const text = { type: "string", minLength: 1, maxLength: 1200 }
 const nullableText = { type: ["string", "null"], maxLength: 1200 }
 const list = { type: "array", minItems: 1, maxItems: 8, items: text }
@@ -54,12 +57,14 @@ export function validateStrategyProposal(p: SocialStrategyProposal, sources: Rec
       if (r.status !== "unknown" || r.excerpt !== null) errors.push("Missing or inaccessible input must remain unknown")
     } else if (source.availability === "notFound") {
       if (r.status !== "notFound") errors.push("Search absence is not evidence of nonexistence")
-    } else if (r.status !== "unknown" && (!r.excerpt || !source.text.includes(r.excerpt))) errors.push("Observed presence requires a verbatim public source excerpt")
+    } else if (r.status === "notFound") errors.push("An accessible account cannot be labeled not-found")
+    else if (r.status !== "unknown" && (!r.excerpt || !source.text.includes(r.excerpt))) errors.push("Observed presence requires a verbatim public source excerpt")
     if (r.sourceUrl !== (source?.url ?? null)) errors.push("Use only the supplied channel source URL")
   }
   for (const channel of ["facebook", "instagram"]) {
     if (!seen.has(channel) || !p.channels.some((c) => c.channel === channel)) errors.push(`Assess and recommend ${channel}`)
   }
+  if (new Set(p.channels.map((c) => c.channel)).size !== p.channels.length) errors.push("Recommend each channel once")
   // Private metrics can be future measurement criteria, never reconnaissance claims.
   if (p.reconnaissance.some((r) => /\b(reach|impressions|saves|attribution|demographics)\b\s*[:=]\s*\d/iu.test(r.observation))) errors.push("Public observations cannot assert private metrics")
   return errors

@@ -54,6 +54,9 @@ export async function approveStrategy(pool: Pool, ownerId: string, brandId: stri
     await c.query("UPDATE social_strategies SET status='superseded',updated_at=now() WHERE brand_id=$1 AND status='approved'", [brandId])
     s.payload.approvedAt = new Date().toISOString()
     await c.query("UPDATE social_strategies SET status='approved',payload=$2::jsonb,updated_at=now() WHERE id=$1", [id, JSON.stringify(s.payload)])
+    // Fence outstanding work based on the old goal; retain its completed artifacts for review.
+    await c.query("UPDATE weekly_planning_runs SET status='failed',lease_token=NULL,lease_until=NULL,error=$3,updated_at=now() WHERE brand_id=$1 AND (payload#>>'{socialStrategy,id}') IS DISTINCT FROM $2 AND status IN ('queued','running')", [brandId, id, "სტრატეგიული მიზანი შეიცვალა. კვირის გეგმა ახალი სტრატეგიით დააზუსტეთ."])
+    await c.query("UPDATE weekly_post_batches p SET status='failed',lease_token=NULL,lease_until=NULL,error=$3,updated_at=now() FROM weekly_planning_runs r WHERE r.id=p.run_id AND r.brand_id=$1 AND (r.payload#>>'{socialStrategy,id}') IS DISTINCT FROM $2 AND p.status IN ('queued','running')", [brandId, id, "სტრატეგიული მიზანი შეიცვალა. დასრულებული ტექსტები შენარჩუნებულია; კვირის გეგმა დააზუსტეთ."])
   })
 }
 export async function retryStrategy(pool: Pool, ownerId: string, brandId: string, id: string) {

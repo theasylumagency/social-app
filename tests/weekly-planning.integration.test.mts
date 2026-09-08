@@ -1,3 +1,7 @@
+import { subscribeFixture, strategicBrandFixture } from "./strategic-integration-fixture"
+import { currentWeek, shiftWeek } from "../src/application/dashboard/model"
+import { approveStrategy, proposeStrategy } from "../src/infrastructure/postgres/social-strategy-store"
+import { strategyProposal } from "./social-strategy-fixture"
 import assert from "node:assert/strict"
 import test from "node:test"
 import { randomUUID } from "node:crypto"
@@ -7,15 +11,13 @@ import { ensurePersonalWorkspace } from "../src/infrastructure/postgres/workspac
 import { saveDiscoveryDraft, startDiscovery, claimDiscovery, finishDiscoveryStep, confirmDiscovery } from "../src/infrastructure/postgres/brand-discovery-store"
 import { readPlanningRun, readPlanningView, beginWeeklyPlanning, claimPlanningRun, finishPlanningStep, failPlanningStep, retryPlanningRun, approvePlanningRun, changeWeeklyCadence } from "../src/infrastructure/postgres/weekly-planning-store"
 import { readWeeklyBrief } from "../src/infrastructure/postgres/dashboard-store"
-import { advanceWeeklyPlanning } from "../src/application/weekly-planning/advance"
-import { completePlanningFixture, discoveryFixture, planningReasoner } from "./weekly-planning-fixture"
+import { completePlanningFixture, discoveryFixture } from "./weekly-planning-fixture"
 import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, mutatePostAsset, readPostAsset, listPostAssets } from "../src/infrastructure/postgres/weekly-posts-store"
 import { scheduleFixture, copyFixture, editorialFixture } from "./weekly-posts-fixture"
 import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
 import { runWeeklyPosts } from "../src/worker/weekly-posts"
-import { distinctSequence } from "./weekly-sequence-fixture"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -26,15 +28,20 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   t.after(async () => { await pool.end(); await admin.query(`DROP SCHEMA "${schema}" CASCADE`); await admin.end() })
   for (const file of (await readdir(new URL("../db/migrations/", import.meta.url))).filter((f) => f.endsWith(".sql")).sort()) await pool.query(await readFile(new URL(`../db/migrations/${file}`, import.meta.url), "utf8"))
   for (const id of ["owner", "other"]) { await pool.query('INSERT INTO auth_user(id,name,email,"emailVerified") VALUES($1,$1,$2,true)', [id, `${id}@example.test`]); await ensurePersonalWorkspace(pool, id) }
+  await subscribeFixture(pool, "owner")
   const discovery = await discoveryFixture()
   await saveDiscoveryDraft(pool, "owner", discovery.id, discovery.payload.input, null)
   await startDiscovery(pool, "owner", discovery.id, 1, discovery.payload.input)
   const d = (await claimDiscovery(pool, "owner", discovery.id))!
   assert.ok(Date.parse(d.session.leaseUntil!) - Date.now() > MODEL_CALL_MAX_MS)
   await finishDiscoveryStep(pool, d.session, d.token, discovery.payload, "ready")
-  const brandId = await confirmDiscovery(pool, "owner", discovery.id, 1, [discovery.payload.goals[0]!.id], "ka")
+  const brandId = await confirmDiscovery(pool, "owner", discovery.id, 1, [], "ka")
+  const strategy = await proposeStrategy(pool, "owner", { id: randomUUID(), brandId })
+  strategy.payload.proposal = strategyProposal(); strategy.payload.sources = []
+  await pool.query("UPDATE social_strategies SET status='proposed',payload=$2::jsonb WHERE id=$1", [strategy.id, JSON.stringify(strategy.payload)])
+  await approveStrategy(pool, "owner", brandId, strategy.id, 1)
   const originalBrand = (await pool.query("SELECT payload FROM brand_dossiers WHERE brand_id=$1", [brandId])).rows[0].payload
-  const input = { id: randomUUID(), brandId, week: "2026-09-07", priority: "" }
+  const input = { id: randomUUID(), brandId, week: currentWeek(), priority: "" }
   await assert.rejects(() => beginWeeklyPlanning(pool, "other", input))
   await assert.rejects(() => beginWeeklyPlanning(pool, "owner", { ...input, week: "2026-09-08" }))
   const [first, duplicate] = await Promise.all([beginWeeklyPlanning(pool, "owner", input), beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID() })])
@@ -46,15 +53,11 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal(claims.filter(Boolean).length, 1)
   const one = claims.find(Boolean)!
   assert.ok(Date.parse(one.run.leaseUntil!) - Date.now() > MODEL_CALL_MAX_MS)
-  const objective = await advanceWeeklyPlanning(one.run, planningReasoner())
-  await finishPlanningStep(pool, one.run, one.token, objective.payload, objective.step)
-  const failure = (await claimPlanningRun(pool, "owner", first.id))!
-  await failPlanningStep(pool, failure.run, failure.token, "Test outage")
+  await failPlanningStep(pool, one.run, one.token, "Test outage before model completion")
   await retryPlanningRun(pool, "owner", first.id, 1)
   const recovered = (await claimPlanningRun(pool, "owner", first.id))!
-  assert.equal(recovered.run.step, "review")
-  assert.deepEqual(recovered.run.payload.objective, objective.payload.objective)
-  assert.equal(await finishPlanningStep(pool, failure.run, failure.token, failure.run.payload, "focus"), false)
+  assert.equal(recovered.run.step, "objective")
+  assert.equal(await finishPlanningStep(pool, one.run, one.token, one.run.payload, "focus"), false)
   const ready = await completePlanningFixture(recovered.run)
   await finishPlanningStep(pool, recovered.run, recovered.token, ready.payload, "ready")
   await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 1), /პოსტების/)
@@ -136,18 +139,10 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await approvePlanningRun(pool, "owner", revision.id, 2)
   assert.equal((await readPlanningRun(pool, "owner", first.id))?.payload.plan?.state, "superseded")
   assert.equal((await readPlanningView(pool, "owner", brandId, input.week)).approved?.id, revision.id)
-  const following = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-09-14" })
-  assert.equal(following.payload.priorWeeks[0]?.objective, ready2.payload.objective?.objective)
-  assert.equal(following.payload.priorWeeks.length, 1, "history includes only one version of a week")
-  assert.equal(following.payload.priorWeeks[0]?.posts?.[0]?.job, completePosts.outline!.posts[0]!.brief.job)
-  assert.equal(following.payload.priorWeeks[0]?.status, "approved")
-  const three = (await claimPlanningRun(pool, "owner", following.id))!
-  const ready3 = await completePlanningFixture(three.run)
-  await finishPlanningStep(pool, three.run, three.token, ready3.payload, "ready")
-  // Quantity edits reuse strategy and assets, including while a writer is running.
-  const cadenceBase = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-09-21" })
-  assert.equal(cadenceBase.payload.priorWeeks[0]?.status, "ready", "an unapproved generated week is still editorial history")
-  assert.equal(cadenceBase.payload.priorWeeks[0]?.week, "2026-09-14")
+  await assert.rejects(() => beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: shiftWeek(currentWeek(), 1) }), /მიმდინარე კვირისთვის/)
+  // Quantity changes operate on a separate brand's current week, never speculative future weeks.
+  const cadenceBrand = await strategicBrandFixture(pool)
+  const cadenceBase = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), brandId: cadenceBrand })
   const cc = (await claimPlanningRun(pool, "owner", cadenceBase.id))!
   const cadenceReady = await completePlanningFixture(cc.run)
   await finishPlanningStep(pool, cc.run, cc.token, cadenceReady.payload, "ready")
@@ -173,7 +168,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const keptAsset = (await listPostAssets(pool, "owner", reduced.id))[0]!
   assert.deepEqual(await readPostAsset(pool, "owner", keptAsset.id), content)
   assert.equal((await listPostAssets(pool, "owner", cadenceBase.id)).length, 1)
-  assert.equal((await readPlanningView(pool, "owner", brandId, cadenceBase.week)).approved?.id, cadenceBase.id)
+  assert.equal((await readPlanningView(pool, "owner", cadenceBrand, cadenceBase.week)).approved?.id, cadenceBase.id)
   await assert.rejects(() => approvePlanningRun(pool, "owner", reduced.id, reduced.version))
   const oldLease = (await claimWeeklyPosts(pool, "owner", reduced.id))!
   const grown = await changeWeeklyCadence(pool, "owner", randomUUID(), reduced.id, 2, { facebook: 4, instagram: 2 })
@@ -197,7 +192,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal((await listPostAssets(pool, "owner", restart.id))[0]!.postKey, "p10")
   await assert.rejects(() => mutatePostAsset(pool, "owner", restart.id, "p11", 0, { content, width: 20, height: 25, name: "invalid.webp" }))
   // Exercise the real worker + model adapter with fake HTTP, including one saved sibling.
-  const runtime = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), week: "2026-10-05" })
+  const runtimeBrand = await strategicBrandFixture(pool)
+  const runtime = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), brandId: runtimeBrand })
   const runtimeClaim = (await claimPlanningRun(pool, "owner", runtime.id))!
   const runtimePlan = await completePlanningFixture(runtimeClaim.run)
   await finishPlanningStep(pool, runtimeClaim.run, runtimeClaim.token, runtimePlan.payload, "ready")
@@ -218,8 +214,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
     const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
     requests.push({ step, model: body.model })
     if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
-    const input = JSON.parse(body.input)
-    const result = step === "post_sequence" ? distinctSequence(3, input.recentEditorialWork[0]?.historyKey ?? null) : step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
+    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
+    if (step.startsWith("post_writer_") && "variants" in result) for (const v of result.variants) v.caption = step === "post_writer_p2" ? "რა გამოგვიგზავნოთ? გადაიღეთ ნივთის სრული ხედი და დაზიანება ახლოდან." : "რომელი კვალი უნდა შევინარჩუნოთ? წინასწარ გამიჯნეთ ძველი ფაქტურა და ახალი დაზიანება."
     return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
   })
   await runWeeklyPosts(pool, "owner", runtime.id)
@@ -238,18 +234,11 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.deepEqual(requests.filter((r) => r.step === "post_review"), [{ step: "post_review", model: "test-reviewer" }])
   assert.deepEqual(requests.filter((r) => r.step === "post_editorial"), [{ step: "post_editorial", model: "test-reviewer" }])
   assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.payload.review?.editorial?.posts.length, 3)
-  assert.deepEqual(requests.filter((r) => r.step === "post_sequence"), [{ step: "post_sequence", model: "test-reviewer" }], "sequence review persists across a writer outage")
-  const finished = (await readWeeklyPosts(pool, "owner", runtime.id))!.payload
-  const sequenceBlocked = structuredClone(finished)
-  sequenceBlocked.sequenceReview!.pairs[0]!.relationship = "duplicate"
-  await pool.query("UPDATE weekly_post_batches SET payload=$2::jsonb WHERE run_id=$1", [runtime.id, JSON.stringify(sequenceBlocked)])
-  await assert.rejects(() => approvePlanningRun(pool, "owner", runtime.id, 1), /იმეორებს/, "a clean copy review cannot override sequence blockers")
-  await assert.rejects(() => repairWeeklyPosts(pool, "owner", runtime.id, 1), /გეგმაშია/, "copy repair cannot bypass rejected planning jobs")
-  await pool.query("UPDATE weekly_post_batches SET payload=$2::jsonb WHERE run_id=$1", [runtime.id, JSON.stringify(finished)])
+  assert.deepEqual(requests.filter((r) => r.step === "post_sequence"), [], "semantic sequence review is removed")
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
-  await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=$1", [brandId])
-  assert.equal((await readPlanningView(pool, "owner", brandId, "2026-09-14")).stale, true)
-  await assert.rejects(() => approvePlanningRun(pool, "owner", following.id, 1))
+  await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=ANY($1::text[])", [[runtimeBrand, cadenceBrand]])
+  assert.equal((await readPlanningView(pool, "owner", runtimeBrand, input.week)).stale, true)
+  await assert.rejects(() => approvePlanningRun(pool, "owner", runtime.id, 1))
   await assert.rejects(() => changeWeeklyCadence(pool, "owner", randomUUID(), restart.id, restart.version, { facebook: 1, instagram: 1 }), /საფუძველი/)
-  assert.equal((await readPlanningRun(pool, "owner", following.id))?.payload.basis.revision, 1)
+  assert.equal((await readPlanningRun(pool, "owner", runtime.id))?.payload.basis.revision, 1)
 })

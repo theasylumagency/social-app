@@ -1,4 +1,5 @@
 import { duplicateCopyIssues } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
+import { operatingChannels } from "../../blueprints/social/strategy/model"
 import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { compilePlanningContext } from "./advance"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
@@ -24,11 +25,13 @@ function keys(run: PlanningRun) {
   return [...c.audiences.map((a) => a.audienceKey), ...c.selectedBrandGoals.map((g) => g.goalKey), ...c.contentDirections.map((d) => d.contentDirectionKey), ...Array.from({ length: 10 }, (_, i) => `p${i + 1}`)]
 }
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
+  const allowed = run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"]
+  if (!allowed.length) throw Error("რეკომენდებული არხებისთვის კონტენტის შესრულება ჯერ ცალკე გამართვას საჭიროებს.")
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
   const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v4", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
     const value = combine(v as PostSchedule)
-    return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
+    return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(value.posts.some((p) => p.channels.some((c) => !allowed.includes(c.channel))) ? ["Use only channels permitted by the approved social strategy"] : []), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
   } })
   return combine(result)
 }

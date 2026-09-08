@@ -11,7 +11,8 @@ import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { currentWeek, DASHBOARD_SECTIONS, isWeek, selectBrand, type DashboardSection } from "../../../application/dashboard/model"
 import { listDashboardBrands, listDashboardSources, readWeeklyBrief } from "../../../infrastructure/postgres/dashboard-store"
-import { requireSession } from "../../_server/auth"
+import { requireSession, currentSubscription } from "../../_server/auth"
+import { SubscriptionExpiry } from "../../subscription/expiry"
 import { getDatabasePool } from "../../_server/database"
 import { ACTIVE_BRAND_COOKIE } from "../../_server/active-brand"
 import { socialConnectionsAvailable } from "../../_server/social-connections"
@@ -35,6 +36,7 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   const section = segments?.[0] ?? "week"
   if ((segments?.length ?? 0) > 1 || !DASHBOARD_SECTIONS.includes(section as DashboardSection)) notFound()
   const session = await requireSession(`/workspace${section === "week" ? "" : `/${section}`}`)
+  const subscription = await currentSubscription(session.user.id)
   const pool = getDatabasePool()
   const brands = await listDashboardBrands(pool, session.user.id)
   const brand = selectBrand(brands, jar.get(ACTIVE_BRAND_COOKIE)?.value)
@@ -53,6 +55,7 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   ])
   const textParam = (name: string) => typeof query[name] === "string" ? query[name] as string : ""
   return <WorkspaceShell section={section as DashboardSection} brands={brands} brand={brand} user={session.user} week={week}>
+    {subscription ? <SubscriptionExpiry expiresAt={subscription.expiresAt} /> : null}
     {section === "strategy" || ((section === "week" || section === "content") && !strategy.active && !planning?.run) ? <StrategyClient key={brand.id} brandId={brand.id} initial={strategy} /> : null}
     {(section === "week" || section === "content") && strategy.active ? <section className="ws-card strategy-banner"><p className="eyebrow">მოქმედი სოციალური სტრატეგიული მიზანი</p><h2>{strategy.active.payload.proposal?.objective}</h2><p>{strategy.active.payload.proposal?.horizon}</p><Link className="ws-text-link" href="/workspace/strategy">სტრატეგია, არხები და გაზომვის კრიტერიუმები →</Link></section> : null}
     {section === "week" && (strategy.active || planning?.run) ? <WeekView planning={planning!} ownerId={session.user.id} brand={brand} sources={sources} week={week} today={today} brief={brief} /> : null}

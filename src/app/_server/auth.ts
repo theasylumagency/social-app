@@ -8,7 +8,8 @@ import { authOrigin, socialProviders } from "../../lib/auth/environment"
 import { createEmailSender } from "../../lib/auth/email"
 import { getDatabasePool } from "./database"
 import { createWorkRequestAuthenticator } from "../../lib/auth/work-request"
-import { hasSubscription } from "../../infrastructure/postgres/subscription-store"
+import { hasSubscription, readSubscription } from "../../infrastructure/postgres/subscription-store"
+import { subscriptionActive } from "../../application/subscriptions/policy"
 
 let instance: ReturnType<typeof createAuth> | undefined
 
@@ -26,11 +27,12 @@ export const currentSession = cache(async () => {
   const requestHeaders = await headers()
   return getAuth().api.getSession({ headers: requestHeaders })
 })
+export const currentSubscription = cache((ownerId: string) => readSubscription(getDatabasePool(), ownerId))
 
 export async function requireSession(returnTo = "/") {
   const session = await currentSession()
   if (!session || !session.user.emailVerified) redirect(`/login?next=${encodeURIComponent(returnTo)}`)
-  if (returnTo !== "/account" && returnTo !== "/subscription" && !await hasSubscription(getDatabasePool(), session.user.id)) redirect("/subscription")
+  if (returnTo !== "/account" && returnTo !== "/subscription" && !subscriptionActive(await currentSubscription(session.user.id))) redirect("/subscription")
   return session
 }
 

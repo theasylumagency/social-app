@@ -1,3 +1,4 @@
+import { subscribeFixture } from "./strategic-integration-fixture"
 import assert from "node:assert/strict"
 import { randomBytes, randomUUID } from "node:crypto"
 import { readdir, readFile } from "node:fs/promises"
@@ -226,6 +227,7 @@ test("authentication and workspace isolation against PostgreSQL", { skip: !proce
     assert.deepEqual(await ensurePersonalWorkspace(pool, ownerId), first)
     const otherId = (await pool.query('SELECT id FROM auth_user WHERE email = $1', ["google-only@example.test"])).rows[0].id
     const second = await ensurePersonalWorkspace(pool, otherId)
+    await subscribeFixture(pool, ownerId)
     const ownStore = new PostgresIngestionStore(pool, first)
     const result = await createBrandOnboarding({ businessName: "Private brand", language: "ka", services: ["Content"] }, ownStore)
     assert.ok(await ownStore.loadBySnapshotId(result.snapshotId))

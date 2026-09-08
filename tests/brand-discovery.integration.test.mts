@@ -1,3 +1,4 @@
+import { subscribeFixture } from "./strategic-integration-fixture"
 import assert from "node:assert/strict"
 import test from "node:test"
 import { randomUUID } from "node:crypto"
@@ -22,6 +23,7 @@ test("discovery persists recovery, independent feedback, ownership and atomic ex
   for (const id of ["owner", "other"]) await pool.query('INSERT INTO auth_user(id,name,email,"emailVerified") VALUES($1,$1,$2,true)', [id, `${id}@example.test`])
   const access = await ensurePersonalWorkspace(pool, "owner")
   await ensurePersonalWorkspace(pool, "other")
+  await subscribeFixture(pool, "owner")
   const existing = await createBrandOnboarding({ businessName: "Old Workshop", services: ["bags", "shoes", "and accessories"], language: "ka", avoidTopics: ["Old restriction"] }, new PostgresIngestionStore(pool, access))
   const before = (await listDashboardBrands(pool, "owner"))[0]!
   const input = { website: "", notes: note, language: "ka" as const }
@@ -50,7 +52,7 @@ test("discovery persists recovery, independent feedback, ownership and atomic ex
   assert.equal(revised.payload.envelope, null)
   const modelCalls: BrandModelCall[] = []
   const ready2 = await completeFixture(revised, modelCalls)
-  assert.deepEqual(modelCalls.map((c) => c.step), ["profiles", "envelope", "goals"])
+  assert.deepEqual(modelCalls.map((c) => c.step), ["profiles", "envelope"])
   assert.equal(ready2.payload.landscape?.entries[0]?.influence, "limited")
   assert.equal(ready2.payload.landscape?.entries[1]?.influence, "strong")
   assert.equal(ready2.payload.profiles.length, 2)
@@ -59,7 +61,7 @@ test("discovery persists recovery, independent feedback, ownership and atomic ex
   const lastClaim = (await claimDiscovery(pool, "owner", id))!
   await finishDiscoveryStep(pool, lastClaim.session, lastClaim.token, ready2.payload, "ready")
   assert.deepEqual((await listDashboardBrands(pool, "owner"))[0], before)
-  const goals = [ready2.payload.goals[0]!.id]
+  const goals: string[] = []
   await assert.rejects(() => confirmDiscovery(pool, "other", id, 2, goals, "ka"))
   await assert.rejects(() => confirmDiscovery(pool, "owner", id, 2, ["invented-goal"], "ka"))
   const results = await Promise.all([confirmDiscovery(pool, "owner", id, 2, goals, "ka"), confirmDiscovery(pool, "owner", id, 2, goals, "ka")])

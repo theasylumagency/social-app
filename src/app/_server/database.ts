@@ -19,8 +19,6 @@ export function getDatabasePool(): Pool {
   }
 
   const pool = createPostgresPool({ connectionString })
-  if (process.env.NODE_ENV !== "production") {
-    globalForDatabase.undaDatabasePool = pool
-  }
+  globalForDatabase.undaDatabasePool = pool
   return pool
 }

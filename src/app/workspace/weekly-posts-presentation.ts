@@ -12,11 +12,9 @@ export function postsPresentation(batch: PostsBatch) {
   const rewritten = repairKeys.filter((key) => payload.copies[key]).length
   const active = batch.status === "queued" || batch.status === "running"
   const complete = batch.status === "ready" && !!payload.review && current === keys.length && !payload.review.issues.some((issue) => issue.severity === "blocking")
-  const needsSequence = !!keys.length && !payload.sequenceReview && ["writing", "review"].includes(batch.step)
-  const phase = batch.step === "outline" ? "outline" : needsSequence ? "sequence" : batch.step === "writing" ? repairKeys.length ? "repair" : "writing" : batch.step === "review" ? "review" : "ready"
+  const phase = batch.step === "outline" ? "outline" : batch.step === "writing" ? repairKeys.length ? "repair" : "writing" : batch.step === "review" ? "review" : "ready"
   const titles = {
-    outline: payload.sequenceFeedback ? "პოსტების სტრუქტურას ვაზუსტებთ" : "პოსტების სტრუქტურას ვამზადებთ",
-    sequence: "კვირის შიდა გამეორებასა და წინა კვირებთან მსგავსებას ვამოწმებთ",
+    outline: "პოსტების სტრუქტურას ვამზადებთ",
     writing: "ტექსტებს ვწერთ",
     review: repairKeys.length ? "გასწორებულ ტექსტებს ხელახლა ვამოწმებთ" : "ბრენდის ხმას, არგუმენტის ხარისხსა და ფაქტებს ვამოწმებთ",
     repair: "ხარისხის შემოწმების შემდეგ ტექსტებს ვასწორებთ",
@@ -30,7 +28,6 @@ export function postsPresentation(batch: PostsBatch) {
       : payload.review?.issues.some((issue) => issue.severity === "blocking") ? "შემოწმება დასრულდა. დარჩენილი შენიშვნები დადასტურებამდე დაზუსტებას საჭიროებს." : "შენახული ტექსტები ქვემოთ ჩანს. საბოლოო შემოწმება ჯერ დადასტურებული არ არის."
   const stages = [
     { key: "outline", label: "პოსტების სტრუქტურის მომზადება", done: !!payload.outline && phase !== "outline" },
-    { key: "sequence", label: "კვირის შიდა გამეორებისა და წინა კვირებთან მსგავსების შემოწმება", done: !!payload.sequenceReview },
     { key: "writing", label: "პირველადი ტექსტების დაწერა", done: !!keys.length && written === keys.length },
     { key: "review", label: "ბრენდის ხმის, არგუმენტის ხარისხის, ფაქტებისა და კომუნიკაციის საზღვრების შემოწმება", done: complete },
     { key: "repair", label: repairKeys.length ? `${repairKeys.length} ტექსტის გასწორება` : "საჭიროების შემთხვევაში ტექსტების გასწორება", done: !!repairKeys.length && rewritten === repairKeys.length },

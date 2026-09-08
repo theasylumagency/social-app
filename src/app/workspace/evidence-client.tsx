@@ -6,19 +6,24 @@ import { currentWeek, shiftWeek } from "../../application/dashboard/model"
 
 export function EvidenceClient({ brandId, initial }: { brandId: string; initial: WeekEvidence[] }) {
   const router = useRouter()
-  const [week, setWeek] = useState(shiftWeek(currentWeek(), -1)), [observation, setObservation] = useState(""), [source, setSource] = useState("")
-  const [level, setLevel] = useState<"public" | "connected" | "downstream">("public")
-  const [execution, setExecution] = useState(""), [unknowns, setUnknowns] = useState(""), [context, setContext] = useState("")
+  const defaultWeek = shiftWeek(currentWeek(), -1)
+  const existing = initial.find((review) => review.week === defaultWeek)
+  const [week, setWeek] = useState(defaultWeek), [observation, setObservation] = useState(existing?.observations[0]?.observation ?? ""), [source, setSource] = useState(existing?.observations[0]?.source ?? "")
+  const [level, setLevel] = useState<"public" | "connected" | "downstream">(existing?.observations[0]?.level ?? "public")
+  const [additionalObservations, setAdditionalObservations] = useState(existing?.observations.slice(1) ?? [])
+  const [execution, setExecution] = useState(existing?.execution.join("\n") ?? ""), [unknowns, setUnknowns] = useState(existing?.unknowns.join("\n") ?? ""), [context, setContext] = useState(existing?.businessContext ?? "")
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [reviews, setReviews] = useState(initial)
   function selectWeek(value: string) {
     setWeek(value)
     const existing = reviews.find((r) => r.week === value)
+    setAdditionalObservations(existing?.observations.slice(1) ?? [])
     setObservation(existing?.observations[0]?.observation ?? ""); setSource(existing?.observations[0]?.source ?? ""); setLevel(existing?.observations[0]?.level ?? "public")
     setExecution(existing?.execution.join("\n") ?? ""); setUnknowns(existing?.unknowns.join("\n") ?? ""); setContext(existing?.businessContext ?? "")
   }
   async function save() {
     setBusy(true); setMessage("")
-    const evidence: WeekEvidence = { week, reviewedAt: new Date().toISOString(), availability: observation.trim() ? "available" : "unavailable", observations: observation.trim() ? [{ level, observation: observation.trim(), source: source.trim() }] : [], execution: execution.trim() ? [execution.trim()] : [], unknowns: unknowns.trim() ? [unknowns.trim()] : ["მიზეზობრივი კავშირი და ბიზნესგავლენა დაუდგენელია."], businessContext: context.trim() }
+    const observations = [...(observation.trim() ? [{ level, observation: observation.trim(), source: source.trim() }] : []), ...additionalObservations]
+    const evidence: WeekEvidence = { week, reviewedAt: new Date().toISOString(), availability: observations.length ? "available" : "unavailable", observations, execution: execution.trim() ? execution.trim().split("\n").filter(Boolean) : [], unknowns: unknowns.trim() ? unknowns.trim().split("\n").filter(Boolean) : ["მიზეზობრივი კავშირი და ბიზნესგავლენა დაუდგენელია."], businessContext: context.trim() }
     try {
       const response = await fetch("/api/social-evidence", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ brandId, evidence }) })
       if (response.status === 402) { router.push("/subscription"); return }

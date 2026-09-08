@@ -29,7 +29,7 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
   return {
     contentLanguage: basis.input.language,
     task: { brief: post.brief, format: post.format, channels: post.channels.map((c) => c.channel), frameCount: post.visual.frames.length, framePlan: post.visual.frames },
-    internalGuidance: { business: { name: u.name, description: u.summary }, positioning: u.positioning, contentDirection: direction, audiences, adaptationBias: adaptation?.bias ?? null },
+    internalGuidance: { business: { name: u.name, description: u.summary }, positioning: u.positioning, socialObjective: p.socialStrategy?.payload.proposal?.objective ?? null, weeklyObjective: p.objective?.objective ?? null, contentDirection: direction, audiences, adaptationBias: adaptation?.bias ?? null },
     voice: compileBrandVoice(u.voice, basis.sources),
     // These are boundaries/defaults, never additional communication jobs.
     communication: { toneRange: envelope.toneRange, terminologyRules: envelope.terminologyRules, ctaStyle: envelope.ctaStyle, salesPressure: envelope.salesPressure, inclusivityRules: envelope.inclusivityRules },

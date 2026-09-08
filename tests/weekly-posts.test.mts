@@ -25,7 +25,7 @@ test("post contracts enforce channel, format, frame and reference coherence", ()
   copy.variants[1]!.caption = "ა".repeat(2201)
   assert.ok(validatePostCopy(copy, schedule.posts[0]!).some((e) => e.includes("2200")))
 })
-test("compact strategy preserves canonical decisions with only two model steps", async () => {
+test("compact weekly planning preserves canonical decisions in one model call", async () => {
   const run = await planningFixture(); run.payload.founderPosts = true
   const calls: import("../src/infrastructure/models/brand-reasoning").BrandModelCall[] = []
   const ready = await completePlanningFixture(run, calls)

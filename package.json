@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:strategy": "node --env-file=.env.local --import tsx --test tests/social-strategy.test.mts tests/strategic-operation.integration.test.mts",
     "dev": "next dev",
     "worker:operator": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
     "worker:discovery": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",

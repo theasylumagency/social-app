@@ -13,7 +13,11 @@ export async function runSocialStrategy(pool: Pool, ownerId: string, id: string)
   const p = structuredClone(s.payload)
   try {
     if (!p.sources) {
-      const accounts = await pool.query<{ profile_url: string | null }>("SELECT profile_url FROM social_publishing_accounts WHERE brand_id=$1", [s.brandId])
+      const accounts = await pool.query<{ profile_url: string | null }>(`SELECT profile_url FROM social_publishing_accounts WHERE brand_id=$1
+        UNION SELECT jsonb_array_elements_text(coalesce(known.accounts,'[]'::jsonb)) FROM (
+          SELECT ss.content#>'{data,knowledge,identitySocialAccounts}' AS accounts FROM ingestion_runs r
+          JOIN source_snapshots ss ON ss.id=r.snapshot_id WHERE r.brand_id=$1 ORDER BY r.completed_at DESC,r.id DESC LIMIT 1
+        ) known`, [s.brandId])
       p.sources = await inspectSocialPresence(p.basis, accounts.rows.flatMap((a) => a.profile_url ? [a.profile_url] : []))
       const saved = await pool.query("UPDATE social_strategies SET payload=$3::jsonb WHERE id=$1 AND lease_token=$2 AND lease_until>now()", [id, token, JSON.stringify(p)])
       if (!saved.rowCount) return

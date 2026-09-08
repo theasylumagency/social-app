@@ -1,3 +1,4 @@
+import { subscribeFixture } from "./strategic-integration-fixture"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { readdir, readFile } from "node:fs/promises"
@@ -21,6 +22,7 @@ test("dashboard reads and brief writes remain isolated by owner, brand and week"
   for (const id of ["owner", "other"]) await pool.query('INSERT INTO auth_user (id,name,email,"emailVerified") VALUES ($1,$1,$2,true)', [id, `${id}@example.test`])
   const access = await ensurePersonalWorkspace(pool, "owner")
   await ensurePersonalWorkspace(pool, "other")
+  await subscribeFixture(pool, "owner")
   const store = new PostgresIngestionStore(pool, access)
   const first = await createBrandOnboarding({ businessName: "პირველი ბრენდი", language: "ka", services: ["კონსულტაცია"] }, store, {
     websiteCapture: { requestedUrl: "https://example.test", finalUrl: "https://example.test/", knowledge: { identityName: "წყაროს სახელი", offerPrimaryServices: ["კონსულტაცია"] } },

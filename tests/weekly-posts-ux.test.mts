@@ -56,12 +56,12 @@ test("Posts receives an active generation dialog; Weekly Plan and previous posts
   }
 })
 
-test("progress follows the worker's actual sequence stage and combined review, with no timed substeps", () => {
+test("progress follows writing and combined review without a phantom novelty stage", () => {
   const batch = batchFixture()
   batch.step = "outline"; batch.payload.outline = null
   assert.equal(postsPresentation(batch).phase, "outline")
   batch.payload.outline = scheduleFixture(); batch.step = "writing"; delete batch.payload.sequenceReview
-  assert.equal(postsPresentation(batch).phase, "sequence")
+  assert.equal(postsPresentation(batch).phase, "writing")
   batch.payload.sequenceReview = distinctSequence(3)
   assert.equal(postsPresentation(batch).phase, "writing")
   batch.step = "review"
