@@ -7,6 +7,8 @@ import { displayDate, knowledgeList, knowledgeText, safeSourceUrl, shiftWeek, we
 import { WeeklyPlanningClient } from "./weekly-planning-client"
 import type { PlanningView } from "../../blueprints/social/weekly-planning/model"
 import { Icon, type IconName } from "./icons"
+import { ConnectionsClient } from "./connections-client"
+import type { ConnectionAccountView } from "../../application/social-connections/view"
 
 export function PageHeading({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
   return <div className="ws-page-heading"><div><p className="ws-eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></div>{children}</div>
@@ -56,9 +58,11 @@ export function BrandView({ brand, sources, view, dossier, history = [] }: { bra
   </>
 }
 
-export function ConnectionsView({ sources }: { sources: DashboardSource[] }) {
+export function ConnectionsView({ sources, ...connections }: { sources: DashboardSource[]; brandId: string; accounts: ConnectionAccountView[]; available: boolean; intentId: string; outcome: string }) {
   const websiteSources = sources.filter((source) => source.url)
-  return <><PageHeading eyebrow="ბრენდის კავშირები" title="სად მუშაობს Operator" description="სოციალური ანგარიშები და წვდომა თქვენს წყაროებზე." /><section className="ws-card ws-connection-card"><div className="ws-card-heading"><h2>სოციალური ანგარიშები</h2><span className="ws-subtle">0 დაკავშირებული</span></div>{[{ icon: "facebook", name: "Facebook", text: "გვერდზე გამოქვეყნება და პოსტების შედეგები" }, { icon: "instagram", name: "Instagram", text: "კონტენტის გამოქვეყნება და აუდიტორიის რეაქცია" }].map((channel) => <div className="ws-channel-row" key={channel.name}><span className={`ws-channel-icon ws-${channel.icon}`}><Icon name={channel.icon as IconName} /></span><div><h3>{channel.name}</h3><p>{channel.text}</p></div><span className="ws-neutral-badge">არ არის დაკავშირებული</span></div>)}<div className="ws-connection-note"><Icon name="info" /><p>სოციალური ანგარიშების დაკავშირება ჯერ არ არის ხელმისაწვდომი. ანგარიშის ბმულის დამატება გამოქვეყნების უფლებას არ იძლევა.</p></div></section><section className="ws-card"><div className="ws-card-heading"><h2>ვებსაიტის წყაროები</h2><Link className="ws-text-link" href="/workspace/brand?view=sources">ყველა წყარო <Icon name="arrow" /></Link></div>{websiteSources.length ? <SourcesList sources={websiteSources} /> : <EmptyState icon="globe" title="ვებსაიტის წყარო ჯერ არ არის შენახული" compact><p>ბრენდის საფუძველი თქვენს მიერ შევსებულ ინფორმაციას ეყრდნობა.</p></EmptyState>}</section></>
+  return <><PageHeading eyebrow="ბრენდის კავშირები" title="სად მუშაობს Operator" description="სოციალური ანგარიშები და წვდომა თქვენს წყაროებზე." />
+    <ConnectionsClient key={`${connections.brandId}:${connections.intentId}:${connections.outcome}`} {...connections} />
+    <section className="ws-card"><div className="ws-card-heading"><h2>ვებსაიტის წყაროები</h2><Link className="ws-text-link" href="/workspace/brand?view=sources">ყველა წყარო <Icon name="arrow" /></Link></div>{websiteSources.length ? <SourcesList sources={websiteSources} /> : <EmptyState icon="globe" title="ვებსაიტის წყარო ჯერ არ არის შენახული" compact><p>ბრენდის საფუძველი თქვენს მიერ შევსებულ ინფორმაციას ეყრდნობა.</p></EmptyState>}</section></>
 }
 
 export function SettingsView({ brand, user, brandCount }: { brand: DashboardBrand; user: { name: string; email: string }; brandCount: number }) {

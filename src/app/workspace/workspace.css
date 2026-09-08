@@ -271,6 +271,18 @@
   .ws-status-body p, .ws-objective .ws-muted, .ws-empty-compact p { font-size: 14px; }
   .ws-status-footer, .ws-card-heading .ws-text-link, .ws-subtle, .ws-availability-note { font-size: 12px; }
 }
+.ws-page-picker { margin: 24px; padding: 24px; border: 1px solid var(--ws-border, #dde5de); border-radius: 16px; }
+.ws-page-picker fieldset { display: grid; gap: 12px; margin: 20px 0; padding: 16px; border: 1px solid var(--ws-border, #dde5de); border-radius: 12px; }
+.ws-page-picker label { display: flex; align-items: center; gap: 10px; min-height: 44px; overflow-wrap: anywhere; cursor: pointer; }
+.ws-page-picker input { flex: 0 0 auto; width: 18px; height: 18px; }
+.ws-page-picker > .ws-text-link { display: inline-flex; margin: 12px; }
+.ws-connection-card button:disabled { opacity: .55; cursor: not-allowed; }
+.ws-connection-card .ws-channel-row > div { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .ws-connection-card .ws-channel-row { flex-wrap: wrap; }
+  .ws-connection-card .ws-channel-row button { margin-left: auto; }
+  .ws-page-picker { margin: 16px; padding: 16px; }
+}
 @media (max-width: 440px) {
   .ws-workflow ol { grid-template-columns: 1fr; padding: 22px 20px; gap: 18px; }
   .ws-workflow li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 12px; }

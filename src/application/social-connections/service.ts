@@ -16,7 +16,7 @@ export class SocialConnectionService {
 
   async begin(ownerId: string, brandId: string, channel: SocialConnectionChannel, targetAccountId: string | null = null) {
     if (!["facebook", "instagram"].includes(channel) || !brandId || brandId.length > 160) throw new ConnectionFlowError("invalidFlow")
-    return this.store.transaction(ownerId, { brandId }, async (session) => {
+    const prepared = await this.store.transaction(ownerId, { brandId }, async (session) => {
       if (targetAccountId && !(await session.accounts.listAccounts(session.scope)).some((a) => a.id === targetAccountId && a.channel === channel)) {
         throw new ConnectionFlowError("accountMismatch")
       }
@@ -31,8 +31,12 @@ export class SocialConnectionService {
         expiresAt: new Date(Date.now() + 10 * 60_000), context: this.cipher.seal(JSON.stringify({ targetAccountId, providerContext: null }), id) })
       const callback = new URL("/api/social/connections/zernio/callback", this.origin)
       callback.searchParams.set("flow", flow)
-      return { authUrl: await provider.connectUrl(channel, profile.providerProfileRef, callback.href) }
+      return { id, provider, profileRef: profile.providerProfileRef, callback: callback.href }
     })
+    // Persist the intent before the remote call: failed attempts still count
+    // toward the limit and uncertain responses can be safely abandoned.
+    try { return { authUrl: await prepared.provider.connectUrl(channel, prepared.profileRef, prepared.callback) } }
+    catch (error) { await this.fail(ownerId, prepared.id); throw error }
   }
 
   private live(intent: ConnectionIntent | null, step: ConnectionIntent["step"]): asserts intent is ConnectionIntent {
@@ -53,6 +57,7 @@ export class SocialConnectionService {
 
   private async bind(session: ConnectionFlowSession, verified: VerifiedConnection, targetAccountId: string | null) {
     const intent = session.intent!
+    if (intent.expiresAt.getTime() <= Date.now()) throw new ConnectionFlowError("expired")
     if (verified.channel !== intent.channel) throw new ConnectionFlowError("accountMismatch")
     const accounts = await session.accounts.listAccounts(session.scope)
     let match = accounts.find((a) => a.channel === verified.channel && verified.nativeAccountRef !== null && a.nativeAccountRef === verified.nativeAccountRef)
@@ -96,6 +101,7 @@ export class SocialConnectionService {
         verifiedState = true
         const context = this.envelope(session.intent)
         const result = await this.providers.resolve(session.intent.provider).callback(session.intent.channel, session.intent.profileRef, query)
+        if (session.intent.expiresAt.getTime() <= Date.now()) throw new ConnectionFlowError("expired")
         if (result.type === "connected") return this.bind(session, result.account, context.targetAccountId)
         if (session.intent.channel !== "facebook") throw new ConnectionFlowError("invalidFlow")
         await session.select(result.pages, this.cipher.seal(JSON.stringify({ ...context, providerContext: result.context }), id))

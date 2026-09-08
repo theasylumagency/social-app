@@ -19,7 +19,7 @@ function service() {
   const env = readZernioEnvironment()
   if (!env.apiKey || !env.connectionContextKey) throw new Error("Social connections are not configured")
   return new SocialConnectionService(new PostgresSocialConnectionFlowStore(getDatabasePool()),
-    new SocialProviderRegistry([["zernio", createZernioConnectionProvider(createZernioClient(env))]]),
+    new SocialProviderRegistry([["zernio", createZernioConnectionProvider(createZernioClient(env), env.applicationOrigin)]]),
     createConnectionContextCipher(env.connectionContextKey), env.applicationOrigin)
 }
 export const socialConnectionHttp = createSocialConnectionHttp({ authenticate: authenticateWorkRequest,

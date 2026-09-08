@@ -9,7 +9,7 @@ export type ZernioEnvironment = {
   readonly applicationOrigin: string
 }
 
-/** Server configuration only; call from the future server/worker composition root. */
+/** Server configuration only; used by the connection composition root and future workers. */
 export function readZernioEnvironment(env: NodeJS.ProcessEnv = process.env): ZernioEnvironment {
   const flag = env.SOCIAL_PUBLISHING_ENABLED ?? "false"
   if (flag !== "true" && flag !== "false") throw new Error("SOCIAL_PUBLISHING_ENABLED must be true or false")

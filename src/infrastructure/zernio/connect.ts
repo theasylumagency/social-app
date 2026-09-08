@@ -20,7 +20,8 @@ function ref(value: unknown): string {
 type FacebookContext = { tempToken: string; connectToken: string; userProfile: Record<string, unknown> }
 
 /** All Zernio response shapes and temporary credential handling stay in infrastructure. */
-export function createZernioConnectionProvider(client: ReturnType<typeof createZernioClient>): SocialConnectionProvider {
+export function createZernioConnectionProvider(client: ReturnType<typeof createZernioClient>, applicationOrigin: string): SocialConnectionProvider {
+  const finalRedirectUrl = new URL("/workspace/connections?connection=connected", applicationOrigin).href
   const request = async (input: Parameters<typeof client.request>[0]) => record((await client.request(input)).data)
   const verify = async (channel: SocialConnectionChannel, profileRef: string, accountRef: string, selectedPage?: string): Promise<VerifiedConnection> => {
     const result = await request({ method: "GET", path: "accounts", query: { profileId: profileRef, platform: channel } })
@@ -29,6 +30,7 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
     if (!account || account.platform !== channel || ref(account.profileId) !== profileRef || account.isActive !== true) throw new ConnectionFlowError("accountMismatch")
     const health = await request({ method: "GET", path: `accounts/${ref(accountRef)}/health` })
     if (health.accountId !== accountRef || health.platform !== channel || record(health.tokenStatus).valid !== true) throw new ConnectionFlowError("accountMismatch")
+    if (health.status !== "healthy" && health.status !== "warning") throw new ConnectionFlowError("providerRejected")
     const permissions = record(health.permissions)
     if (typeof permissions.canPost !== "boolean" || typeof permissions.canFetchAnalytics !== "boolean") throw new ConnectionFlowError("providerRejected")
     let nativeAccountRef: string | null = null
@@ -84,7 +86,7 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
       if (query.has("error")) throw new ConnectionFlowError("providerRejected")
       if (query.get("profileId") !== profileRef) throw new ConnectionFlowError("accountMismatch")
       if (channel === "instagram") {
-        if (query.get("connected") !== "instagram" || query.has("step")) throw new ConnectionFlowError("accountMismatch")
+        if (query.get("connected") !== "instagram" || query.has("step") || (query.has("platform") && query.get("platform") !== "instagram")) throw new ConnectionFlowError("accountMismatch")
         return { type: "connected", account: await verify(channel, profileRef, ref(query.get("accountId"))) }
       }
       if (query.get("platform") !== "facebook" || query.get("step") !== "select_page") throw new ConnectionFlowError("accountMismatch")
@@ -102,7 +104,7 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
     async selectPage(profileRef, sealedContext, pageId) {
       const context = record(JSON.parse(sealedContext))
       const data = await request({ method: "POST", path: "connect/facebook/select-page", connectToken: text(context.connectToken),
-        body: { profileId: profileRef, pageId, tempToken: text(context.tempToken), userProfile: record(context.userProfile) } })
+        body: { profileId: profileRef, pageId, tempToken: text(context.tempToken), userProfile: record(context.userProfile), redirect_url: finalRedirectUrl } })
       const selected = record(data.account)
       if (selected.platform !== "facebook") throw new ConnectionFlowError("accountMismatch")
       return verify("facebook", profileRef, ref(selected.accountId), pageId)

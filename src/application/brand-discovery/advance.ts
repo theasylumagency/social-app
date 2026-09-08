@@ -10,7 +10,7 @@ import { COMMUNICATION_ENVELOPE_SYSTEM_PROMPT } from "../../blueprints/social/br
 import { BUSINESS_UNDERSTANDING_PROMPT } from "../../blueprints/social/brand-discovery/prompts/understanding"
 import { BRAND_GOALS_PROMPT } from "../../blueprints/social/brand-discovery/prompts/goals"
 import { AUDIENCE_HYPOTHESIS_OUTPUT_SCHEMA, AUDIENCE_COMMUNICATION_PROFILE_OUTPUT_SCHEMA, COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA, BUSINESS_UNDERSTANDING_SCHEMA, BRAND_GOALS_SCHEMA } from "../../blueprints/social/brand-discovery/schemas"
-import { validateReferences, validateUnderstanding } from "../../blueprints/social/brand-discovery/validation"
+import { anchorUnderstandingCitations, validateReferences, validateUnderstanding } from "../../blueprints/social/brand-discovery/validation"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
 import type { WebsiteCorpusPage } from "../../infrastructure/web/brand-model-extraction"
 import type { BrandId, IsoDateTime } from "../../core/domain"
@@ -66,8 +66,9 @@ export async function advanceDiscovery(session: DiscoverySession, deps: Discover
     return { payload: p, step: "understanding" }
   }
   if (session.step === "understanding") {
-    p.understanding = await deps.reason<BrandUnderstanding>({ step: "understanding", version: "business-understanding-v2", prompt: BUSINESS_UNDERSTANDING_PROMPT, input: { locale: "ka", sources: p.sources }, schema: BUSINESS_UNDERSTANDING_SCHEMA,
-      validate: (value) => validateUnderstanding(value as BrandUnderstanding, p.sources) })
+    const proposal = await deps.reason<BrandUnderstanding>({ step: "understanding", version: "business-understanding-v3", prompt: BUSINESS_UNDERSTANDING_PROMPT, input: { locale: "ka", sources: p.sources }, schema: BUSINESS_UNDERSTANDING_SCHEMA,
+      validate: (value) => validateUnderstanding(anchorUnderstandingCitations(value as BrandUnderstanding, p.sources), p.sources) })
+    p.understanding = anchorUnderstandingCitations(proposal, p.sources)
     const u = p.understanding
     const signals = [...u.offers.map((offer) => ({ statement: `${offer.name}: ${offer.description}`, sourceKey: offer.sourceKey, exactExcerpt: offer.exactExcerpt })), ...u.distinctiveSignals, ...u.audienceSignals, ...u.voice.examples.map((citation) => ({ ...citation, statement: citation.exactExcerpt }))]
     p.evidence = signals.map((signal, i) => ({ ...signal, key: `e${i + 1}`, id: `evidence:discovery:${prefix}:${i + 1}` }))

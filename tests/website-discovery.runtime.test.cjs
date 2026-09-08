@@ -4,6 +4,7 @@ const test = require("node:test")
 
 const {
   captureWebsiteImage,
+  captureBrandWebsite,
   discoverWebsite,
   extractWebsiteDiscovery,
   WebsiteDiscoveryError,
@@ -241,6 +242,20 @@ test("deterministic fallback reads visible offer cards when no API key exists", 
     "Brand Architectures",
     "Intelligence Layers",
   ])
+})
+
+test("brand corpus preserves readable boundaries between nested visible elements", async () => {
+  const html = Buffer.from(`<!doctype html><html><head><title>Almost Another</title></head><body><main>
+    <a href="/essay"><time>APR 17, 2026</time><h2>Bread for the New Empire</h2><p>A look from outside the imperial lens.</p></a>
+    <a href="/dialogue"><span>Target Dialogue</span><strong>Talks about UBI</strong></a>
+  </main></body></html>`)
+  const pages = await captureBrandWebsite("https://almostanother.example/", {
+    resolveAddresses: async () => ["93.184.216.34"],
+    fetchPage: async (url) => new Response(url.pathname === "/" ? html : Buffer.from("<html><body></body></html>"), { headers: { "content-type": "text/html" } }),
+  })
+  assert.match(pages[0].text, /APR 17, 2026 Bread for the New Empire A look from outside the imperial lens\./)
+  assert.match(pages[0].text, /Target Dialogue Talks about UBI/)
+  assert.doesNotMatch(pages[0].text, /2026Bread|EmpireA look|DialogueTalks/)
 })
 
 test("model extraction discards invented citations and uses the stronger fallback", async () => {

@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { ConnectionAccountView } from "../../application/social-connections/view"
 import type { PageChoice } from "../../application/social-connections/connection-flow"
 import { Icon } from "./icons"
@@ -41,6 +43,7 @@ export function ConnectionsClient({ brandId, accounts, available, intentId, outc
 }
 
 function FacebookPagePicker({ intentId, brandId }: { intentId: string; brandId: string }) {
+  const router = useRouter()
   const [pages, setPages] = useState<PageChoice[] | null>(null)
   const [selected, setSelected] = useState("")
   const [busy, setBusy] = useState(false)
@@ -61,7 +64,8 @@ function FacebookPagePicker({ intentId, brandId }: { intentId: string; brandId: 
     try {
       const response = await fetch("/api/social/connections/facebook/select-page", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ intentId, pageId: selected }) })
       if (!response.ok) throw Error()
-      window.location.assign("/workspace/connections?connection=connected")
+      router.replace("/workspace/connections?connection=connected")
+      router.refresh()
     } catch { setMessage("გვერდი ვერ დაკავშირდა. დაიწყეთ დაკავშირება თავიდან."); setBusy(false) }
   }
   return <section className="ws-page-picker" aria-label="Facebook გვერდის არჩევა">
@@ -73,6 +77,6 @@ function FacebookPagePicker({ intentId, brandId }: { intentId: string; brandId: 
       {pages.map((page) => <label key={page.id}><input type="radio" name="facebook-page" value={page.id} checked={selected === page.id} onChange={() => setSelected(page.id)} /> {page.name}</label>)}
     </fieldset> : null}
     <button type="button" className="ws-button ws-button-green" disabled={!selected || busy} onClick={confirm}>{busy ? "უკავშირდება…" : "არჩეული გვერდის დაკავშირება"}</button>
-    <a className="ws-text-link" href="/workspace/connections">გაუქმება</a>
+    <Link className="ws-text-link" href="/workspace/connections" replace prefetch={false}>გაუქმება</Link>
   </section>
 }

@@ -610,7 +610,15 @@ function corpusDocument(html: Buffer, url: string): WebsiteCorpusPage {
   add(title)
   const scope = $("main").first().length > 0 ? $("main").first() : $("body")
   scope.find("h1,h2,h3,h4,h5,li,a[href],p").each((_index, element) => {
-    add($(element).text())
+    // Cheerio's text() joins adjacent nested elements without a separator. That
+    // turns visible text such as "2026" + "Bread" into "2026Bread", which is
+    // hard for readers and makes otherwise faithful model citations unverifiable.
+    const readable = $(element).clone()
+    readable.find("br").replaceWith("\n")
+    readable.find("*").each((_childIndex, child) => {
+      $(child).before(" ").after(" ")
+    })
+    add(readable.text())
   })
 
   return {

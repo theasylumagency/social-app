@@ -7,6 +7,7 @@ import { createAuth } from "../../lib/auth/create-auth"
 import { authOrigin, socialProviders } from "../../lib/auth/environment"
 import { createEmailSender } from "../../lib/auth/email"
 import { getDatabasePool } from "./database"
+import { createWorkRequestAuthenticator } from "../../lib/auth/work-request"
 
 let instance: ReturnType<typeof createAuth> | undefined
 
@@ -31,17 +32,8 @@ export async function requireSession(returnTo = "/") {
   return session
 }
 
-export async function authenticateWorkRequest(request: Request) {
-  const origin = request.headers.get("origin")
-  const expectedOrigin = authOrigin()
-  const isDev = process.env.NODE_ENV !== "production"
-  const isAllowedDevOrigin = isDev && (origin === "http://localhost:3000" || origin === "http://127.0.0.1:3000")
-  if (origin !== expectedOrigin && !isAllowedDevOrigin) {
-    return { error: Response.json({ message: "მოთხოვნა დაუშვებელია." }, { status: 403 }) } as const
-  }
-  const session = await getAuth().api.getSession({ headers: request.headers })
-  if (!session || !session.user.emailVerified) {
-    return { error: Response.json({ message: "გაგრძელებისთვის შედი ანგარიშში." }, { status: 401 }) } as const
-  }
-  return { session } as const
-}
+export const authenticateWorkRequest = createWorkRequestAuthenticator({
+  origin: authOrigin,
+  isDevelopment: () => process.env.NODE_ENV !== "production",
+  session: (request) => getAuth().api.getSession({ headers: request.headers }),
+})

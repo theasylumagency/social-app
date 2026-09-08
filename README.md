@@ -88,8 +88,8 @@ approval preserve earlier versions. Image generation is deliberately disabled
 during testing. See [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20Posts.md)
 for deployment, model choices, validation and current limits.
 
-Social account connection, real publishing, analytics, billing and trial
-activation remain future work. Recommended channels and days are not presented
+Facebook and Instagram account connection is available when configured. Real
+publishing, analytics, billing and trial activation remain future work. Recommended channels and days are not presented
 as connected accounts or scheduled publication.
 
 The Phase 1 social provider foundation is available in
@@ -102,15 +102,14 @@ blocked while any existing attempt has no result or an `unknownOutcome` result.
 Phase 3 will account for durable reconciliations and acquire the same brand lock
 when capturing a binding for a new attempt.
 
-The Zernio client is transport-only, with bounded JSON requests/responses, a
+The Zernio transport client has bounded JSON requests/responses, a
 whole-request timeout, no redirects/retries, and redacted errors. Configuration
 uses the existing `BETTER_AUTH_URL` origin policy. The provider API defaults to
 `https://zernio.com/api/v1`; only local test servers may override it outside
 production. `readZernioEnvironment` defaults publishing off and validates all
-required secrets when enabled. It is not yet wired to a server/worker startup
-path. There are no OAuth, publishing, scheduling, webhook, or analytics calls.
-The connection-intent table and encryption-key configuration reserve the schema
-for Phase 2; no OAuth credential handling is implemented yet.
+required secrets when enabled. Phase 2 wires the connection adapter through a
+server-only composition root. There are still no publishing, scheduling,
+webhook, reconciliation, or analytics ingestion calls.
 
 Phase 1 verification (requires the local test database):
 
@@ -123,6 +122,80 @@ npm run test:integration
 
 The focused test creates and removes only a randomly named isolated PostgreSQL
 schema. It fails, rather than skips persistence coverage, without `DATABASE_URL`.
+
+### Phase 2: social connection flow
+
+The Connections page reads canonical accounts and current binding health from
+PostgreSQL. Facebook uses Zernio headless mode: UNDA lists display-only Page
+choices and requires an explicit choice, even for a single Page. Instagram uses
+`instagram_login` for professional accounts, not `facebook_login`.
+
+Set `ZERNIO_API_KEY`, `SOCIAL_CONNECTION_CONTEXT_KEY` (32 random bytes encoded as
+base64), and the existing `BETTER_AUTH_URL` canonical application origin. Keep
+`SOCIAL_PUBLISHING_ENABLED=false`; connecting does not require the future
+webhook secret or enable publishing. No provider credentials use `NEXT_PUBLIC_`.
+Apply existing migrations through `0011` with `npm run db:migrate` before use;
+Phase 2 adds no migration. Configure the provider callback at
+`<BETTER_AUTH_URL>/api/social/connections/zernio/callback` and allow its server-issued
+`flow` query parameter. Production requires HTTPS.
+
+Server routes:
+
+- `POST /api/social/connections/facebook` or `/instagram`: verified session,
+  same-origin request and brand ownership required; returns the provider auth URL.
+- `GET /api/social/connections/zernio/callback`: verifies the owner-bound state,
+  profile and requested channel; redirects to a clean internal URL.
+- `GET /api/social/connections/facebook/pages?intent=<id>`: owner-only display
+  choices, without provider credentials.
+- `POST /api/social/connections/facebook/select-page`: accepts only an offered
+  Page for an unconsumed owner-bound intent; independently refetches the connected
+  account, profile, health and selected native Page before binding it.
+
+Intents expire after ten minutes and have SHA-256 state digests. Temporary
+Facebook context is AES-256-GCM encrypted with a fresh IV and intent-bound AAD.
+Success and terminal failure erase context; expired context is erased on the
+owner's next connection request (there is no background cleanup worker yet).
+Cancellation leaves the encrypted intent to expire. Changing the context key
+invalidates pending connections, so restart them after key rotation.
+
+The server serializes connection changes under the existing brand lock. Account,
+binding and intent consumption commit atomically; no first-Page selection or
+provider POST retry is automatic. Ten persisted initiations per brand/owner/hour
+are allowed, including failed auth-URL requests. Profile creation uses a
+deterministic brand-derived name and idempotency key, with lookup recovery for a
+previous remote success. Callback responses use `private, no-store` and
+`no-referrer`; configure hosting/proxy/APM access logs to **omit callback query
+strings** because the provider's initial callback URL contains temporary tokens.
+
+Reconnect reuses the canonical account ID. The documented account-list response
+does not guarantee a native Instagram ID, so it remains null rather than being
+invented from a provider ID or username. Same-binding reconnect is supported;
+identity-changing reconnect/provider migration must wait for independently
+verified native identity. A returned account from another profile/channel or a
+different selected Facebook Page is rejected.
+
+Phase 2 gate (isolated real PostgreSQL plus mocked Zernio transport; no live
+provider accounts are changed):
+
+```powershell
+npm run check
+npm run lint
+npm run test:social:foundation
+npm run test:social:connections
+npm run build
+```
+
+The tests cover ownership/authentication/origin checks, expiry/replay,
+concurrent callbacks and selection, encrypted context, explicit Page choice,
+provider account/profile/channel refetch, reconnect identity, rollback safety
+and initiation limits. Keep the gate green before Phase 3. Before production
+rollout, also smoke-test both OAuth flows with a real configured test brand and
+confirm that deployment access logs redact the callback query string.
+
+Provider contracts: [connection URL](https://docs.zernio.com/connect/get-connect-url),
+[headless Page list](https://docs.zernio.com/connect/list-facebook-pages),
+[Page selection](https://docs.zernio.com/connect/select-facebook-page), and
+[profile creation](https://docs.zernio.com/profiles/create-profile).
 
 ## Local commands
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { randomUUID } from "node:crypto"
 import { emptyDiscovery, splitListLines, type DiscoverySession } from "../src/blueprints/social/brand-discovery/model"
-import { validateUnderstanding } from "../src/blueprints/social/brand-discovery/validation"
+import { anchorSourceExcerpt, anchorUnderstandingCitations, validateUnderstanding } from "../src/blueprints/social/brand-discovery/validation"
 import { advanceDiscovery } from "../src/application/brand-discovery/advance"
 import { createBrandReasoner, type BrandModelCall, type BrandModelRun } from "../src/infrastructure/models/brand-reasoning"
 import { AUDIENCE_HYPOTHESIS_OUTPUT_SCHEMA } from "../src/blueprints/social/brand-discovery/schemas"
@@ -45,6 +45,37 @@ test("invented citations and unknown model authority are rejected, valid repair 
   assert.equal(records.length, 2)
   assert.ok(records[0]!.validationErrors.some((e) => e.includes("influence")))
   assert.deepEqual(records[1]!.validationErrors, [])
+})
+test("citation anchoring restores only source formatting and keeps invented wording blocked", () => {
+  const source = `APR 17, 2026Bread for the New Empire\n“This essay does not stand alone.”\nCharacters—they carry ambitions.`
+  assert.equal(anchorSourceExcerpt("APR 17, 2026 Bread for the New Empire", source), "APR 17, 2026Bread for the New Empire")
+  assert.equal(anchorSourceExcerpt('"This essay does not stand alone."', source), "“This essay does not stand alone.”")
+  assert.equal(anchorSourceExcerpt("Characters - they carry ambitions", source), "Characters—they carry ambitions.")
+  assert.equal(anchorSourceExcerpt("Characters carry political ambitions", source), null)
+  assert.equal(anchorSourceExcerpt("APR 17 2026 Bread for the New Empire", source), null, "meaning-bearing punctuation is not discarded")
+  assert.equal(anchorSourceExcerpt("stand", source), null)
+  const changed = structuredClone(understanding)
+  changed.offers[0]!.exactExcerpt = "Workshop repairs leather bags, shoes, and accessories."
+  const malformed = note.replace("bags, shoes", "bags,shoes")
+  const anchored = anchorUnderstandingCitations(changed, [{ key: "founder", url: null, title: "Founder", text: malformed, capturedAt: new Date().toISOString() }])
+  assert.equal(anchored.offers[0]!.exactExcerpt, "Workshop repairs leather bags,shoes, and accessories.")
+  assert.deepEqual(validateUnderstanding(anchored, [{ key: "founder", url: null, title: "Founder", text: malformed, capturedAt: new Date().toISOString() }]), [])
+  assert.equal(changed.offers[0]!.exactExcerpt, "Workshop repairs leather bags, shoes, and accessories.", "anchoring does not mutate model output")
+})
+test("a failed understanding stage can recover from its already persisted source corpus", async () => {
+  const session = initial()
+  session.step = "understanding"
+  session.payload.sources = [{ key: "founder", url: null, title: "Founder", text: note.replace("bags, shoes", "bags,shoes"), capturedAt: session.updatedAt }]
+  const proposal = structuredClone(understanding)
+  let validationErrors: string[] = []
+  const next = await advanceDiscovery(session, { capture: async () => { throw Error("must not recrawl") }, reason: async <T,>(call: BrandModelCall) => {
+    validationErrors = call.validate!(proposal)
+    return proposal as T
+  } })
+  assert.deepEqual(validationErrors, [])
+  assert.equal(next.step, "audiences")
+  assert.equal(next.payload.understanding!.offers[0]!.exactExcerpt, "Workshop repairs leather bags,shoes, and accessories.")
+  assert.equal(next.payload.evidence[0]!.exactExcerpt, "Workshop repairs leather bags,shoes, and accessories.")
 })
 test("unknown evidence and inflated confidence cannot enter the audience landscape", async () => {
   const ready = await completeFixture(initial())

@@ -9,6 +9,9 @@ import { listDashboardBrands, listDashboardSources, readWeeklyBrief } from "../.
 import { requireSession } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { ACTIVE_BRAND_COOKIE } from "../../_server/active-brand"
+import { socialConnectionsAvailable } from "../../_server/social-connections"
+import { PostgresSocialConnectionsStore } from "../../../infrastructure/postgres/social-connections-store"
+import { readConnectionAccounts } from "../../../application/social-connections/view"
 import { sectionLabels, WorkspaceShell } from "../shell"
 import { BrandView, ConnectionsView, ContentView, ResultsView, SettingsView, WeekView } from "../views"
 import "../workspace.css"
@@ -33,12 +36,13 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   if (!brand || !brand.ready) redirect("/onboarding")
   const today = currentWeek()
   const week = isWeek(query.week) ? query.week : today
-  const [sources, brief, dossier, history, planning] = await Promise.all([
+  const [sources, brief, dossier, history, planning, accounts] = await Promise.all([
     listDashboardSources(pool, session.user.id, brand.id),
     section === "week" ? readWeeklyBrief(pool, session.user.id, brand.id, week) : Promise.resolve(null),
     section === "brand" ? readBrandDossier(pool, session.user.id, brand.id) : Promise.resolve(null),
     section === "brand" && query.view === "history" ? readDossierHistory(pool, session.user.id, brand.id) : Promise.resolve([]),
     (section === "week" || section === "content") ? readPlanningView(pool, session.user.id, brand.id, week) : Promise.resolve(null),
+    section === "connections" ? readConnectionAccounts(new PostgresSocialConnectionsStore(pool), { ownerId: session.user.id, brandId: brand.id }) : Promise.resolve([]),
   ])
   const textParam = (name: string) => typeof query[name] === "string" ? query[name] as string : ""
   return <WorkspaceShell section={section as DashboardSection} brands={brands} brand={brand} user={session.user} week={week}>
@@ -46,7 +50,7 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
     {section === "content" ? <ContentView planning={planning!} brand={brand} ownerId={session.user.id} week={week} /> : null}
     {section === "results" ? <ResultsView /> : null}
     {section === "brand" ? <BrandView history={history} dossier={dossier ? { ...dossier, payload: publicDiscoveryPayload(dossier.payload) } : null} brand={brand} sources={sources} view={textParam("view")} /> : null}
-    {section === "connections" ? <ConnectionsView sources={sources} /> : null}
+    {section === "connections" ? <ConnectionsView sources={sources} brandId={brand.id} accounts={accounts} available={socialConnectionsAvailable()} intentId={textParam("intent")} outcome={textParam("connection")} /> : null}
     {section === "settings" ? <SettingsView brand={brand} user={session.user} brandCount={brands.length} /> : null}
   </WorkspaceShell>
 }
