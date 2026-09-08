@@ -1147,3 +1147,17 @@ export async function captureBrandWebsite(
   const pages = await crawlWebsite(requested, dependencies.fetchPage ?? fetch, dependencies.resolveAddresses ?? defaultResolveAddresses)
   return pages.map(({ url, title, text }) => ({ url, ...(title ? { title } : {}), text }))
 }
+
+/** Bounded single-page inspection using the existing SSRF/size/redirect protections. */
+export async function inspectPublicPage(url: string): Promise<{ url: string; text: string; socialLinks: string[] }> {
+  const page = await fetchHtmlPage(normalizeWebsiteUrl(url), fetch, defaultResolveAddresses)
+  const $ = loadBuffer(page.html)
+  const socialLinks = new Set<string>()
+  $("a[href]").each((_i, element) => {
+    try {
+      const link = new URL($(element).attr("href")!, page.url)
+      if (link.protocol === "https:" && /(^|\.)(facebook|instagram|linkedin|tiktok|youtube)\.com$/i.test(link.hostname)) socialLinks.add(link.href)
+    } catch { /* Ignore invalid hyperlinks. */ }
+  })
+  return { url: page.url, text: corpusDocument(page.html, page.url).text.slice(0, 12000), socialLinks: [...socialLinks].slice(0, 12) }
+}

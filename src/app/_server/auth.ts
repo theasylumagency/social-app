@@ -8,6 +8,7 @@ import { authOrigin, socialProviders } from "../../lib/auth/environment"
 import { createEmailSender } from "../../lib/auth/email"
 import { getDatabasePool } from "./database"
 import { createWorkRequestAuthenticator } from "../../lib/auth/work-request"
+import { hasSubscription } from "../../infrastructure/postgres/subscription-store"
 
 let instance: ReturnType<typeof createAuth> | undefined
 
@@ -29,11 +30,22 @@ export const currentSession = cache(async () => {
 export async function requireSession(returnTo = "/") {
   const session = await currentSession()
   if (!session || !session.user.emailVerified) redirect(`/login?next=${encodeURIComponent(returnTo)}`)
+  if (returnTo !== "/account" && returnTo !== "/subscription" && !await hasSubscription(getDatabasePool(), session.user.id)) redirect("/subscription")
   return session
 }
 
-export const authenticateWorkRequest = createWorkRequestAuthenticator({
+export const authenticateAccountRequest = createWorkRequestAuthenticator({
   origin: authOrigin,
   isDevelopment: () => process.env.NODE_ENV !== "production",
   session: (request) => getAuth().api.getSession({ headers: request.headers }),
 })
+
+export async function authenticateWorkRequest(request: Request) {
+  const access = await authenticateAccountRequest(request)
+  if (access.error) return access
+  if (!await hasSubscription(getDatabasePool(), access.session.user.id)) return { error: Response.json({ message: "გამოწერა არ არის აქტიური. გასაგრძელებლად განაახლეთ იგი.", redirect: "/subscription" }, { status: 402 }) } as const
+  return access
+}
+export async function subscriptionRequired(ownerId: string) {
+  return await hasSubscription(getDatabasePool(), ownerId) ? null : Response.json({ message: "გასაგრძელებლად განაახლეთ გამოწერა.", redirect: "/subscription" }, { status: 402 })
+}

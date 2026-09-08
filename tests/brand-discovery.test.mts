@@ -24,11 +24,11 @@ test("source failure needs honest fallback, never fabricated successful crawl", 
 test("full process resolves evidence IDs and keeps goals separate from facts", async () => {
   const calls: BrandModelCall[] = []
   const ready = await completeFixture(initial(), calls)
-  assert.deepEqual(calls.map((c) => c.step), ["understanding", "audiences", "profiles", "envelope", "goals"])
+  assert.deepEqual(calls.map((c) => c.step), ["understanding", "audiences", "profiles", "envelope"])
   assert.equal(ready.payload.hypotheses[0]?.evidenceIds[0], ready.payload.evidence[0]?.id)
   assert.equal(ready.payload.envelope?.landscapeVersion, 1)
-  assert.equal(ready.payload.goals[0]?.audienceIds[0], ready.payload.hypotheses[0]?.id)
-  assert.equal(ready.payload.feedback.selectedGoalIds, null)
+  assert.deepEqual(ready.payload.goals, [])
+  assert.deepEqual(ready.payload.feedback.selectedGoalIds, [])
   assert.deepEqual(ready.payload.feedback.stances, [])
   assert.equal(ready.payload.sources[0]?.capturedAt, "2026-09-06T10:00:00.000Z")
 })

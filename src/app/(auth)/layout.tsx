@@ -12,7 +12,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <span className="eyebrow">შენი ბრენდის ყოველდღიური პარტნიორი</span>
           <h1>მეტი დრო<br />შენი ბიზნესისთვის.</h1>
           <p>სოციალური ოპერატორი გაიცნობს შენს ბრენდს და დაგეხმარება კონტენტის დაგეგმვაში, მომზადებასა და გამოქვეყნებაში.</p>
-          <div className="auth-trial-note"><span aria-hidden="true">14</span><div><strong>დღე გამოსაცდელად</strong><p>ერთი ბრენდი · ბარათის გარეშე<br />გამოსახულების გენერაცია ფასიან ტარიფზეა.</p></div></div>
+          <div className="auth-trial-note"><span aria-hidden="true">U</span><div><strong>ერთი სივრცე თქვენი ბრენდებისთვის</strong><p>1, 3 ან 10 ბრენდი · შესაძლებელია გაუმჯობესება<br />ტესტირებისას — სატესტო გადახდა.</p></div></div>
         </div>
         <p className="auth-story-footer">შენი ბიზნესი. შენი ხმა. შენი UNDA.</p>
       </aside>

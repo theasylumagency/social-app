@@ -1,6 +1,6 @@
 import type { AudienceHypothesis, AudienceCommunicationProfile, CommunicationEnvelope } from "../../blueprints/social/audience"
 import { resolveAudienceLandscape } from "../../blueprints/social/audience-resolution"
-import type { BrandUnderstanding, DiscoverySession, DiscoveryPayload, GoalProposal } from "../../blueprints/social/brand-discovery/model"
+import type { BrandUnderstanding, DiscoverySession, DiscoveryPayload } from "../../blueprints/social/brand-discovery/model"
 import type { AudienceHypothesisModelOutput } from "../../blueprints/social/brand-discovery/audience-contract"
 import type { AudienceCommunicationProfileModelOutput } from "../../blueprints/social/brand-discovery/communication-profile-contract"
 import type { CommunicationEnvelopeModelOutput } from "../../blueprints/social/brand-discovery/communication-envelope-contract"
@@ -8,8 +8,7 @@ import { AUDIENCE_HYPOTHESIS_SYSTEM_PROMPT } from "../../blueprints/social/brand
 import { AUDIENCE_COMMUNICATION_PROFILE_SYSTEM_PROMPT } from "../../blueprints/social/brand-discovery/prompts/communication-profile"
 import { COMMUNICATION_ENVELOPE_SYSTEM_PROMPT } from "../../blueprints/social/brand-discovery/prompts/communication-envelope"
 import { BUSINESS_UNDERSTANDING_PROMPT } from "../../blueprints/social/brand-discovery/prompts/understanding"
-import { BRAND_GOALS_PROMPT } from "../../blueprints/social/brand-discovery/prompts/goals"
-import { AUDIENCE_HYPOTHESIS_OUTPUT_SCHEMA, AUDIENCE_COMMUNICATION_PROFILE_OUTPUT_SCHEMA, COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA, BUSINESS_UNDERSTANDING_SCHEMA, BRAND_GOALS_SCHEMA } from "../../blueprints/social/brand-discovery/schemas"
+import { AUDIENCE_HYPOTHESIS_OUTPUT_SCHEMA, AUDIENCE_COMMUNICATION_PROFILE_OUTPUT_SCHEMA, COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA, BUSINESS_UNDERSTANDING_SCHEMA } from "../../blueprints/social/brand-discovery/schemas"
 import { anchorUnderstandingCitations, validateReferences, validateUnderstanding } from "../../blueprints/social/brand-discovery/validation"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
 import type { WebsiteCorpusPage } from "../../infrastructure/web/brand-model-extraction"
@@ -117,16 +116,9 @@ export async function advanceDiscovery(session: DiscoverySession, deps: Discover
     })
     const proposal = await deps.reason<CommunicationEnvelopeModelOutput>({ step: "envelope", version: "communication-envelope-v2", prompt: COMMUNICATION_ENVELOPE_SYSTEM_PROMPT, input: { ...context, profiles }, schema: COMMUNICATION_ENVELOPE_OUTPUT_SCHEMA })
     p.envelope = { ...proposal.envelope, id: `envelope:${prefix}` as CommunicationEnvelope["id"], brandId, landscapeVersion: session.revision, profileIds: p.profiles.map((profile) => profile.id), generatedAt: now } as CommunicationEnvelope
-    return { payload: p, step: "goals" }
-  }
-  if (session.step === "goals") {
-    const context = compileLandscapeContext(p)
-    const proposal = await deps.reason<{ goals: GoalProposal[] }>({ step: "goals", version: "brand-goals-v1", prompt: BRAND_GOALS_PROMPT, input: { ...context, envelope: p.envelope }, schema: BRAND_GOALS_SCHEMA,
-      validate: (value) => (value as { goals: GoalProposal[] }).goals.flatMap((goal) => validateReferences(goal.audienceKeys, context.audiences.map((a) => a.audienceKey), "audiences")) })
-    const entries = p.landscape!.entries.filter((e) => e.influence !== "none")
-    p.goals = proposal.goals.map(({ audienceKeys, ...goal }, i) => ({ ...goal, id: `goal:${prefix}:${i + 1}`, audienceIds: audienceKeys.map((key) => entries[context.audiences.findIndex((a) => a.audienceKey === key)]!.audience.id) }))
-    p.feedback.selectedGoalIds = null
+    p.goals = []; p.feedback.selectedGoalIds = []
     return { payload: p, step: "ready" }
   }
+  // Legacy queued goal stages finish without another paid call.
   return { payload: p, step: "ready" }
 }

@@ -6,6 +6,7 @@ import type { ContentDirectionProposal } from "./content-direction-contract"
 import type { ContentAudienceDirectionProposal } from "./content-audience-direction-contract"
 import type { ExperimentDecisionStructuredProposal } from "./experiment-decision-contract"
 import type { PostsBatch, PostAsset, PostCadence, PostsPayload } from "./posts"
+import type { SocialStrategy, WeekEvidence } from "../strategy/model"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -23,6 +24,9 @@ export type PlanOutline = {
   posts?: { title: string; job: string; takeaway: string; points: string[] }[]
 }
 export type PlanningPayload = {
+  socialStrategy?: SocialStrategy
+  evidence?: WeekEvidence[]
+  priorCopy?: string[]
   founderPosts?: boolean
   cadence?: PostCadence
   basis: BrandDossier

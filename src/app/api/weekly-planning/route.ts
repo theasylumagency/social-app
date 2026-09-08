@@ -1,4 +1,4 @@
-import { authenticateWorkRequest, currentSession } from "../../_server/auth"
+import { authenticateWorkRequest, currentSession, subscriptionRequired } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { isWeek } from "../../../application/dashboard/model"
 import { isDiscoveryId } from "../../../infrastructure/postgres/brand-discovery-store"
@@ -12,6 +12,8 @@ export const runtime = "nodejs"
 export async function GET(request: Request) {
   const auth = await currentSession()
   if (!auth?.user.emailVerified) return Response.json({ message: "გაგრძელებისთვის შედით ანგარიშში." }, { status: 401 })
+  const billing = await subscriptionRequired(auth.user.id)
+  if (billing) return billing
   const query = new URL(request.url).searchParams
   const brandId = query.get("brand")
   const week = query.get("week")

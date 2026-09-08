@@ -130,7 +130,7 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
               await sendEmail({
                 to: user.email,
                 subject: "UNDA — რეგისტრაცია წარმატებით დასრულდა!",
-                text: `გამარჯობა${name},\n\nმოგესალმებით UNDA-ში! შენი ანგარიში წარმატებით შეიქმნა.\n\nსამუშაო სივრცეში გადასასვლელად გახსენი ბმული:\n${origin}\n\n14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.\n\nშეგიძლია ნებისმიერ დროს შეხვიდე Google-ით, ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.\n\nპატივისცემით,\nUNDA გუნდი`,
+                text: `გამარჯობა${name},\n\nმოგესალმებით UNDA-ში! შენი ანგარიში წარმატებით შეიქმნა.\n\nსამუშაო სივრცეში გადასასვლელად გახსენი ბმული:\n${origin}\n\nმუშაობის დასაწყებად აირჩიე გამოწერა. ტესტირებისას თანხა არ ჩამოიჭრება.\n\nშეგიძლია ნებისმიერ დროს შეხვიდე Google-ით, ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.\n\nპატივისცემით,\nUNDA გუნდი`,
                 html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
                   <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">მოგესალმებით UNDA-ში!</h2>
                   <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა${name},</p>
@@ -138,7 +138,7 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
                   <p style="margin-bottom: 24px;">
                     <a href="${origin}" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">სამუშაო სივრცეში გადასვლა</a>
                   </p>
-                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე. შეგიძლია ნებისმიერ დროს შეხვიდე Google-ით ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.</p>
+                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">მუშაობის დასაწყებად აირჩიე გამოწერა. ტესტირებისას თანხა არ ჩამოიჭრება. შეგიძლია ნებისმიერ დროს შეხვიდე Google-ით ან ანგარიშის პარამეტრებიდან დაამატო პაროლი.</p>
                   <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
                   <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>
                 </div>`,
@@ -153,7 +153,7 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
               await sendEmail({
                 to: user.email,
                 subject: "UNDA — რეგისტრაცია წარმატებით დასრულდა!",
-                text: `გამარჯობა${name},\n\nშენი UNDA ანგარიში წარმატებით გააქტიურდა.\n\nშესვლა შეგიძლია ბმულიდან:\n${origin}/login\n\n14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.\n\nთუ რაიმე შეკითხვა გაგიჩნდება, მოგვწერე ნებისმიერ დროს.\n\nპატივისცემით,\nUNDA გუნდი`,
+                text: `გამარჯობა${name},\n\nშენი UNDA ანგარიში წარმატებით გააქტიურდა.\n\nშესვლა შეგიძლია ბმულიდან:\n${origin}/login\n\nმუშაობის დასაწყებად აირჩიე გამოწერა. ტესტირებისას თანხა არ ჩამოიჭრება.\n\nთუ რაიმე შეკითხვა გაგიჩნდება, მოგვწერე ნებისმიერ დროს.\n\nპატივისცემით,\nUNDA გუნდი`,
                 html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #111; line-height: 1.6;">
                   <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #111;">მოგესალმებით UNDA-ში!</h2>
                   <p style="font-size: 15px; margin-bottom: 16px;">გამარჯობა${name},</p>
@@ -161,7 +161,7 @@ export function createAuth({ pool, origin, secret, providers, sendEmail }: AuthC
                   <p style="margin-bottom: 24px;">
                     <a href="${origin}/login" style="display: inline-block; background-color: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;">სამუშაო სივრცეში შესვლა</a>
                   </p>
-                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">14-დღიანი საცდელი პერიოდი დაიწყება პირველი ბრენდის გამართვისთანავე.</p>
+                  <p style="font-size: 13px; color: #555; margin-bottom: 8px;">მუშაობის დასაწყებად აირჩიე გამოწერა. ტესტირებისას თანხა არ ჩამოიჭრება.</p>
                   <p style="font-size: 13px; color: #555;">თუ რაიმე შეკითხვა გაგიჩნდება, მოგვწერე ნებისმიერ დროს.</p>
                   <hr style="border: none; border-top: 1px solid #eaeaea; margin: 32px 0 16px;" />
                   <p style="font-size: 12px; color: #888;">UNDA Social Operator · <a href="${origin}" style="color: #888; text-decoration: underline;">${origin}</a></p>

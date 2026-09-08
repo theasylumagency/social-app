@@ -1,4 +1,4 @@
-import { authenticateWorkRequest, currentSession } from "../../_server/auth"
+import { authenticateWorkRequest, currentSession, subscriptionRequired } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { rememberBrand } from "../../_server/active-brand"
 import { ensurePersonalWorkspace } from "../../../infrastructure/postgres/workspace-store"
@@ -13,6 +13,8 @@ function publicSession(session: DiscoverySession | null) {
 export async function GET(request: Request) {
   const session = await currentSession()
   if (!session?.user.emailVerified) return Response.json({ message: "გაგრძელებისთვის შედით ანგარიშში." }, { status: 401 })
+  const billing = await subscriptionRequired(session.user.id)
+  if (billing) return billing
   const query = new URL(request.url).searchParams
   const id = query.get("id")
   const brand = query.get("brand")
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     else if (body.action === "confirm") {
       const brandId = await confirmDiscovery(pool, ownerId, id, revision, body.selectedGoalIds, body.language)
       await rememberBrand(brandId)
-      return Response.json({ brandId, redirect: "/workspace/brand" })
+      return Response.json({ brandId, redirect: "/workspace/strategy" })
     } else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")
     const current = await readDiscovery(pool, ownerId, id)
     if (!current) return Response.json({ message: "სესია ვერ მოიძებნა." }, { status: 404 })

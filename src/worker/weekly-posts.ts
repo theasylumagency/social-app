@@ -1,7 +1,7 @@
+import { hasSubscription } from "../infrastructure/postgres/subscription-store"
 import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
-import { createPostSchedule, writePost, reviewPosts, reviewPostSequence } from "../application/weekly-planning/posts"
-import { applySequenceReview } from "../blueprints/social/weekly-planning/sequence"
+import { createPostSchedule, writePost, reviewPosts } from "../application/weekly-planning/posts"
 import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
 import { readPlanningRun, recordPlanningModelRun } from "../infrastructure/postgres/weekly-planning-store"
@@ -10,10 +10,10 @@ import { claimWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, readW
 export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, budgetMs = OPERATOR_WORKER_BUDGET_MS) {
   const deadline = Date.now() + budgetMs
   while (Date.now() < deadline - MODEL_STAGE_RESERVE_MS) {
+    if (!await hasSubscription(pool, ownerId)) return
     const claim = await claimWeeklyPosts(pool, ownerId, id)
     if (!claim) return
-    const needsSequence = ["writing", "review"].includes(claim.batch.step) && !claim.batch.payload.sequenceReview && !!claim.batch.payload.outline?.posts.length
-    const model = postStageModel(needsSequence ? "review" : claim.batch.step)
+    const model = postStageModel(claim.batch.step)
     try {
       const run = await readPlanningRun(pool, ownerId, id)
       if (!run) throw Error("Missing owned plan")
@@ -21,13 +21,9 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
       const reason = createBrandReasoner((r) => recordPlanningModelRun(pool, id, r), { model, reasoningEffort: "low" })
       let step = claim.batch.step
       if (step === "outline") {
-        payload.sequenceRetainedCount = payload.outline?.posts.length ?? 0
         payload.outline = await createPostSchedule(run, reason, payload)
         delete payload.sequenceReview
         step = "writing"
-      }
-      else if (needsSequence) {
-        step = applySequenceReview(payload, await reviewPostSequence(run, payload, reason))
       }
       else if (step === "writing") {
         const pending = payload.outline!.posts.map((_, i) => `p${i + 1}`).filter((key) => !payload.copies[key]).slice(0, 3)

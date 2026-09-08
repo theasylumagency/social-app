@@ -1,4 +1,4 @@
-import { countPostChannels, type PostCadence, type PostOutline, type PostsPayload } from "./posts"
+import { countPostChannels, postRepairFeedback, type PostCadence, type PostOutline, type PostsPayload } from "./posts"
 
 /** Keep existing communication jobs and channel copies; a day change needs no writer. */
 export function resizePostSchedule(previous: PostsPayload, cadence: PostCadence) {
@@ -17,9 +17,21 @@ export function resizePostSchedule(previous: PostsPayload, cadence: PostCadence)
     const copy = previous.copies[from] ?? previous.repairDrafts?.[from]
     const feedback = previous.review?.issues.filter((issue) => issue.postKey === from) ?? []
     issues.push(...feedback.map((issue) => ({ ...issue, postKey: to })))
+    const draft = previous.repairDrafts?.[from]
+    if (draft) payload.repairDrafts![to] = { variants: draft.variants.filter((v) => channels.some((c) => c.channel === v.channel)) }
+    const savedFeedback = previous.repairFeedback?.[from]
+    if (savedFeedback) {
+      payload.repairFeedback ??= {}
+      payload.repairFeedback[to] = { ...savedFeedback, issues: savedFeedback.issues.map((issue) => ({ ...issue, postKey: to })) }
+    }
     if (copy) {
       const kept = { variants: copy.variants.filter((v) => channels.some((c) => c.channel === v.channel)) }
-      if (feedback.some((issue) => issue.severity === "blocking")) payload.repairDrafts![to] = kept
+      if (feedback.some((issue) => issue.severity === "blocking")) {
+        payload.repairDrafts![to] = kept
+        payload.repairFeedback ??= {}
+        const evidence = postRepairFeedback(previous.review!, from)
+        payload.repairFeedback[to] = { ...evidence, issues: evidence.issues.map((issue) => ({ ...issue, postKey: to })) }
+      }
       else payload.copies[to] = kept
     }
   })

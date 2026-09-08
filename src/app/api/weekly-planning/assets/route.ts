@@ -1,5 +1,5 @@
 import sharp from "sharp"
-import { authenticateWorkRequest, currentSession } from "../../../_server/auth"
+import { authenticateWorkRequest, currentSession, subscriptionRequired } from "../../../_server/auth"
 import { getDatabasePool } from "../../../_server/database"
 import { isDiscoveryId } from "../../../../infrastructure/postgres/brand-discovery-store"
 import { listPostAssets, mutatePostAsset, readPostAsset, readWeeklyPosts } from "../../../../infrastructure/postgres/weekly-posts-store"
@@ -9,6 +9,8 @@ const maxFileBytes = 8 * 1024 * 1024
 export async function GET(request: Request) {
   const session = await currentSession()
   if (!session?.user.emailVerified) return new Response(null, { status: 401 })
+  const billing = await subscriptionRequired(session.user.id)
+  if (billing) return billing
   const id = new URL(request.url).searchParams.get("id")
   if (!isDiscoveryId(id)) return new Response(null, { status: 404 })
   const content = await readPostAsset(getDatabasePool(), session.user.id, id)

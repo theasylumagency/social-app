@@ -29,7 +29,7 @@ test("compact strategy preserves canonical decisions with only two model steps",
   const run = await planningFixture(); run.payload.founderPosts = true
   const calls: import("../src/infrastructure/models/brand-reasoning").BrandModelCall[] = []
   const ready = await completePlanningFixture(run, calls)
-  assert.deepEqual(calls.map((c) => c.step), ["weekly_strategy", "weekly_review"])
+  assert.deepEqual(calls.map((c) => c.step), ["weekly_strategy"])
   assert.equal(ready.payload.plan!.contentDirections.length, 3)
   assert.equal(ready.payload.plan!.audienceFocus.primary.id, run.payload.basis.payload.hypotheses[0]!.id)
   assert.equal(postsContext(ready).executionPolicy.publishingEnabled, false)

@@ -1,4 +1,4 @@
-export const DASHBOARD_SECTIONS = ["week", "content", "results", "brand", "connections", "settings"] as const
+export const DASHBOARD_SECTIONS = ["week", "strategy", "content", "results", "brand", "connections", "settings"] as const
 export type DashboardSection = typeof DASHBOARD_SECTIONS[number]
 
 export type DashboardBrand = {

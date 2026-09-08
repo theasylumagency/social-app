@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from "pg"
+import { assertBrandCapacity } from "./subscription-store"
 import { assertWorkspaceAccess, type WorkspaceAccess } from "./workspace-store"
 
 import {
@@ -214,6 +215,7 @@ async function persistBrand(
   brand: PersistedBrand,
   access?: WorkspaceAccess,
 ): Promise<void> {
+  if (access) await assertBrandCapacity(client, access.workspaceId, brand.id)
   const result = await client.query(
     `
       INSERT INTO brands(id, created_at, workspace_id)

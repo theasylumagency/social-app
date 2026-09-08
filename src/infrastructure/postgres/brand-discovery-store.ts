@@ -195,7 +195,7 @@ export async function confirmDiscovery(pool: Pool, ownerId: string, id: string, 
     if (session.status === "confirmed" && session.brandId) return session.brandId
     const p = session.payload
     if (session.status !== "ready" || !p.understanding || !p.envelope || p.envelope.landscapeVersion !== revision || p.profiles.some((profile) => profile.landscapeVersion !== revision)) throw new DiscoveryConflict("ჯერ მიმდინარე ანალიზი დაასრულეთ.")
-    if (!Array.isArray(selectedGoals) || !selectedGoals.length || new Set(selectedGoals).size !== selectedGoals.length || selectedGoals.some((goal) => typeof goal !== "string" || !p.goals.some((g) => g.id === goal))) throw new Error("აირჩიეთ სულ მცირე ერთი შემოთავაზებული მიზანი.")
+    if (!Array.isArray(selectedGoals) || new Set(selectedGoals).size !== selectedGoals.length || selectedGoals.some((goal) => typeof goal !== "string" || !p.goals.some((g) => g.id === goal))) throw new Error("მიზნების ძველი ჩანაწერი არასწორია.")
     if (language !== "ka" && language !== "en") throw new Error("აირჩიეთ კონტენტის ენა.")
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`brand-confirm:${session.brandId ?? session.id}`])
     const workspace = await client.query<{ id: string }>("SELECT id FROM workspaces WHERE owner_user_id=$1", [ownerId])

@@ -1,4 +1,32 @@
 .fp-app { min-width:0; }
+.fp-progress { flex-wrap:wrap; }
+.fp-progress > div { flex:1; min-width:220px; }
+.fp-progress p { margin:6px 0; }
+.fp-progress .fp-copy-button { margin:0; }
+.fp-progress-dialog { position:fixed; inset:0; width:min(640px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; margin:auto; overflow-y:auto; border:1px solid #ced9bf; border-radius:18px; padding:26px; background:#fffefb; color:#304d35; box-shadow:0 20px 80px #13291f35; font:inherit; }
+.fp-progress-dialog::backdrop { background:#13291f85; }
+.fp-progress-dialog header { display:flex; align-items:center; justify-content:space-between; gap:16px; position:sticky; top:0; background:#fffefb; z-index:1; }
+.fp-progress-dialog header .fp-copy-button { margin:0; }
+.fp-progress-dialog h2 { font-size:22px; line-height:1.8; margin:18px 0 12px; }
+.fp-progress-dialog p { font-size:12px; line-height:1.9; }
+.fp-pipeline { list-style:none; padding:0; margin:20px 0; }
+.fp-pipeline li { display:flex; gap:12px; padding:10px; margin:5px 0; border-radius:8px; font-size:12px; line-height:1.8; color:#65745c; }
+.fp-pipeline li > span { flex:0 0 25px; text-align:center; }
+.fp-pipeline small { display:block; font-size:10px; }
+.fp-pipeline .is-current { background:#eaf2dc; color:#2e5026; font-weight:600; }
+.fp-pipeline .is-complete { color:#416934; }
+.fp-repair-notice,.fp-completion { padding:16px; border:1px solid #d2debf; border-radius:10px; background:#f1f6e8; font-size:12px; line-height:1.9; }
+.fp-copy-status { display:inline-block; font-size:11px; line-height:1.8; border-radius:6px; padding:7px 10px; margin:0 0 16px; }
+.fp-copy-status.is-provisional { background:#faf0d9; color:#73561e; }
+.fp-copy-status.is-final { background:#eaf2e1; color:#355b2f; }
+.fp-repair-history { margin-top:22px; border-top:1px solid #e0e6d7; padding-top:12px; }
+.fp-repair-history > section { margin-top:16px; padding:14px; border-radius:8px; border:1px solid #e0e6d7; }
+.fp-repair-history h4 { font-size:12px; line-height:1.9; margin:0 0 10px; }
+.fp-repair-history p,.fp-repair-history li { font-size:12px; line-height:1.9; overflow-wrap:anywhere; }
+.fp-repair-history .fp-first-draft { background:#faf5e9; border-left:3px solid #c5a665; }
+.fp-repair-history .fp-final-copy { background:#f1f6eb; border-left:3px solid #6b9258; }
+.fp-progress-dialog button:focus-visible,.fp-repair-history summary:focus-visible { outline:3px solid #729650; outline-offset:3px; }
+@media(max-width:700px) { .fp-progress-dialog { padding:18px; }.fp-progress-dialog h2 { font-size:18px; }.fp-progress > div { min-width:0; flex-basis:80%; } }
 .fp-week-summary { display:flex; align-items:center; justify-content:space-between; gap:32px; padding:32px; border-radius:18px; background:#203f31; color:#f7faef; }
 .fp-week-summary .wp-eyebrow { color:#c4d794; }
 .fp-week-summary h2 { font-size:28px; line-height:1.65; margin:10px 0 15px; }

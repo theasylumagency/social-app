@@ -24,7 +24,10 @@ export type PostVariant = { channel: PostChannel; caption: string; frames: { hea
 export type PostCopy = { variants: PostVariant[] }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
+export type PostRepairFeedback = { issues: PostsReview["issues"]; instructions: string[] }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  /** Decision evidence paired with repairDrafts; final review replaces review. */
+  repairFeedback?: Record<string, PostRepairFeedback>
   sequenceReview?: SequenceReview
   sequenceRepairs?: number
   sequenceRetainedCount?: number
@@ -34,6 +37,13 @@ export type PostsBatch = { runId: string; status: "queued" | "running" | "ready"
 export type PostAsset = { id: string; postKey: string; slot: number; width: number; height: number; name: string }
 export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, review: null, repairs: 0 })
 
+export function postRepairFeedback(review: PostsReview, postKey: string): PostRepairFeedback {
+  return {
+    issues: review.issues.filter((issue) => issue.postKey === postKey && issue.severity === "blocking").map((issue) => ({ ...issue })),
+    instructions: review.editorial?.posts.find((post) => post.postKey === postKey)?.issues.map((issue) => issue.repairInstruction) ?? [],
+  }
+}
+
 /** One consolidated automatic Writer repair; unresolved issues remain approval blockers. */
 export function applyPostReview(payload: PostsPayload, review: PostsReview): "writing" | "ready" {
   payload.review = review
@@ -42,7 +52,11 @@ export function applyPostReview(payload: PostsPayload, review: PostsReview): "wr
   payload.repairDrafts ??= {}
   for (const key of new Set(blocked.map((i) => i.postKey))) {
     const previous = payload.copies[key]
-    if (previous) payload.repairDrafts[key] = previous
+    if (previous) {
+      payload.repairDrafts[key] = previous
+      payload.repairFeedback ??= {}
+      payload.repairFeedback[key] = postRepairFeedback(review, key)
+    }
     delete payload.copies[key]
   }
   payload.repairs++

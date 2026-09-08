@@ -1,3 +1,7 @@
+import { currentWeeklyOperation } from "./weekly-operation-access"
+import { readStrategyView, readWeekEvidence } from "./social-strategy-store"
+import { hasSubscription } from "./subscription-store"
+import { copyTexts } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
 import { OPERATOR_LEASE_MS } from "../models/runtime-policy"
 import { randomUUID } from "node:crypto"
 import type { Pool, PoolClient } from "pg"
@@ -7,14 +11,13 @@ import { publicDiscoveryPayload } from "../../blueprints/social/brand-discovery/
 import type { PlanningRun, PlanningPayload, PlanningView } from "../../blueprints/social/weekly-planning/model"
 import { summarizePlan } from "../../blueprints/social/weekly-planning/model"
 import { approveWeeklyPlan, requestWeeklyPlanChanges, supersedeWeeklyPlan } from "../../blueprints/social/weekly-plan-lifecycle"
-import { isWeek } from "../../application/dashboard/model"
+import { currentWeek, isWeek } from "../../application/dashboard/model"
 import type { BrandModelRun } from "../models/brand-reasoning"
 import { isDiscoveryId } from "./brand-discovery-store"
 import { emptyPosts, isPostCadence, countPostChannels, type PostsPayload, type PostCadence } from "../../blueprints/social/weekly-planning/posts"
 import { resizePostSchedule, spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
 import { assemblePlanningRun } from "../../application/weekly-planning/advance"
 import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
-import { sequenceIssues } from "../../blueprints/social/weekly-planning/sequence"
 
 type Row = { id: string; owner_user_id: string; brand_id: string; week: string; version: number; status: PlanningRun["status"]; step: PlanningRun["step"]; payload: PlanningPayload; error: string | null; lease_until: Date | null; created_at: Date; updated_at: Date }
 const fields = "r.*,to_char(r.week_start,'YYYY-MM-DD') AS week"
@@ -45,10 +48,10 @@ async function basis(c: Pool | PoolClient, ownerId: string, brandId: string): Pr
   return r ? { sessionId: r.session_id, revision: r.revision, confirmedAt: r.confirmed_at.toISOString(), payload: publicDiscoveryPayload(r.payload) } : null
 }
 function assertBasis(d: BrandDossier | null): asserts d is BrandDossier {
-  if (!d?.payload.understanding || !d.payload.landscape || !d.payload.envelope || d.payload.landscape.version !== d.revision || d.payload.envelope.landscapeVersion !== d.revision || !d.payload.feedback.selectedGoalIds?.length) throw new Error("ჯერ ბრენდის გაცნობა დაასრულეთ და მისი საფუძველი დაადასტურეთ.")
+  if (!d?.payload.understanding || !d.payload.landscape || !d.payload.envelope || d.payload.landscape.version !== d.revision || d.payload.envelope.landscapeVersion !== d.revision) throw new Error("ჯერ ბრენდის გაცნობა დაასრულეთ და მისი საფუძველი დაადასტურეთ.")
   const p = d.payload
   const entries = p.landscape!.entries.filter((e) => e.influence !== "none")
-  if (!entries.length || p.profiles.length !== entries.length || entries.some((e) => p.profiles.filter((profile) => profile.audience.id === e.audience.id && profile.audience.source === e.source && profile.landscapeVersion === d.revision).length !== 1) || p.feedback.selectedGoalIds!.some((id) => !p.goals.some((g) => g.id === id))) throw new Error("ბრენდის აუდიტორიებისა და კომუნიკაციის მიმდინარე ვერსია დასაზუსტებელია.")
+  if (!entries.length || p.profiles.length !== entries.length || entries.some((e) => p.profiles.filter((profile) => profile.audience.id === e.audience.id && profile.audience.source === e.source && profile.landscapeVersion === d.revision).length !== 1) || (p.feedback.selectedGoalIds ?? []).some((id) => !p.goals.some((g) => g.id === id))) throw new Error("ბრენდის აუდიტორიებისა და კომუნიკაციის მიმდინარე ვერსია დასაზუსტებელია.")
 }
 async function event(c: PoolClient, runId: string, kind: string, payload: unknown) {
   await c.query("INSERT INTO weekly_planning_events(run_id,kind,payload) VALUES($1,$2,$3::jsonb)", [runId, kind, JSON.stringify(payload)])
@@ -58,17 +61,18 @@ export async function readPlanningRun(pool: Pool, ownerId: string, id: string): 
   return r.rows[0] ? fromRow(r.rows[0]) : null
 }
 export async function readPlanningView(pool: Pool, ownerId: string, brandId: string, week: string): Promise<PlanningView> {
-  const [r, approved, history, foundation] = await Promise.all([
+  const [r, approved, history, foundation, strategy] = await Promise.all([
     pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date ORDER BY r.version DESC LIMIT 1`, [ownerId, brandId, week]),
     pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date AND r.status='approved' LIMIT 1`, [ownerId, brandId, week]),
     pool.query<{ id: string; version: number; status: PlanningRun["status"]; updated_at: Date; objective: string | null }>(`SELECT r.id,r.version,r.status,r.updated_at,r.payload->'objective'->>'objective' AS objective FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date ORDER BY r.version DESC LIMIT 20`, [ownerId, brandId, week]),
     basis(pool, ownerId, brandId),
+    readStrategyView(pool, ownerId, brandId),
   ])
   const run = r.rows[0] ? fromRow(r.rows[0]) : null
   const [posts, assets] = run ? await Promise.all([readWeeklyPosts(pool, ownerId, run.id), listPostAssets(pool, ownerId, run.id)]) : [null, []]
   const previousId = approved.rows[0]?.id
   const [approvedPosts, approvedAssets] = previousId && previousId !== run?.id ? await Promise.all([readWeeklyPosts(pool, ownerId, previousId), listPostAssets(pool, ownerId, previousId)]) : [null, []]
-  return { run, posts, assets, approvedPosts, approvedAssets, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!run && (run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
+  return { run, posts, assets, approvedPosts, approvedAssets, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!run && (run.payload.socialStrategy?.id !== strategy.active?.id || !run.payload.socialStrategy || run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
 }
 
 export type BeginPlanningInput = { id: string; brandId: string; week: string; priority: string; parentId?: string; parentVersion?: number; revisionNote?: string }
@@ -87,13 +91,23 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     const previous = latest.rows[0] ? fromRow(latest.rows[0]) : null
     if (!input.parentId && previous) return previous
     if (input.parentId && (!previous || previous.id !== input.parentId || previous.version !== input.parentVersion || !["ready", "approved", "failed"].includes(previous.status))) throw new PlanningConflict("გეგმა სხვა ჩანართში შეიცვალა ან ჯერ მზადდება. განაახლეთ გვერდი.")
+    if (input.week !== currentWeek()) throw new Error("ახალი გეგმა მხოლოდ მიმდინარე კვირისთვის იქმნება. ძველი კვირები ისტორიად რჩება.")
+    if (!await hasSubscription(c, ownerId)) throw new Error("განაახლეთ გამოწერა.")
+    const strategy = (await readStrategyView(c, ownerId, input.brandId)).active
+    if (!strategy?.payload.proposal) throw new Error("ჯერ სოციალური სტრატეგიის მიზანი დაადასტურეთ.")
+    const evidence = (await readWeekEvidence(c, ownerId, input.brandId)).filter((e) => e.week <= input.week)
     const foundation = await basis(c, ownerId, input.brandId)
     assertBasis(foundation)
-    // Include generated proposals: founders can compare two weeks before approving either.
+    // Execution history is not evidence of exposure or performance.
     // One current usable version per recent week; failed/rejected/superseded plans are not exposure.
     const prior = await c.query<Row & { posts_payload: PostsPayload | null }>(`SELECT DISTINCT ON (r.week_start) ${fields},p.payload AS posts_payload FROM weekly_planning_runs r LEFT JOIN weekly_post_batches p ON p.run_id=r.id WHERE r.brand_id=$1 AND r.owner_user_id=$3 AND r.week_start<$2::date AND r.week_start>=$2::date-28 AND r.status IN ('ready','approved') ORDER BY r.week_start DESC,r.version DESC LIMIT 3`, [input.brandId, input.week, ownerId])
-    const payload: PlanningPayload = { basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
+    const payload: PlanningPayload = { socialStrategy: strategy, evidence, priorCopy: prior.rows.flatMap((r) => r.posts_payload ? copyTexts(r.posts_payload).map((c) => c.text) : []), basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
     const now = new Date().toISOString() as IsoDateTime
+    // Reviewing no observations is an explicit unknown state, never fabricated progress.
+    for (const row of prior.rows) {
+      if (!evidence.some((e) => e.week === row.week)) evidence.push({ week: row.week, reviewedAt: now, availability: "unavailable", observations: [], execution: [row.posts_payload?.copies && Object.keys(row.posts_payload.copies).length ? "ტექსტები მომზადებულია; გამოქვეყნება და აუდიტორიის რეაქცია დაუდგენელია." : "კვირის გეგმა არსებობდა; შესრულება დაუდგენელია."], unknowns: ["შედეგები არ არის მოწოდებული."], businessContext: "" })
+    }
+    if (!evidence.length) evidence.push({ week: input.week, reviewedAt: now, availability: "unavailable", observations: [], execution: [], unknowns: ["ეს საწყისი გეგმაა; წინა შედეგები არ გვაქვს."], businessContext: "" })
     payload.founderPosts = true
     if (previous?.payload.cadence) payload.cadence = previous.payload.cadence
     if (previous && previous.status !== "approved") {
@@ -175,7 +189,7 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
 
 export async function claimPlanningRun(pool: Pool, ownerId: string, id: string) {
   const token = randomUUID()
-  const result = await pool.query<Row>(`UPDATE weekly_planning_runs r SET status='running',lease_token=$3,lease_until=now()+interval '${OPERATOR_LEASE_MS} milliseconds',updated_at=now() WHERE ${owned} AND r.id=$2 AND (r.status='queued' OR (r.status='running' AND r.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING ${fields}`, [ownerId, id, token])
+  const result = await pool.query<Row>(`UPDATE weekly_planning_runs r SET status='running',lease_token=$3,lease_until=now()+interval '${OPERATOR_LEASE_MS} milliseconds',updated_at=now() WHERE ${owned} AND ${currentWeeklyOperation} AND r.id=$2 AND (r.status='queued' OR (r.status='running' AND r.lease_until<now())) AND EXISTS(SELECT 1 FROM auth_user u WHERE u.id=$1 AND u."emailVerified"=true) RETURNING ${fields}`, [ownerId, id, token])
   return result.rows[0] ? { run: fromRow(result.rows[0]), token } : null
 }
 export async function finishPlanningStep(pool: Pool, run: PlanningRun, token: string, payload: PlanningPayload, step: PlanningRun["step"]) {
@@ -221,7 +235,6 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
     if (current?.sessionId !== run.payload.basis.sessionId || current.revision !== run.payload.basis.revision) throw new PlanningConflict("ბრენდის საფუძველი განახლდა. ჯერ გეგმა ახალ ცოდნაზე განაახლეთ.")
     if (run.payload.review.concerns.some((issue) => issue.severity === "blocking")) throw new PlanningConflict("ჯერ გეგმის შემოწმებისას აღმოჩენილი საკითხები დააზუსტეთ.")
     if ((run.payload.founderPosts || posts.rowCount) && (posts.rows[0]?.status !== "ready" || !posts.rows[0].payload.review || posts.rows[0].payload.review.issues.some((i) => i.severity === "blocking"))) throw new PlanningConflict("ჯერ პოსტების ტექსტების მომზადება და შემოწმება დაასრულეთ.")
-    if (posts.rows[0]?.payload.sequenceReview && sequenceIssues(posts.rows[0].payload.sequenceReview).length) throw new PlanningConflict("კვირის პოსტები ერთსა და იმავე საქმეს იმეორებს. ჯერ გეგმა დააზუსტეთ.")
     const now = new Date().toISOString() as IsoDateTime
     if (posts.rowCount) {
       await c.query("UPDATE weekly_post_batches SET approved_at=now(),updated_at=now() WHERE run_id=$1", [id])

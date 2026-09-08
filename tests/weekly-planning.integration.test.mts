@@ -85,7 +85,12 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const repair = (await claimWeeklyPosts(pool, "owner", first.id))!
   assert.deepEqual(Object.keys(repair.batch.payload.copies), ["p1", "p3"])
   assert.deepEqual(repair.batch.payload.repairDrafts?.p2, copyFixture())
-  await saveWeeklyPosts(pool, first.id, repair.token, completePosts, "ready")
+  assert.deepEqual(repair.batch.payload.repairFeedback?.p2?.issues, [{ postKey: "p2", severity: "blocking", message: "დაამატეთ: მაგალითად" }])
+  await saveWeeklyPosts(pool, first.id, repair.token, { ...repair.batch.payload, copies: completePosts.copies, review: completePosts.review }, "ready")
+  const repairedReady = (await readWeeklyPosts(pool, "owner", first.id))!
+  assert.deepEqual(repairedReady.payload.repairDrafts?.p2, copyFixture())
+  assert.equal(repairedReady.payload.repairFeedback?.p2?.issues[0]?.message, "დაამატეთ: მაგალითად")
+  assert.deepEqual(repairedReady.payload.review?.issues, [])
   const content = await sharp({ create: { width: 20, height: 25, channels: 3, background: "#46754a" } }).webp().toBuffer()
   await assert.rejects(() => mutatePostAsset(pool, "other", first.id, "p1", 0, { content, width: 20, height: 25, name: "qa.webp" }))
   await assert.rejects(() => mutatePostAsset(pool, "owner", first.id, "p1", 4, { content, width: 20, height: 25, name: "qa.webp" }))

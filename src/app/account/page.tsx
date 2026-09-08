@@ -12,6 +12,6 @@ export default async function AccountPage() {
     <SessionRefresh />
     <div className="account-topline"><Link href="/">← სამუშაო სივრცე</Link><SignOutButton /></div>
     <span className="eyebrow">UNDA ანგარიში</span><h1>ანგარიშის პარამეტრები</h1><p className="account-identity">{session.user.name} · {session.user.email}</p>
-    <div className="account-card"><PasswordControl email={session.user.email} hasPassword={accounts.some((account) => account.providerId === "credential")} hasGoogle={accounts.some((account) => account.providerId === "google")} /><RevokeOtherSessions /></div>
+    <div className="account-card"><Link href="/subscription">გამოწერა, განახლება და გადახდები →</Link><PasswordControl email={session.user.email} hasPassword={accounts.some((account) => account.providerId === "credential")} hasGoogle={accounts.some((account) => account.providerId === "google")} /><RevokeOtherSessions /></div>
   </main>
 }

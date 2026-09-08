@@ -1,3 +1,4 @@
+import { approvedStrategy } from "./social-strategy-fixture"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { emptyDiscovery, type BrandDossier, type DiscoverySession } from "../src/blueprints/social/brand-discovery/model"
@@ -13,9 +14,9 @@ export async function discoveryFixture(): Promise<DiscoverySession> {
 }
 export async function planningFixture(): Promise<PlanningRun> {
   const discovery = await discoveryFixture()
-  discovery.payload.feedback.selectedGoalIds = [discovery.payload.goals[0]!.id]
+  discovery.payload.feedback.selectedGoalIds = []
   const basis: BrandDossier = { sessionId: discovery.id, revision: 1, confirmedAt: "2026-09-06T10:00:00.000Z", payload: discovery.payload }
-  return { id: randomUUID(), ownerId: "owner", brandId: `brand:${discovery.id}`, week: "2026-09-07", version: 1, status: "queued", step: "objective", error: null, leaseUntil: null, createdAt: "2026-09-06T10:00:00.000Z", updatedAt: "2026-09-06T10:00:00.000Z", payload: { basis, priority: "", revisionNote: "", previousVersion: null, priorWeeks: [], plannedOn: "2026-09-06", objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null } }
+  return { id: randomUUID(), ownerId: "owner", brandId: `brand:${discovery.id}`, week: "2026-09-07", version: 1, status: "queued", step: "objective", error: null, leaseUntil: null, createdAt: "2026-09-06T10:00:00.000Z", updatedAt: "2026-09-06T10:00:00.000Z", payload: { socialStrategy: approvedStrategy(basis), basis, priority: "", revisionNote: "", previousVersion: null, priorWeeks: [], plannedOn: "2026-09-06", objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null } }
 }
 export function planningOutput(call: BrandModelCall): unknown {
   if (call.step === "weekly_strategy") return {

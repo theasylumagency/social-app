@@ -1,4 +1,5 @@
 import "server-only"
+import { hasSubscription } from "../../infrastructure/postgres/subscription-store"
 import { authOrigin } from "../../lib/auth/environment"
 import { SocialConnectionService } from "../../application/social-connections/service"
 import { SocialProviderRegistry } from "../../application/social-connections/provider-registry"
@@ -23,4 +24,4 @@ function service() {
     createConnectionContextCipher(env.connectionContextKey), env.applicationOrigin)
 }
 export const socialConnectionHttp = createSocialConnectionHttp({ authenticate: authenticateWorkRequest,
-  session: (request) => getAuth().api.getSession({ headers: request.headers }), service, origin: authOrigin, rememberBrand })
+  session: async (request) => { const session = await getAuth().api.getSession({ headers: request.headers }); return session && await hasSubscription(getDatabasePool(), session.user.id) ? session : null }, service, origin: authOrigin, rememberBrand })

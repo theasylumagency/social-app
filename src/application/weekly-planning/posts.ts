@@ -1,3 +1,4 @@
+import { duplicateCopyIssues } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
 import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { compilePlanningContext } from "./advance"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
@@ -7,7 +8,6 @@ import { validatePlanningProse } from "../../blueprints/social/weekly-planning/v
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
 import { compilePostGenerationContext, compilePostEditorialContext } from "../../blueprints/social/weekly-planning/post-context"
 import { POST_EDITORIAL_PROMPT, POST_EDITORIAL_SCHEMA, validatePostEditorialReview, consolidatePostReviews, type PostEditorialReview } from "../../blueprints/social/weekly-planning/post-editorial"
-import { SEQUENCE_REVIEW_PROMPT, SEQUENCE_REVIEW_SCHEMA, recentEditorialWork, validateSequenceReview, type SequenceReview } from "../../blueprints/social/weekly-planning/sequence"
 
 export function postsContext(run: PlanningRun) {
   const context = compilePlanningContext(run)
@@ -17,7 +17,7 @@ export function postsContext(run: PlanningRun) {
     selectedBrandGoals: context.selectedBrandGoals.filter((g) => !run.payload.review || run.payload.review.brandGoalKeys.includes(g.goalKey)),
     audiences: context.audiences.filter((a) => audienceKeys.includes(a.audienceKey)),
     communicationProfiles: context.communicationProfiles.filter((p) => audienceKeys.includes(p.audienceKey)),
-    requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: { channelsAreRecommendations: true, publishingEnabled: false, imageGenerationEnabled: false, founderUploadAvailable: true, trialIncludesGeneration: false } }
+    requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: { channelsAreRecommendations: true, publishingEnabled: false, imageGenerationEnabled: false, founderUploadAvailable: true, billingMode: "simulated" } }
 }
 function keys(run: PlanningRun) {
   const c = compilePlanningContext(run)
@@ -26,20 +26,11 @@ function keys(run: PlanningRun) {
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
-  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v4", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept, sequenceFeedback: existing?.sequenceFeedback ?? null }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
+  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v4", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
     const value = combine(v as PostSchedule)
     return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
   } })
   return combine(result)
-}
-export async function reviewPostSequence(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner) {
-  const posts = payload.outline!.posts
-  const recent = recentEditorialWork(run.payload, run.week)
-  return reason<SequenceReview>({ step: "post_sequence", version: "post-sequence-v2", prompt: SEQUENCE_REVIEW_PROMPT,
-    input: { objective: run.payload.objective, userPriority: run.payload.priority, revisionNote: run.payload.revisionNote,
-      posts: posts.map((p, i) => ({ postKey: `p${i + 1}`, title: p.title, ...p.brief })), recentEditorialWork: recent },
-    schema: SEQUENCE_REVIEW_SCHEMA, validate: (v) => [...validateSequenceReview(v as SequenceReview, posts, recent), ...validatePlanningProse(v, [...keys(run), ...recent.map((p) => p.historyKey)])],
-  })
 }
 export async function writePost(run: PlanningRun, payload: PostsPayload, key: string, reason: BrandReasoner) {
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
@@ -57,5 +48,6 @@ export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reaso
   const [safety, editorial] = results
   if (safety.status === "rejected") throw safety.reason
   if (editorial.status === "rejected") throw editorial.reason
-  return consolidatePostReviews(safety.value, editorial.value)
+  const combined = consolidatePostReviews(safety.value, editorial.value)
+  return { ...combined, issues: [...combined.issues, ...duplicateCopyIssues(payload, run.payload.priorCopy)] }
 }

@@ -1,27 +1,14 @@
 import type { BrandId, IsoDate, IsoDateTime } from "../../core/domain"
 import type { AudienceRef } from "../../blueprints/social/audience"
-import type { PlanningRun, PlanningPayload, PlanningReview } from "../../blueprints/social/weekly-planning/model"
+import type { PlanningRun, PlanningPayload } from "../../blueprints/social/weekly-planning/model"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
-import type { WeeklyObjectiveModelOutput } from "../../blueprints/social/weekly-planning/weekly-objective-contract"
-import type { WeeklyAudienceFocusModelOutput } from "../../blueprints/social/weekly-planning/weekly-audience-focus-contract"
-import type { ContentDirectionModelOutput } from "../../blueprints/social/weekly-planning/content-direction-contract"
-import type { ContentAudienceDirectionModelOutput } from "../../blueprints/social/weekly-planning/content-audience-direction-contract"
-import type { ExperimentDecisionModelOutput } from "../../blueprints/social/weekly-planning/experiment-decision-contract"
 import type { WeeklyExperimentDecision, WeeklyPlan } from "../../blueprints/social/weekly-plan"
 import { assembleWeeklyPlan } from "../../blueprints/social/weekly-plan-assembly"
 import { submitWeeklyPlanForReview } from "../../blueprints/social/weekly-plan-lifecycle"
-import { validateReferences } from "../../blueprints/social/brand-discovery/validation"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { recentEditorialWork } from "../../blueprints/social/weekly-planning/sequence"
 import { compileLandscapeContext } from "../brand-discovery/advance"
-import { WEEKLY_OBJECTIVE_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/weekly-objective"
-import { WEEKLY_AUDIENCE_FOCUS_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/weekly-audience-focus"
-import { CONTENT_DIRECTION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/content-direction"
-import { CONTENT_AUDIENCE_DIRECTION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/content-audience-direction"
-import { EXPERIMENT_DECISION_SYSTEM_PROMPT } from "../../blueprints/social/weekly-planning/prompts/experiment-decision"
-import { WEEKLY_PLAN_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/review"
 import { COMPACT_STRATEGY_PROMPT, COMPACT_STRATEGY_SCHEMA, validateCompactStrategy, type CompactStrategy } from "../../blueprints/social/weekly-planning/compact-strategy"
-import { WEEKLY_OBJECTIVE_OUTPUT_SCHEMA, WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA, CONTENT_DIRECTION_OUTPUT_SCHEMA, CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA, EXPERIMENT_DECISION_OUTPUT_SCHEMA, WEEKLY_PLAN_REVIEW_SCHEMA } from "../../blueprints/social/weekly-planning/schemas"
 
 export function planningAudienceRefs(p: PlanningPayload) {
   return p.basis.payload.landscape!.entries.filter((e) => e.influence !== "none").map((entry, i) => ({ key: `a${i + 1}`, ref: { source: entry.source, id: entry.audience.id } as AudienceRef }))
@@ -35,7 +22,7 @@ export function compilePlanningContext(run: PlanningRun) {
   const end = new Date(`${run.week}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + 6)
   return {
     ...landscape,
-    selectedBrandGoals: basis.goals.filter((g) => basis.feedback.selectedGoalIds?.includes(g.id)).map((g, i) => ({ goalKey: `g${i + 1}`, title: g.title, desiredChange: g.desiredChange, rationale: g.rationale, progressSignals: g.progressSignals })),
+    selectedBrandGoals: p.socialStrategy?.payload.proposal ? [{ goalKey: "g1", title: p.socialStrategy.payload.proposal.objective, desiredChange: p.socialStrategy.payload.proposal.plan.audienceChange, rationale: p.socialStrategy.payload.proposal.rationale, progressSignals: p.socialStrategy.payload.proposal.measurement.map((m) => m.signal) }] : basis.goals.filter((g) => basis.feedback.selectedGoalIds?.includes(g.id)).map((g, i) => ({ goalKey: `g${i + 1}`, title: g.title, desiredChange: g.desiredChange, rationale: g.rationale, progressSignals: g.progressSignals })),
     communicationProfiles: basis.profiles.map((profile) => ({
       audienceKey: refs.find((r) => r.ref.source === profile.audience.source && r.ref.id === profile.audience.id)!.key,
       communicationGoal: profile.communicationGoal, toneAdjustments: profile.toneAdjustments, preferredFraming: profile.preferredFraming,
@@ -47,8 +34,13 @@ export function compilePlanningContext(run: PlanningRun) {
     userPriority: p.priority || null, revisionNote: p.revisionNote || null,
     previousVersion: p.previousVersion, priorPlans: p.priorWeeks,
     recentEditorialWork: recentEditorialWork(p, run.week),
-    recentResults: [], recentSignals: [], channelContext: { confirmedDestinations: [], publishingSchedule: null },
-    dataAvailability: { performance: "notSupplied", proof: "notSupplied", priorPlansAreResults: false },
+    socialStrategy: p.socialStrategy?.payload.proposal ?? null,
+    strategyVersion: p.socialStrategy ? { id: p.socialStrategy.id, revision: p.socialStrategy.revision, approvedAt: p.socialStrategy.payload.approvedAt } : null,
+    recentResults: (p.evidence ?? []).filter((e) => e.availability === "available"),
+    recentSignals: (p.evidence ?? []).flatMap((e) => e.observations),
+    evidenceReview: p.evidence ?? [],
+    channelContext: { recommendations: p.socialStrategy?.payload.proposal?.channels ?? [], confirmedDestinations: [], publishingSchedule: null },
+    dataAvailability: { performance: p.evidence?.some((e) => e.availability === "available") ? "suppliedObservations" : "unavailable", proof: "notSupplied", priorPlansAreResults: false },
     weeklyObjective: p.objective,
     weeklyAudienceFocus: p.focus,
     contentDirections: p.directions.map((d, i) => ({ contentDirectionKey: `d${i + 1}`, ...d })),
@@ -82,57 +74,14 @@ export async function advanceWeeklyPlanning(run: PlanningRun, reason: BrandReaso
   const audienceKeys = context.audiences.map((a) => a.audienceKey)
   const proseKeys = [...audienceKeys, ...context.selectedBrandGoals.map((g) => g.goalKey), ...context.contentDirections.map((d) => d.contentDirectionKey)]
   const runModel: BrandReasoner = (call) => reason({ ...call, validate: (value) => [...(call.validate?.(value) ?? []), ...validatePlanningProse(value, proseKeys)] })
-  if (run.step === "objective" && p.founderPosts) {
-    const s = await runModel<CompactStrategy>({ step: "weekly_strategy", version: "founder-weekly-strategy-v2", prompt: COMPACT_STRATEGY_PROMPT, input: context, schema: COMPACT_STRATEGY_SCHEMA, validate: (v) => validateCompactStrategy(v as CompactStrategy, audienceKeys) })
-    p.objective = s.weeklyObjective; p.focus = s.focus; p.directions = s.directions; p.adaptation = s.audienceDirections; p.experiment = s.experimentDecision
-    return { payload: p, step: "review" }
-  }
-  if (run.step === "objective") {
-    const output = await runModel<WeeklyObjectiveModelOutput>({ step: "weekly_objective", version: "weekly-objective-v3", prompt: WEEKLY_OBJECTIVE_SYSTEM_PROMPT, input: context, schema: WEEKLY_OBJECTIVE_OUTPUT_SCHEMA })
-    p.objective = output.weeklyObjective
-    return { payload: p, step: "focus" }
-  }
-  if (run.step === "focus") {
-    const output = await runModel<WeeklyAudienceFocusModelOutput>({ step: "weekly_focus", version: "weekly-focus-v3", prompt: WEEKLY_AUDIENCE_FOCUS_SYSTEM_PROMPT, input: context, schema: WEEKLY_AUDIENCE_FOCUS_OUTPUT_SCHEMA, validate: (value) => {
-      const f = (value as WeeklyAudienceFocusModelOutput).focus
-      return [...validateReferences([f.primaryAudienceKey, ...f.secondaryAudienceKeys], audienceKeys, "weekly audiences"), ...(f.secondaryAudienceKeys.length > 1 ? ["Select at most one secondary audience"] : [])]
-    } })
-    p.focus = output.focus
-    return { payload: p, step: "directions" }
-  }
-  if (run.step === "directions") {
-    const output = await runModel<ContentDirectionModelOutput>({ step: "weekly_directions", version: "content-direction-v3", prompt: CONTENT_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
-      const d = (value as ContentDirectionModelOutput).directions
-      return [...(d.length < 3 || d.length > 5 ? ["Return 3–5 distinct directions"] : []), ...(new Set(d.map((d) => d.direction.trim().toLocaleLowerCase())).size !== d.length ? ["Duplicate content directions"] : [])]
-    } })
-    p.directions = [...output.directions]
-    return { payload: p, step: "adaptation" }
-  }
-  if (run.step === "adaptation") {
-    const allowed = [p.focus!.primaryAudienceKey, ...p.focus!.secondaryAudienceKeys]
-    const output = await runModel<ContentAudienceDirectionModelOutput>({ step: "weekly_adaptation", version: "content-audience-direction-v3", prompt: CONTENT_AUDIENCE_DIRECTION_SYSTEM_PROMPT, input: context, schema: CONTENT_AUDIENCE_DIRECTION_OUTPUT_SCHEMA, validate: (value) => {
-      const d = (value as ContentAudienceDirectionModelOutput).directions
-      return [...validateReferences(d.map((d) => d.contentDirectionKey), context.contentDirections.map((d) => d.contentDirectionKey), "directions"), ...(d.length !== p.directions.length ? ["Cover every content direction exactly once"] : []), ...d.flatMap((d) => [...validateReferences([d.primaryAudienceKey, ...d.secondaryAudienceKeys], allowed, "focus audiences"), ...(d.secondaryAudienceKeys.length > 1 ? ["At most one secondary audience per direction"] : [])])]
-    } })
-    p.adaptation = [...output.directions]
-    return { payload: p, step: "experiment" }
-  }
-  if (run.step === "experiment") {
-    const output = await runModel<ExperimentDecisionModelOutput>({ step: "weekly_experiment", version: "experiment-decision-v3", prompt: EXPERIMENT_DECISION_SYSTEM_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation }, schema: EXPERIMENT_DECISION_OUTPUT_SCHEMA, validate: (value) => {
-      const d = (value as ExperimentDecisionModelOutput).experimentDecision
-      const e = d.experiment; const fields = [e.hypothesis, e.variable, e.comparison, e.learningSignal]
-      return d.decision === "noExperiment" ? fields.some((v) => v !== null) || e.guardrails.length ? ["No experiment requires null experiment fields and empty guardrails"] : [] : fields.some((v) => typeof v !== "string" || !v.trim()) || !e.guardrails.length ? ["Experiment requires a hypothesis, variable, comparison, signal and guardrails"] : []
-    } })
-    p.experiment = output.experimentDecision
-    return { payload: p, step: "review" }
-  }
-  if (run.step === "review") {
-    p.review = await runModel<PlanningReview>({ step: "weekly_review", version: "weekly-plan-review-v2", prompt: WEEKLY_PLAN_REVIEW_PROMPT, input: { ...context, contentAudienceDirections: p.adaptation, experimentDecision: p.experiment }, schema: WEEKLY_PLAN_REVIEW_SCHEMA, validate: (value) => {
-      const review = value as PlanningReview
-      return [...validateReferences(review.brandGoalKeys, context.selectedBrandGoals.map((g) => g.goalKey), "brand goals"), ...review.concerns.flatMap((c) => validateReferences(c.directionKeys, context.contentDirections.map((d) => d.contentDirectionKey), "review directions"))]
-    } })
-    p.plan = assemblePlanningRun({ ...run, payload: p }, now as IsoDateTime)
-    return { payload: p, step: "ready" }
-  }
+  if (run.step === "ready") return { payload: p, step: "ready" }
+  // Old in-flight stage names resume through one complete weekly proposal. No serial sub-planners.
+  const s = await runModel<CompactStrategy>({ step: "weekly_strategy", version: "current-week-v3", prompt: COMPACT_STRATEGY_PROMPT, input: context, schema: COMPACT_STRATEGY_SCHEMA, validate: (v) => validateCompactStrategy(v as CompactStrategy, audienceKeys) })
+  p.objective = s.weeklyObjective; p.focus = s.focus; p.directions = s.directions; p.adaptation = s.audienceDirections; p.experiment = s.experimentDecision
+  // Structural checks ran on the proposal. Factual/voice/editorial review belongs to the actual copy.
+  p.review = { brandGoalKeys: context.selectedBrandGoals.map((g) => g.goalKey), progressSignals: p.socialStrategy?.payload.proposal?.measurement.map((m) => m.signal) ?? [], checks: {
+    brandSpecificity: "გეგმა ეყრდნობა ბრენდის დადასტურებულ საფუძველს.", focusCoherence: "აუდიტორიისა და მიმართულებების ბმულები შემოწმებულია.", voiceCompatibility: "ტექსტების შეფასება ბრენდის ხმის წესებით მოხდება.", evidenceDiscipline: context.dataAvailability.performance === "unavailable" ? "შედეგები ჯერ უცნობია; შექმნილი კონტენტი აუდიტორიის პროგრესს არ ამტკიცებს." : "გათვალისწინებულია წყაროს მითითებით შენახული დაკვირვებები.", priorityResponse: p.priority || "დამატებითი ბიზნესკონტექსტი არ არის მითითებული.",
+  }, concerns: [] }
+  p.plan = assemblePlanningRun({ ...run, payload: p }, now as IsoDateTime)
   return { payload: p, step: "ready" }
 }

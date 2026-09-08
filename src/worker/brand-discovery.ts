@@ -1,3 +1,4 @@
+import { hasSubscription } from "../infrastructure/postgres/subscription-store"
 import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
 import { advanceDiscovery } from "../application/brand-discovery/advance"
@@ -17,6 +18,7 @@ export function discoveryErrorMessage(error: unknown): string {
 export async function runBrandDiscovery(pool: Pool, ownerId: string, id: string, budgetMs = OPERATOR_WORKER_BUDGET_MS): Promise<void> {
   const deadline = Date.now() + budgetMs
   while (Date.now() < deadline - MODEL_STAGE_RESERVE_MS) {
+    if (!await hasSubscription(pool, ownerId)) return
     const claim = await claimDiscovery(pool, ownerId, id)
     if (!claim) return
     const { session, token } = claim

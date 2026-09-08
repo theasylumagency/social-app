@@ -1,3 +1,4 @@
+import { hasSubscription } from "../infrastructure/postgres/subscription-store"
 import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
 import { advanceWeeklyPlanning } from "../application/weekly-planning/advance"
@@ -7,6 +8,7 @@ import { claimPlanningRun, failPlanningStep, finishPlanningStep, recordPlanningM
 export async function runWeeklyPlanning(pool: Pool, ownerId: string, id: string, budgetMs = OPERATOR_WORKER_BUDGET_MS) {
   const deadline = Date.now() + budgetMs
   while (Date.now() < deadline - MODEL_STAGE_RESERVE_MS) {
+    if (!await hasSubscription(pool, ownerId)) return
     const claim = await claimPlanningRun(pool, ownerId, id)
     if (!claim) return
     try {

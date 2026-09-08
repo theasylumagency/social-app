@@ -6,7 +6,7 @@ import { BrandSwitcher } from "./controls"
 import { Icon } from "./icons"
 
 export const sectionLabels: Record<DashboardSection, string> = {
-  week: "კვირა", content: "კონტენტი", results: "შედეგები", brand: "ბრენდი", connections: "კავშირები", settings: "პარამეტრები",
+  week: "კვირა", strategy: "სტრატეგია", content: "კონტენტი", results: "შედეგები", brand: "ბრენდი", connections: "კავშირები", settings: "პარამეტრები",
 }
 export function sectionUrl(section: DashboardSection) { return section === "week" ? "/workspace" : `/workspace/${section}` }
 
@@ -21,7 +21,7 @@ export function WorkspaceShell({ section, brands, brand, user, children, week }:
       <BrandSwitcher brands={brands.map(({ id, name }) => ({ id, name }))} active={brand.id} />
       <div className="ws-nav-caption">თქვენი ოპერატორი</div>
       <nav className="ws-nav" aria-label="მთავარი ნავიგაცია">
-        {(Object.keys(sectionLabels) as DashboardSection[]).map((item) => <Link className={`${section === item ? "is-active" : ""} ${item === "connections" ? "ws-nav-divider" : ""}`} key={item} href={`${sectionUrl(item)}${week && (item === "week" || item === "content") ? `?week=${week}` : ""}`} aria-current={section === item ? "page" : undefined}><Icon name={item} /><span>{sectionLabels[item]}</span>{section === item ? <span className="ws-nav-dot" /> : null}</Link>)}
+        {(Object.keys(sectionLabels) as DashboardSection[]).map((item) => <Link className={`${section === item ? "is-active" : ""} ${item === "connections" ? "ws-nav-divider" : ""}`} key={item} href={`${sectionUrl(item)}${week && (item === "week" || item === "content") ? `?week=${week}` : ""}`} aria-current={section === item ? "page" : undefined}><Icon name={item === "strategy" ? "week" : item} /><span>{sectionLabels[item]}</span>{section === item ? <span className="ws-nav-dot" /> : null}</Link>)}
       </nav>
       <div className="ws-sidebar-bottom"><div className="ws-sidebar-note"><Icon name="spark" /><p>ბრენდიდან —<br />შემდეგ სწორ ნაბიჯამდე.</p></div><Link className="ws-user" href="/account"><span className="ws-user-avatar">{user.name.slice(0, 1).toLocaleUpperCase("ka-GE")}</span><span><strong>{user.name}</strong><small>ჩემი ანგარიში</small></span><Icon name="chevron" /></Link></div>
     </aside>

@@ -29,7 +29,7 @@ test("weekly context carries confirmed selected goals, founder disagreement, env
   run.payload.priority = "გვკითხავენ, რა ფოტო გამოგვიგზავნონ"
   const context = compilePlanningContext(run)
   assert.equal(context.selectedBrandGoals.length, 1)
-  assert.equal(context.selectedBrandGoals[0]!.title, p.goals[0]!.title)
+  assert.equal(context.selectedBrandGoals[0]!.title, run.payload.socialStrategy!.payload.proposal!.objective)
   assert.equal(context.audiences[0]!.influence, "limited")
   assert.equal(context.audiences[0]!.founderNote, stance.note)
   assert.equal(context.userPriority, run.payload.priority)
@@ -37,14 +37,14 @@ test("weekly context carries confirmed selected goals, founder disagreement, env
   assert.deepEqual(context.recentResults, [])
   assert.deepEqual(context.eligibleProof, [])
   assert.equal(context.dataAvailability.priorPlansAreResults, false)
-  assert.ok(!JSON.stringify(context).includes(run.brandId))
+  assert.equal(context.strategyVersion?.id, run.payload.socialStrategy?.id)
 })
-test("all six stages assemble a reviewable canonical week with application-owned references and dates", async () => {
+test("one model call assembles a reviewable canonical week with application-owned references and dates", async () => {
   const run = await planningFixture()
   const original = structuredClone(run)
   const calls: BrandModelCall[] = []
   const ready = await completePlanningFixture(run, calls)
-  assert.deepEqual(calls.map((c) => c.step), ["weekly_objective", "weekly_focus", "weekly_directions", "weekly_adaptation", "weekly_experiment", "weekly_review"])
+  assert.deepEqual(calls.map((c) => c.step), ["weekly_strategy"])
   assert.deepEqual(run, original)
   const plan = ready.payload.plan!
   assert.equal(plan.state, "awaitingReview")
@@ -54,18 +54,18 @@ test("all six stages assemble a reviewable canonical week with application-owned
   assert.deepEqual(plan.contentDirections.map((d) => d.order), [0, 1, 2])
   assert.equal(plan.contentDirections[0]?.audienceDirection.primaryAudience.id, run.payload.basis.payload.hypotheses[0]!.id)
   assert.equal(plan.experimentDecision.experiment, null)
-  assert.deepEqual((calls[1]!.input as { weeklyObjective: unknown }).weeklyObjective, ready.payload.objective)
+  assert.equal(calls.length, 1)
   assert.deepEqual(ready.payload.basis, run.payload.basis)
 })
 test("unknown audiences, out-of-focus assignments and fabricated direction keys cannot be assembled", async () => {
   const ready = await completePlanningFixture(await planningFixture())
-  type TestOutput = { focus: { primaryAudienceKey: string; secondaryAudienceKeys: string[] }; directions: { primaryAudienceKey: string; contentDirectionKey: string }[] }
+  type TestOutput = { focus: { primaryAudienceKey: string; secondaryAudienceKeys: string[] }; audienceDirections: { primaryAudienceKey: string; contentDirectionKey: string }[] }
   for (const [step, mutate] of [
     ["focus", (v: TestOutput) => { v.focus.primaryAudienceKey = "a99" }],
     ["focus", (v: TestOutput) => { v.focus.secondaryAudienceKeys = ["a1"] }],
-    ["adaptation", (v: TestOutput) => { v.directions[0]!.primaryAudienceKey = "a99" }],
-    ["adaptation", (v: TestOutput) => { v.directions[0]!.contentDirectionKey = "invented" }],
-    ["adaptation", (v: TestOutput) => { v.directions.pop() }],
+    ["adaptation", (v: TestOutput) => { v.audienceDirections[0]!.primaryAudienceKey = "a99" }],
+    ["adaptation", (v: TestOutput) => { v.audienceDirections[0]!.contentDirectionKey = "invented" }],
+    ["adaptation", (v: TestOutput) => { v.audienceDirections.pop() }],
   ] as const) {
     await assert.rejects(() => advanceWeeklyPlanning({ ...ready, step }, async (call) => {
       const value = planningOutput(call) as TestOutput
@@ -91,7 +91,7 @@ test("revision intent and previous plans remain intent, while a failed stage pre
   run.payload.revisionNote = "ამ კვირაში ახსენი მხოლოდ შეფასების პირველი ნაბიჯი"
   run.payload.previousVersion = { week: run.week, objective: "Previous intention", directions: ["Old direction"], experiment: null }
   const objective = await advanceWeeklyPlanning(run, planningReasoner())
-  const next = { ...run, ...objective }
+  const next = { ...run, ...objective, step: "objective" as const }
   const snapshot = structuredClone(next)
   await assert.rejects(() => advanceWeeklyPlanning(next, async (call) => {
     const context = call.input as ReturnType<typeof compilePlanningContext>

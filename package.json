@@ -6,8 +6,7 @@
     "dev": "next dev",
     "worker:operator": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
     "worker:discovery": "node --env-file=.env.local --import tsx scripts/brand-discovery-worker.mts",
-    "test:planning": "node --env-file=.env.local --import tsx --test tests/weekly-planning.test.mts tests/weekly-posts.test.mts tests/weekly-sequence.test.mts tests/model-runtime.test.mts tests/weekly-planning.integration.test.mts",
-    "eval:weekly-sequence": "node --env-file=.env.local --import tsx scripts/weekly-sequence-eval.mts",
+    "test:planning": "node --env-file=.env.local --import tsx --test tests/weekly-planning.test.mts tests/weekly-posts.test.mts tests/weekly-posts-ux.test.mts tests/weekly-sequence.test.mts tests/model-runtime.test.mts tests/weekly-planning.integration.test.mts",
     "test:discovery": "node --env-file=.env.local --import tsx --test tests/brand-discovery.test.mts tests/brand-discovery.integration.test.mts",
     "test:voice": "node --import tsx --test tests/brand-voice-fidelity.test.mts tests/brand-discovery.test.mts tests/weekly-posts.test.mts tests/weekly-planning.test.mts tests/model-runtime.test.mts",
     "build": "next build",
@@ -54,6 +53,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.23.1",
@@ -61,6 +61,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5"
