@@ -7,6 +7,10 @@ export type ZernioEnvironment = {
   readonly webhookSecret: string | null
   readonly connectionContextKey: string | null
   readonly applicationOrigin: string
+  readonly publishMaxAttempts: number
+  readonly publishAttemptGraceSeconds: number
+  readonly analyticsEnabled: boolean
+  readonly analyticsPollSeconds: number
 }
 
 /** Server configuration only; used by the connection composition root and future workers. */
@@ -14,6 +18,16 @@ export function readZernioEnvironment(env: NodeJS.ProcessEnv = process.env): Zer
   const flag = env.SOCIAL_PUBLISHING_ENABLED ?? "false"
   if (flag !== "true" && flag !== "false") throw new Error("SOCIAL_PUBLISHING_ENABLED must be true or false")
   const publishingEnabled = flag === "true"
+  const integer = (name: string, fallback: number, minimum: number, maximum: number) => {
+    const value = Number(env[name] ?? fallback)
+    if (!Number.isSafeInteger(value) || value < minimum || value > maximum) throw new Error(`${name} is invalid`)
+    return value
+  }
+  const analyticsFlag = env.SOCIAL_ANALYTICS_ENABLED ?? "false"
+  if (analyticsFlag !== "true" && analyticsFlag !== "false") throw new Error("SOCIAL_ANALYTICS_ENABLED must be true or false")
+  const publishMaxAttempts = integer("SOCIAL_PUBLISH_MAX_ATTEMPTS", 3, 1, 20)
+  const publishAttemptGraceSeconds = integer("SOCIAL_PUBLISH_ATTEMPT_GRACE_SECONDS", 120, 1, 86_400)
+  const analyticsPollSeconds = integer("SOCIAL_ANALYTICS_POLL_SECONDS", 900, 60, 86_400)
   let url: URL
   try { url = new URL(env.ZERNIO_API_BASE_URL ?? "https://zernio.com/api/v1") }
   catch { throw new Error("ZERNIO_API_BASE_URL is invalid") }
@@ -39,9 +53,11 @@ export function readZernioEnvironment(env: NodeJS.ProcessEnv = process.env): Zer
   if (publishingEnabled && (!apiKey || !webhookSecret || !connectionContextKey)) {
     throw new Error("Social publishing requires ZERNIO_API_KEY, ZERNIO_WEBHOOK_SECRET and SOCIAL_CONNECTION_CONTEXT_KEY")
   }
+  if (analyticsFlag === "true" && !apiKey) throw new Error("Social analytics requires ZERNIO_API_KEY")
   // Reuse the app's canonical-origin policy instead of introducing another origin.
   let applicationOrigin: string
   try { applicationOrigin = authOrigin(env) }
   catch { throw new Error("BETTER_AUTH_URL must be a valid application origin") }
-  return { publishingEnabled, apiBaseUrl: url.href.replace(/\/$/, ""), apiKey, webhookSecret, connectionContextKey, applicationOrigin }
+  return { publishingEnabled, apiBaseUrl: url.href.replace(/\/$/, ""), apiKey, webhookSecret, connectionContextKey, applicationOrigin,
+    publishMaxAttempts, publishAttemptGraceSeconds, analyticsEnabled: analyticsFlag === "true", analyticsPollSeconds }
 }

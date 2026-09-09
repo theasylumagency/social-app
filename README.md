@@ -93,9 +93,10 @@ approval preserve earlier versions. Image generation is deliberately disabled
 during testing. See [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20Posts.md)
 for deployment, model choices, validation and current limits.
 
-Facebook and Instagram account connection is available when configured. Real
-publishing, automatic analytics ingestion and real payment processing remain future work. Weekly observations can already be recorded with their sources and used by the next plan. Recommended channels and days are not presented
-as connected accounts or scheduled publication.
+Facebook and Instagram connection, UNDA-owned scheduling, durable immediate
+publishing through Zernio, reconciliation, and factual analytics ingestion are
+available when configured. Weekly observations can also be recorded manually
+with their sources. Real payment processing remains future work.
 
 The Phase 1 social provider foundation is available in
 `src/application/social-connections`, `src/infrastructure/postgres/social-connections-store.ts`
@@ -103,18 +104,19 @@ and `src/infrastructure/zernio`. Migration `0011_social_connections.sql` separat
 stable UNDA publishing accounts from historical provider bindings. Composite
 foreign keys enforce brand and channel agreement; replacing a binding preserves
 the canonical account ID and requires verified native identity. Replacement is
-blocked while any existing attempt has no result or an `unknownOutcome` result.
-Phase 3 will account for durable reconciliations and acquire the same brand lock
-when capturing a binding for a new attempt.
+blocked while an unresolved dispatched attempt could still have created provider
+content. Publication requests capture their exact historical binding under the
+same brand lock, so safe provider replacement leaves the canonical account,
+schedules, publication history, and analytics lineage intact.
 
 The Zernio transport client has bounded JSON requests/responses, a
 whole-request timeout, no redirects/retries, and redacted errors. Configuration
 uses the existing `BETTER_AUTH_URL` origin policy. The provider API defaults to
 `https://zernio.com/api/v1`; only local test servers may override it outside
 production. `readZernioEnvironment` defaults publishing off and validates all
-required secrets when enabled. Phase 2 wires the connection adapter through a
-server-only composition root. There are still no publishing, scheduling,
-webhook, reconciliation, or analytics ingestion calls.
+required secrets when enabled. Connection and delivery adapters are composed
+server-side; provider-specific transport remains outside `src/core` and behind
+the existing `SocialContentPublisher` boundary.
 
 Phase 1 verification (requires the local test database):
 
@@ -196,6 +198,25 @@ provider account/profile/channel refetch, reconnect identity, rollback safety
 and initiation limits. Keep the gate green before Phase 3. Before production
 rollout, also smoke-test both OAuth flows with a real configured test brand and
 confirm that deployment access logs redact the callback query string.
+
+### Durable publishing, scheduling, and analytics
+
+Apply migrations through `0016`. `SOCIAL_PUBLISHING_ENABLED=true` enables the
+existing operator worker's due-publication, webhook, orphan recovery, and
+reconciliation ticks. UNDA owns every exact publication time; Zernio receives
+only immediate, single-account requests. Configure retry policy with
+`SOCIAL_PUBLISH_MAX_ATTEMPTS` and `SOCIAL_PUBLISH_ATTEMPT_GRACE_SECONDS`.
+
+`SOCIAL_ANALYTICS_ENABLED=true` enables baseline ingestion followed by Zernio's
+opaque cursor feed. `SOCIAL_ANALYTICS_POLL_SECONDS` controls fallback polling;
+webhooks trigger the same ingestion path. Metrics are immutable snapshots,
+attributed to both the stable UNDA account and the exact provider binding. A
+missing metric remains unavailable rather than becoming zero.
+
+Production publishing requires `ZERNIO_API_KEY`, `ZERNIO_WEBHOOK_SECRET`,
+`SOCIAL_CONNECTION_CONTEXT_KEY`, and an HTTPS `BETTER_AUTH_URL`. These values
+must remain server-only. Start one or more restart-safe operators with
+`npm run worker:operator`; durable claims prevent duplicate provider dispatch.
 
 Provider contracts: [connection URL](https://docs.zernio.com/connect/get-connect-url),
 [headless Page list](https://docs.zernio.com/connect/list-facebook-pages),

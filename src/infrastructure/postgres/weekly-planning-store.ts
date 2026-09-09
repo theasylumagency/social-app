@@ -247,7 +247,7 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
     if ((run.payload.founderPosts || posts.rowCount) && (posts.rows[0]?.status !== "ready" || !posts.rows[0].payload.review || posts.rows[0].payload.review.issues.some((i) => i.severity === "blocking"))) throw new PlanningConflict("ჯერ პოსტების ტექსტების მომზადება და შემოწმება დაასრულეთ.")
     const now = new Date().toISOString() as IsoDateTime
     if (posts.rowCount) {
-      await c.query("UPDATE weekly_post_batches SET approved_at=now(),updated_at=now() WHERE run_id=$1", [id])
+      await c.query("UPDATE weekly_post_batches SET approved_at=now(),approved_by_user_id=$2,updated_at=now() WHERE run_id=$1", [id, ownerId])
       await event(c, id, "posts-approved", { decidedBy: ownerId, posts: posts.rows[0]!.payload })
     }
     if (run.status === "approved") return

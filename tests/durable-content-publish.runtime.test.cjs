@@ -948,7 +948,7 @@ test("current run cannot predate stored unresolved attempt", async () => {
                 {
                     now:
                         () =>
-                            "2026-09-08T09:59:00+04:00",
+                            "2026-09-08T10:00:00+04:00",
 
                     store: {
                         async claimAttempt() {
@@ -1196,7 +1196,7 @@ test("stored attempt remains canonical even when current worker proposed a diffe
             {
                 now:
                     () =>
-                        "2026-09-08T10:05:00+04:00",
+                        "2026-09-08T10:05:01+04:00",
 
                 store: {
                     async claimAttempt() {

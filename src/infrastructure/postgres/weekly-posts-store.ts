@@ -5,8 +5,8 @@ import type { Pool } from "pg"
 import { emptyPosts, type PostsBatch, type PostsPayload, type PostAsset } from "../../blueprints/social/weekly-planning/posts"
 
 const access = "r.owner_user_id=$1 AND EXISTS(SELECT 1 FROM brands b JOIN workspaces w ON w.id=b.workspace_id WHERE b.id=r.brand_id AND w.owner_user_id=$1)"
-type Row = { run_id: string; status: PostsBatch["status"]; step: PostsBatch["step"]; payload: PostsPayload; error: string | null; lease_until: Date | null; approved_at: Date | null; updated_at: Date }
-const fromRow = (r: Row): PostsBatch => ({ runId: r.run_id, status: r.status, step: r.step, payload: r.payload, error: r.error, leaseUntil: r.lease_until?.toISOString() ?? null, approvedAt: r.approved_at?.toISOString() ?? null, updatedAt: r.updated_at.toISOString() })
+type Row = { run_id: string; status: PostsBatch["status"]; step: PostsBatch["step"]; payload: PostsPayload; error: string | null; lease_until: Date | null; approved_at: Date | null; approved_by_user_id: string | null; updated_at: Date }
+const fromRow = (r: Row): PostsBatch => ({ runId: r.run_id, status: r.status, step: r.step, payload: r.payload, error: r.error, leaseUntil: r.lease_until?.toISOString() ?? null, approvedAt: r.approved_at?.toISOString() ?? null, approvedByUserId: r.approved_by_user_id, updatedAt: r.updated_at.toISOString() })
 export async function readWeeklyPosts(pool: Pool, ownerId: string, runId: string): Promise<PostsBatch | null> {
   const rows = await pool.query<Row>(`SELECT p.* FROM weekly_post_batches p JOIN weekly_planning_runs r ON r.id=p.run_id WHERE ${access} AND r.id=$2`, [ownerId, runId])
   return rows.rows[0] ? fromRow(rows.rows[0]) : null

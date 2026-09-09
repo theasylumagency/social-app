@@ -51,11 +51,12 @@ test("configuration errors do not echo secrets or credential-bearing URLs", () =
 })
 
 test("HTTP foundation authenticates, bounds resources, rejects redirects, and never retries", async (t) => {
-  const calls: { url: string; method: string; authorization: string; body: string }[] = []
+  const calls: { url: string; method: string; authorization: string; requestId: string | undefined; body: string }[] = []
   const server = createServer(async (req, res) => {
     const chunks: Buffer[] = []
     for await (const chunk of req) chunks.push(Buffer.from(chunk))
-    calls.push({ url: req.url!, method: req.method!, authorization: req.headers.authorization!, body: Buffer.concat(chunks).toString() })
+    calls.push({ url: req.url!, method: req.method!, authorization: req.headers.authorization!, requestId: req.headers["x-request-id"] as string | undefined,
+      body: Buffer.concat(chunks).toString() })
     if (req.url === "/api/v1/error") { res.writeHead(429); res.end("secret-api-key secret-provider-body"); return }
     if (req.url === "/api/v1/redirect") { res.writeHead(302, { Location: "/api/v1/profiles" }); res.end(); return }
     if (req.url === "/api/v1/large") { res.end(JSON.stringify({ data: "x".repeat(5000) })); return }
@@ -82,6 +83,10 @@ test("HTTP foundation authenticates, bounds resources, rejects redirects, and ne
     assert.equal(calls.at(-1)?.method, "POST")
     assert.equal(calls.at(-1)?.body, '{"name":"Test"}')
     assert.deepEqual(await client.request({ method: "GET", path: "empty" }), { status: 204, data: null })
+    const requestId = "c04d6a5e-f8ae-4d4f-94d7-c945641d3c30"
+    await client.request({ method: "GET", path: "profiles", requestId })
+    assert.equal(calls.at(-1)?.requestId, requestId)
+    await assert.rejects(client.request({ method: "GET", path: "profiles", requestId: "not-a-uuid" }), { code: "invalidRequest" })
   })
   await t.test("traversal and excessive request bodies fail before transport", async () => {
     const count = calls.length

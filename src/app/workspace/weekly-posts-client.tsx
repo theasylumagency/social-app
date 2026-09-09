@@ -7,6 +7,7 @@ import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { IMAGE_GENERATION_POLICY, type PostsBatch, type PostOutline, type PostVariant, type PostAsset, type PostChannel } from "../../blueprints/social/weekly-planning/posts"
 import { changedCopyParts, postPresentation, postsPresentation } from "./weekly-posts-presentation"
 import { WeeklyPostsProgress } from "./weekly-posts-progress"
+import { SocialScheduleControls } from "./social-schedule-controls"
 
 const formats = { text: "ტექსტური პოსტი", image: "პოსტი გამოსახულებით", carousel: "კარუსელი", story: "სთორი", reel: "რილი" }
 const channels = { facebook: "Facebook", instagram: "Instagram" }
@@ -33,7 +34,7 @@ function RepairHistory({ state, channel, format }: { state: ReturnType<typeof po
   </details>
 }
 
-function PostCard({ run, post, index, state, assets, onAssets, readOnly = false, preferredChannel }: { run: PlanningRun; post: PostOutline; index: number; state: ReturnType<typeof postPresentation>; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; readOnly?: boolean; preferredChannel?: PostChannel | undefined }) {
+function PostCard({ run, post, index, state, assets, onAssets, readOnly = false, approved = false, preferredChannel }: { run: PlanningRun; post: PostOutline; index: number; state: ReturnType<typeof postPresentation>; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; readOnly?: boolean; approved?: boolean; preferredChannel?: PostChannel | undefined }) {
   const [channel, setChannel] = useState<PostChannel>(preferredChannel ?? post.channels[0]!.channel)
   const [busy, setBusy] = useState<number | null>(null)
   const [error, setError] = useState("")
@@ -82,6 +83,7 @@ function PostCard({ run, post, index, state, assets, onAssets, readOnly = false,
     </div>
     {error ? <p className="wp-error" role="alert">{error}</p> : null}
     <details className="fp-post-details wp-details"><summary>რატომ ეს პოსტი და რას უნდა მივაღწიოთ</summary><p>{post.brief.takeaway}</p><ul>{post.brief.points.map((point) => <li key={point}>{point}</li>)}</ul><p><strong>რას ვერ დავპირდებით:</strong> {post.brief.mustNotSay.join(" · ")}</p></details>
+    <SocialScheduleControls brandId={run.brandId} runId={run.id} postKey={postKey} channels={post.channels.map((item) => item.channel)} enabled={!readOnly && approved} />
   </article>
 }
 
@@ -101,7 +103,7 @@ export function WeeklyPostsClient({ run, batch, assets, onAssets, onStart, onRet
     {outline ? <><details className="fp-decisions-detail wp-details"><summary>რატომ {outline.posts.length} პოსტი და რატომ ეს არხები?</summary><div className="fp-decisions"><section><h3>რატომ {outline.posts.length} პოსტი?</h3><p>{outline.cadenceReason}</p></section><section><h3>სად და რატომ?</h3><p>{outline.channelReason}</p></section></div></details><p className="fp-proposal-note">არხები და დღეები შეთავაზებულია. ანგარიშები ჯერ არ არის დაკავშირებული და პოსტები ავტომატურად არ გამოქვეყნდება.</p><nav className="fp-agenda" aria-label="ამ კვირის პოსტები">{visible.map(({ post: p, index: i }) => <a key={i} href={readOnly ? `#previous-post-${i + 1}` : `#post-${i + 1}`}><span>{String(i + 1).padStart(2, "0")} · {formats[p.format]}</span><strong>{p.title}</strong><small>{p.channels.map((c) => channels[c.channel]).join(" + ")}</small></a>)}</nav></> : null}
 
     {batch.status === "failed" ? <section className="wp-error" role="alert"><p>{batch.error}</p><button className="wp-button" disabled={busy} onClick={onRetry}>მომზადების გაგრძელება</button></section> : null}
-    {visible.map(({ post, index }) => <PostCard key={`${run.id}:${index}:${filter}`} run={run} post={post} index={index} state={postPresentation(batch, `p${index + 1}`)} assets={assets} onAssets={onAssets} readOnly={readOnly} preferredChannel={filter === "all" ? undefined : filter} />)}
+    {visible.map(({ post, index }) => <PostCard key={`${run.id}:${index}:${filter}`} run={run} post={post} index={index} state={postPresentation(batch, `p${index + 1}`)} assets={assets} onAssets={onAssets} readOnly={readOnly} approved={run.status === "approved" && Boolean(batch.approvedAt)} preferredChannel={filter === "all" ? undefined : filter} />)}
     {issues.length ? <section className="wp-concerns"><h2>რა არის გასათვალისწინებელი</h2>{issues.map((issue, i) => <p key={i}><strong>{outline?.posts[Number(issue.postKey.slice(1)) - 1]?.title}:</strong> {issue.message}</p>)}{batch.status === "ready" && issues.some((i) => i.severity === "blocking") && onRepair && !readOnly ? <button className="wp-button" disabled={busy} onClick={onRepair}>მხოლოდ დასაზუსტებელი პოსტების გასწორება</button> : null}</section> : null}
     {batch.status === "ready" ? <details className="wp-details fp-copy-review"><summary>ტექსტების შემოწმება</summary><p>{batch.payload.review?.summary}</p></details> : null}
   </div>

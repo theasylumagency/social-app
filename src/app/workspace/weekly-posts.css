@@ -112,3 +112,10 @@
 .fp-calendar small, .fp-calendar p { font-size: 11px; color: #516357; line-height: 1.7; }
 @media (max-width: 1450px) { .fp-calendar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .fp-calendar { grid-template-columns: 1fr; } }
+.fp-schedule { border-top:1px solid #e3e8da; padding:22px 27px 27px; background:#f7f9f2; }
+.fp-schedule h4 { margin:0 0 14px; font-size:14px; }.fp-schedule>p { font-size:11px; line-height:1.8; color:#526b45; }
+.fp-schedule fieldset { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; border:0; padding:14px 0; margin:0; }
+.fp-schedule legend { font-size:11px; font-weight:600; color:#3e5838; }.fp-schedule label { display:grid; gap:6px; font-size:10px; color:#65765b; }
+.fp-schedule input,.fp-schedule select { min-width:0; min-height:38px; border:1px solid #cad6bf; border-radius:7px; background:#fff; padding:7px; font:inherit; color:#334b37; }
+.fp-schedule small { align-self:end; font-size:10px; color:#8a7250; }.fp-schedule .wp-button { margin-top:8px; }
+@media(max-width:700px) { .fp-schedule { padding:20px; }.fp-schedule fieldset { grid-template-columns:1fr; } }

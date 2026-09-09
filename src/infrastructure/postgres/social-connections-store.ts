@@ -120,11 +120,12 @@ export class PostgresSocialConnectionsStore implements SocialConnectionsStore {
         || (active && account.nativeAccountRef === null)) {
         throw new SocialConnectionConflict("Verified native account identity is required for this binding")
       }
-      // No dispatch journal/reconciliation store exists until Phase 3. Conservatively
-      // block every result-less or unknown attempt, including first-binding recovery.
       const unresolved = await c.query(`SELECT a.id FROM social_publish_attempts a
         LEFT JOIN social_publish_results r ON r.attempt_id=a.id
-        WHERE a.publishing_account_id=$1 AND (r.id IS NULL OR r.status='unknownOutcome') LIMIT 1`, [account.id])
+        LEFT JOIN social_provider_publish_requests j ON j.attempt_id=a.id
+        WHERE a.publishing_account_id=$1 AND (r.id IS NULL OR r.status='unknownOutcome')
+          AND (j.attempt_id IS NULL OR j.dispatch_started_at IS NOT NULL)
+        LIMIT 1`, [account.id])
       if (unresolved.rowCount) throw new SocialConnectionConflict("Unresolved publication attempt prevents binding replacement")
       if (active) await c.query("UPDATE social_provider_account_bindings SET binding_status='retired',updated_at=now() WHERE id=$1", [active.id])
       const r = await c.query<ProviderAccountBinding>(`INSERT INTO social_provider_account_bindings

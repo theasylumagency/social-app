@@ -29,6 +29,20 @@ export type SocialContentPublishReconciliationId =
 
 export type SocialContentPublishReconciliationOutcome =
     | {
+        /** Provider confirms that an accepted publication terminated in failure. */
+        readonly status:
+        "publicationFailed"
+
+        readonly failureType:
+        "retryable" | "permanent"
+
+        readonly reasonCode:
+        string
+
+        readonly message?:
+        string
+    }
+    | {
         readonly status:
         "publicationFound"
 
@@ -107,6 +121,21 @@ type SocialContentPublishReconciliationBase = {
 }
 
 export type SocialContentPublishReconciliation =
+    | (
+        SocialContentPublishReconciliationBase & {
+            readonly status:
+            "publicationFailed"
+
+            readonly failureType:
+            "retryable" | "permanent"
+
+            readonly reasonCode:
+            string
+
+            readonly message?:
+            string
+        }
+    )
     | (
         SocialContentPublishReconciliationBase & {
             readonly status:
@@ -432,6 +461,17 @@ export function assembleSocialContentPublishReconciliation(
                 status:
                     "confirmedAbsent",
             }
+
+        case "publicationFailed": {
+            const message = optionalText(input.outcome.message)
+            return {
+                ...base,
+                status: "publicationFailed",
+                failureType: input.outcome.failureType,
+                reasonCode: requiredText(input.outcome.reasonCode, "reasonCode"),
+                ...(message === undefined ? {} : { message }),
+            }
+        }
 
         case "inconclusive": {
             const message =

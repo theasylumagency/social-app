@@ -147,6 +147,12 @@ export function resolveSocialContentPublishReconciliationDecision(
                     "done",
             }
 
+        case "publicationFailed": {
+            if (reconciliation.failureType === "permanent") return { decision: "done" }
+            if (attempt.attemptNumber >= policy.maxAttempts) return { decision: "retryExhausted" }
+            return { decision: "retryAllowed", nextAttemptNumber: attempt.attemptNumber + 1 }
+        }
+
         case "inconclusive":
             return {
                 decision:

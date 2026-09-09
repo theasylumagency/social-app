@@ -18,6 +18,9 @@ export type ZernioRequest = {
   readonly body?: unknown
   readonly connectToken?: string
   readonly idempotencyKey?: string
+  readonly requestId?: string
+  /** Endpoint adapters may explicitly inspect bounded, sanitized error envelopes. */
+  readonly acceptedStatuses?: readonly number[]
 }
 
 export type ZernioClientOptions = {
@@ -44,14 +47,16 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
   const base = new URL(`${config.apiBaseUrl}/`)
 
   return {
-    async request(input: ZernioRequest): Promise<{ readonly status: number; readonly data: unknown }> {
+    async request(input: ZernioRequest): Promise<{ readonly status: number; readonly data: unknown; readonly retryAfter?: string }> {
       if (!/^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/u.test(input.path)
         || !["GET", "POST"].includes(input.method) || (input.method === "GET" && input.body !== undefined)) {
         throw new ZernioClientError("invalidRequest")
       }
-      for (const header of [input.connectToken, input.idempotencyKey]) {
+      for (const header of [input.connectToken, input.idempotencyKey, input.requestId]) {
         if (header !== undefined && (!header || header.length > 8000 || /[\r\n\u0000]/u.test(header))) throw new ZernioClientError("invalidRequest")
       }
+      if (input.requestId !== undefined && !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iu.test(input.requestId)) throw new ZernioClientError("invalidRequest")
+      if (input.acceptedStatuses?.some((status) => !Number.isInteger(status) || status < 400 || status > 599)) throw new ZernioClientError("invalidRequest")
       const url = new URL(input.path, base)
       for (const [key, value] of Object.entries(input.query ?? {})) url.searchParams.set(key, value)
       let body: string | undefined
@@ -68,11 +73,13 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
           method: input.method, signal: controller.signal, redirect: "manual", cache: "no-store",
           headers: { Authorization: authorization, Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }),
             ...(input.connectToken ? { "X-Connect-Token": input.connectToken } : {}),
-            ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}) },
+            ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}),
+            ...(input.requestId ? { "X-Request-Id": input.requestId } : {}) },
           ...(body === undefined ? {} : { body }),
         })
         // Never follow a redirect carrying credentials, or expose an error response body.
-        if (!response.ok) {
+        const accepted = response.ok || input.acceptedStatuses?.includes(response.status)
+        if (!accepted) {
           await response.body?.cancel()
           throw new ZernioClientError("http", response.status)
         }
@@ -105,7 +112,11 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
           reader?.releaseLock()
         }
         if (response.status === 204) return { status: response.status, data: null }
-        try { return { status: response.status, data: JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown } }
+        try {
+          const retryAfter = response.headers.get("retry-after")
+          return { status: response.status, data: JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown,
+            ...(retryAfter ? { retryAfter } : {}) }
+        }
         catch { throw new ZernioClientError("invalidResponse", response.status) }
       }
       try { return await Promise.race([execute(), deadline]) }

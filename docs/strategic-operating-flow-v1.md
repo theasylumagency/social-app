@@ -88,7 +88,9 @@ npm run test:auth
 npm run build
 ```
 
-The domain suite passed 227 tests. Targeted strategy, planning, discovery, dashboard, authentication, copy, voice and UX checks and the production build were also run. Integration tests create isolated temporary databases and mock model/provider responses. Browser verification uses a disposable account and mocked strategy/content, with no bank or model calls. Test results and the final completion message identify any remaining warnings or limitations.
+The domain suite passed 227 tests; final strategy/subscription tests passed 7, planning/copy/UX tests passed 33, and authentication/discovery/dashboard/voice tests passed 22. TypeScript and the final production build passed. Lint has zero errors and five existing unused-variable warnings in golden evaluators. Integration tests create isolated temporary databases and mock model/provider responses.
+
+Browser verification covered first-login subscription selection, simulated purchase, strategy approval, current-week planning and saving explicitly unavailable results. This caught and fixed a billing-date hydration mismatch. Final running-app HTTP checks passed upgrade capacity with preserved expiry, expired workspace redirection, work API rejection with 402, accessible billing and renewal restoring the saved plan. The disposable QA account was removed; the original three brands remain. No bank or model calls were used for these checks.
 
 ## 8. Deliberate limits and remaining decisions
 

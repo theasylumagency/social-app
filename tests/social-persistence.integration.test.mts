@@ -9,6 +9,7 @@ import { SocialConnectionConflict, type ActivateProviderBindingInput } from "../
 import { SocialProviderRegistry } from "../src/application/social-connections/provider-registry"
 import type { SocialPublishingAccountId } from "../src/blueprints/social/content-publish-eligibility"
 import { SOCIAL_CHANNELS } from "../src/blueprints/social/tokens"
+import { attempt, prepareSchedule } from "./social-delivery-fixture"
 
 test("social persistence preserves canonical accounts and isolates provider bindings", async (t) => {
   assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required: foundation integration coverage must not be skipped")
@@ -97,6 +98,9 @@ test("social persistence preserves canonical accounts and isolates provider bind
     const replacement = { ...binding, id: "binding-meta", provider: "meta", providerProfileRef: "meta-profile",
       providerAccountRef: "native-page", expectedActiveBindingId: binding.id }
     await assert.rejects(store.activateBinding(scope, { ...replacement, verifiedNativeAccountRef: "wrong" }), /Verified native account identity/)
+    const legacyAttempt = { ...attempt("attempt"), idempotencyKey: "intent", contentId: "content", draftId: "draft",
+      scheduleId: "schedule", publishingAccountId: accountId }
+    await prepareSchedule(pool, legacyAttempt as never, scope)
     await pool.query(`INSERT INTO social_publish_attempts
       (id,idempotency_key,attempt_number,content_id,draft_id,draft_version,schedule_id,schedule_revision,publishing_account_id,channel,publish_at,attempted_at)
       VALUES('attempt','intent',1,'content','draft',1,'schedule',0,$1,'facebook',now(),now())`, [accountId])
