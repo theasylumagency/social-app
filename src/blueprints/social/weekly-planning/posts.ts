@@ -106,6 +106,3 @@ export function validatePostCopy(value: PostCopy, post: PostOutline): string[] {
   }
   return errors
 }
-
-/** Test mode is a server-owned hard stop; no provider request or charge is possible. */
-export const IMAGE_GENERATION_POLICY = { mode: "testing", enabled: false, trialIncluded: false, paidPlanned: true } as const

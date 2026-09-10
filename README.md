@@ -89,8 +89,9 @@ Week now turns confirmed brand knowledge into a founder-facing list of proposed
 posts: count and channel rationale, full Facebook/Instagram text, format, visual
 briefs and private image uploads. Strategic explanations remain expandable.
 Independent review, durable parallel writing, targeted repair and explicit
-approval preserve earlier versions. Image generation is deliberately disabled
-during testing. See [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20Posts.md)
+approval preserve earlier versions. Image generation includes workspace credits,
+durable history and explicit post attachment. See [Visual generation](docs/visual-generation.md)
+and [Weekly Planning and Posts](docs/Weekly%20Planning%20and%20Posts.md)
 for deployment, model choices, validation and current limits.
 
 Facebook and Instagram connection, UNDA-owned scheduling, durable immediate

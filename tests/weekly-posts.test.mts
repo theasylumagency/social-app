@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { validatePostSchedule, validatePostCopy, POST_SCHEDULE_SCHEMA, POST_COPY_SCHEMA, IMAGE_GENERATION_POLICY, isPostCadence, countPostChannels, type PostsPayload } from "../src/blueprints/social/weekly-planning/posts"
+import { validatePostSchedule, validatePostCopy, POST_SCHEDULE_SCHEMA, POST_COPY_SCHEMA, isPostCadence, countPostChannels, type PostsPayload } from "../src/blueprints/social/weekly-planning/posts"
 import { resizePostSchedule, spreadPostDays, validateCadence } from "../src/blueprints/social/weekly-planning/cadence"
 import { createPostSchedule } from "../src/application/weekly-planning/posts"
 import { validateSchema } from "../src/blueprints/social/brand-discovery/validation"
@@ -35,12 +35,7 @@ test("compact weekly planning preserves canonical decisions in one model call", 
   assert.equal(postsContext(ready).executionPolicy.publishingEnabled, false)
   assert.deepEqual(postsContext(ready).recentResults, [])
 })
-test("image generation stays disabled in testing and excluded from trial", () => {
-  assert.equal(IMAGE_GENERATION_POLICY.enabled, false)
-  assert.equal(IMAGE_GENERATION_POLICY.mode, "testing")
-  assert.equal(IMAGE_GENERATION_POLICY.trialIncluded, false)
-  assert.equal(IMAGE_GENERATION_POLICY.paidPlanned, true)
-})
+
 
 test("Georgian dates remain deterministic without Georgian browser ICU support", () => {
   assert.match(displayDate("2026-09-07"), /7 სექტემბერი/)
