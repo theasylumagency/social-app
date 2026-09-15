@@ -26,6 +26,7 @@
     "test:social:foundation": "node --env-file=.env.local --import tsx --test tests/social-persistence.integration.test.mts tests/zernio-client.test.mts",
     "test:social:connections": "node --env-file=.env.local --import tsx --test tests/social-connections.integration.test.mts tests/zernio-facebook-headless.integration.test.mts",
     "test:social:delivery": "node --env-file=.env.local --import tsx --test tests/zernio-publisher.test.mts tests/social-publish-store.integration.test.mts tests/zernio-webhook.integration.test.mts tests/social-reconciliation.integration.test.mts",
+    "test:social:delivery-view": "node --env-file=.env.local --import tsx --test tests/delivery-view.test.mts tests/delivery-view.integration.test.mts tests/executive-briefing.test.mts",
     "test:social:scheduling": "node --env-file=.env.local --import tsx --test tests/publication-bundle-codec.test.mts tests/social-scheduling.integration.test.mts tests/social-worker.integration.test.mts",
     "test:social:analytics": "node --env-file=.env.local --import tsx --test tests/social-analytics.integration.test.mts tests/social-results-ui.test.mts",
     "test:social": "npm run test:social:foundation && npm run test:social:connections && npm run test:social:delivery && npm run test:social:scheduling && npm run test:social:analytics",

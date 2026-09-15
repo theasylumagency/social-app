@@ -11,6 +11,7 @@ type Props = {
   onConfirm?: (goalIds: string[], language: "ka" | "en") => Promise<void>
   draftKey?: string
   refineHref?: string
+  embedded?: boolean
 }
 const stanceLabels = { agree: "ვეთანხმები", unsure: "არ ვარ დარწმუნებული", disagree: "არ ვეთანხმები" } as const
 const confidenceLabels = { tentative: "საწყისი ვარაუდი", reasonable: "დასაბუთებული ჰიპოთეზა", strong: "წყაროებით გამყარებული ჰიპოთეზა" }
@@ -20,7 +21,8 @@ function Citation({ citation, payload }: { citation: SourceCitation; payload: Di
   return <details className="bd-citation"><summary>რას ვეყრდნობით <span aria-hidden="true">↗</span></summary><blockquote>{citation.exactExcerpt}</blockquote>{source?.url ? <a href={source.url} target="_blank" rel="noreferrer">{new URL(source.url).hostname} ↗</a> : <small>თქვენი დამატებული ინფორმაცია</small>}</details>
 }
 
-export function BrandDossierView({ payload: p, busy = false, onFeedback, onConfirm, refineHref, draftKey }: Props) {
+export function BrandDossierView({ payload: p, busy = false, onFeedback, onConfirm, refineHref, draftKey, embedded = false }: Props) {
+  const Heading = embedded ? "h2" : "h1"
   const u = p.understanding!
   const envelope = p.envelope
   const [stances, setStances] = useState(() => p.feedback.stances.map((s) => ({ audienceHypothesisId: s.audienceHypothesisId as string, stance: s.stance, note: s.note ?? "" })))
@@ -63,13 +65,13 @@ export function BrandDossierView({ payload: p, busy = false, onFeedback, onConfi
   return <div className="bd-dossier">
     <header className="bd-reveal">
       <div className="bd-reveal-kicker"><span className="bd-live-dot" />{editable ? "ჩვენი პირველი ხედვა თქვენს ბიზნესზე" : "თქვენი ბრენდის სამუშაო საფუძველი"}<span>{p.sources.length} წყარო</span></div>
-      <h1>{u.name}</h1>
+      <Heading>{u.name}</Heading>
       <p className="bd-summary">{u.summary}</p>
       <div className="bd-reveal-footer"><p>ბიზნესის გაგება, რომელიც შემდეგ გადაწყვეტილებას აზრს აძლევს.</p>{editable ? <button type="button" className="bd-text-button" onClick={() => setNoteOpen(!noteOpen)} aria-expanded={noteOpen}>რაღაც დასაზუსტებელია <span aria-hidden="true">↗</span></button> : refineHref ? <Link className="bd-text-button" href={refineHref}>ბრენდის დაზუსტება ↗</Link> : null}</div>
     </header>
     {noteOpen && onFeedback ? <form className="bd-refinement" onSubmit={(event) => { event.preventDefault(); void onFeedback({ kind: "business", note: businessNote }) }}><label htmlFor="bd-business-note">რა უნდა იცოდეს UNDA-მ უფრო ზუსტად?</label><textarea id="bd-business-note" name="businessNote" rows={4} minLength={10} maxLength={4000} required value={businessNote} onChange={(e) => setBusinessNote(e.target.value)} placeholder="მაგ. ეს პროექტის მაგალითია და არა ჩვენი ცალკე მომსახურება…" /><p>თქვენი განმარტება ცალკე შეინახება. მის საფუძველზე თავიდან გადავამოწმებთ საქმიანობას, აუდიტორიებსა და კომუნიკაციას.</p><button className="bd-button" disabled={busy}>დაზუსტების გათვალისწინება</button><button type="button" className="bd-text-button" disabled={busy} onClick={() => { setBusinessNote(""); setNoteOpen(false) }}>მონახაზის გაუქმება</button></form> : null}
     {p.sourceWarnings.length ? <div className="bd-notice">{p.sourceWarnings.map((warning) => <p key={warning}>{warning}</p>)}</div> : null}
-    <nav className="bd-section-nav" aria-label="ბრენდის გაცნობის შედეგები"><a href="#bd-business">01 · ბიზნესი</a><a href="#bd-audiences">02 · აუდიტორია</a><a href="#bd-goals">03 · მიზნები</a><a href="#bd-voice">04 · კომუნიკაცია</a></nav>
+    <nav className="bd-section-nav" aria-label="ბრენდის გაცნობის შედეგები"><a href="#bd-business">01 · ბიზნესი</a><a href="#bd-audiences">02 · აუდიტორია</a>{onConfirm ? <a href="#bd-goals">03 · მიზნები</a> : null}<a href="#bd-voice">04 · კომუნიკაცია</a></nav>
 
     <section id="bd-business" className="bd-section">
       <div className="bd-section-heading"><span className="bd-section-number">01</span><div><p className="bd-eyebrow">საქმიანობა და განსხვავება</p><h2>რას ვხედავთ ზედაპირის მიღმა</h2></div></div>
@@ -98,7 +100,7 @@ export function BrandDossierView({ payload: p, busy = false, onFeedback, onConfi
       {onFeedback ? <div className="bd-feedback-actions"><button type="button" className="bd-button bd-button-outline" disabled={busy || founderAudiences.length >= 4} onClick={() => { setFounderAudiences((current) => [...current, { id: `new-${current.length}`, name: "", description: "" }]); setFeedbackDirty(true) }}>+ ჩემი აუდიტორიის დამატება</button>{feedbackDirty ? <button type="button" className="bd-button" disabled={busy} onClick={() => void onFeedback({ kind: "audience", stances, founderAudiences })}>ჩემი პასუხების გათვალისწინება ↗</button> : <p>შეგიძლიათ გააგრძელოთ პასუხის გარეშეც. გაურკვევლობა მუშაობას არ აჩერებს.</p>}</div> : null}
     </section>
 
-    <section className="bd-section"><h2>შემდეგი ნაბიჯი — სოციალური სტრატეგია</h2><p>ბრენდის დადასტურების შემდეგ Operator შეაფასებს საჯარო სოციალურ გარემოს და შემოგთავაზებთ კონკრეტულ მიზანსა და არხების რეკომენდაციას.</p></section>
+    {onConfirm ? <section id="bd-goals" className="bd-section"><h2>შემდეგი ნაბიჯი — სოციალური სტრატეგია</h2><p>ბრენდის დადასტურების შემდეგ UNDA შეაფასებს საჯარო სოციალურ გარემოს და შემოგთავაზებთ კონკრეტულ მიზანსა და არხების რეკომენდაციას.</p></section> : null}
 
     {envelope ? <section id="bd-voice" className="bd-section bd-communication"><div className="bd-section-heading"><span className="bd-section-number">04</span><div><p className="bd-eyebrow">Communication envelope</p><h2>ხმა, რომელიც თქვენად დარჩება</h2><p>{envelope.rationale}</p></div></div><div className="bd-tone-row">{envelope.toneRange.map((tone) => <span key={tone}>{tone}</span>)}</div><div className="bd-communication-grid"><div><h3>როგორ ავაწყობთ აზრს</h3><ul>{envelope.framingRules.map((rule) => <li key={rule}>{rule}</li>)}</ul><h3>როგორ მოვიწვევთ შემდეგ ნაბიჯზე</h3><p>{({ informational: "ინფორმაცია, რომელიც დამოუკიდებელ არჩევანს ეხმარება.", lowPressure: "მშვიდი მოწვევა, ზეწოლისა და ხელოვნური აჩქარების გარეშე.", consultative: "დიალოგი და კონსულტაცია — გადაწყვეტილების დაჩქარების ნაცვლად.", directWhenJustified: "კონკრეტული მოქმედება მაშინ, როცა ამის საფუძველი არსებობს." })[envelope.ctaStyle]}</p></div><div><h3>რით შევქმნით ნდობას</h3><ul>{envelope.trustMechanisms.map((rule) => <li key={rule}>{rule}</li>)}</ul><h3>რა არ უნდა გაჟღერდეს</h3><ul>{envelope.avoid.map((rule) => <li key={rule}>{rule}</li>)}</ul></div></div><details className="bd-detail bd-envelope-detail"><summary>კომუნიკაციის სრული წესები <span aria-hidden="true">+</span></summary><div className="bd-communication-grid">{[{ title: "ტერმინები და განმარტება", items: envelope.terminologyRules }, { title: "ტექსტის აგებულება", items: envelope.preferredStructures }, { title: "მტკიცებულების გამოყენება", items: envelope.proofStyle }, { title: "როგორ გავითვალისწინებთ განსხვავებულ მკითხველს", items: envelope.inclusivityRules }].map((group) => <div key={group.title}><h3>{group.title}</h3><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>)}</div></details></section> : null}
 

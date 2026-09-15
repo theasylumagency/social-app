@@ -154,7 +154,7 @@ export function SubscriptionClient({
               </span>
 
               <span className="plan-details">
-                <span>Full Social Operator</span>
+                <span>UNDA Social</span>
                 <span>{plan.brandLimit === 1 ? "1 brand workspace" : `${plan.brandLimit}-მდე brand workspace`}</span>
                 <span>{plan.visualCredits} გრაფიკული კრედიტი / თვე</span>
               </span>

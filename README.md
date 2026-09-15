@@ -1,4 +1,11 @@
-# UNDA Social Operator
+# UNDA Social
+
+The executive UI first pass is documented in
+[Executive experience — first implementation](docs/executive-experience-first-pass.md).
+The workspace now opens a concise management briefing; weekly planning is at
+`/workspace/week`. Publishing retains the existing approval requirements.
+Overview and Content also show [saved delivery status](docs/delivery-visibility.md),
+including confirmed publication, delays and unresolved outcomes.
 
 UNDA Social Operator is an AI operator that learns how a business communicates,
 plans its social content, prepares publishable posts, routes them through review,

@@ -3,8 +3,8 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "UNDA — Social Operator",
-  description: "თქვენი სოციალური მედიის AI ოპერატორი",
+  title: "UNDA Social",
+  description: "თქვენი სოციალური მედიის AI გუნდი",
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

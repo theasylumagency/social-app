@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="auth-story-copy">
           <span className="eyebrow">შენი ბრენდის ყოველდღიური პარტნიორი</span>
           <h1>მეტი დრო<br />შენი ბიზნესისთვის.</h1>
-          <p>სოციალური ოპერატორი გაიცნობს შენს ბრენდს და დაგეხმარება კონტენტის დაგეგმვაში, მომზადებასა და გამოქვეყნებაში.</p>
+          <p>UNDA გაიცნობს თქვენს ბრენდს, დაგეგმავს კომუნიკაციას და მოამზადებს კონტენტს შეთანხმებული მიზნისა და გამოქვეყნების წესების მიხედვით.</p>
           <div className="auth-trial-note"><span aria-hidden="true">U</span><div><strong>ერთი სივრცე თქვენი ბრენდებისთვის</strong><p>1, 3 ან 10 ბრენდი · შესაძლებელია გაუმჯობესება<br />ტესტირებისას — სატესტო გადახდა.</p></div></div>
         </div>
         <p className="auth-story-footer">შენი ბიზნესი. შენი ხმა. შენი UNDA.</p>

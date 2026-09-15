@@ -12,8 +12,11 @@ import { resizePostSchedule } from "../src/blueprints/social/weekly-planning/cad
 import { completePlanningFixture, planningFixture } from "./weekly-planning-fixture"
 import { copyFixture, scheduleFixture, editorialFixture } from "./weekly-posts-fixture"
 import { distinctSequence } from "./weekly-sequence-fixture"
+import { currentWeek } from "../src/application/dashboard/model"
 
 const run = await completePlanningFixture(await planningFixture())
+// Active generation is only shown for the current week, regardless of when this test runs.
+run.week = currentWeek()
 function batchFixture(): PostsBatch {
   return { runId: run.id, status: "running", step: "writing", payload: { outline: { ...scheduleFixture(), posts: scheduleFixture().posts.slice(0, 2) }, copies: {}, review: null, repairs: 0, sequenceReview: distinctSequence(2) }, error: null, leaseUntil: null, approvedAt: null, updatedAt: "2026-09-08T10:00:00Z" }
 }

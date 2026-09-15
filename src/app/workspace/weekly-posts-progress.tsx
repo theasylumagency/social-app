@@ -31,7 +31,7 @@ export function WeeklyPostsProgress({ batch }: { batch: PostsBatch }) {
       <button type="button" className="fp-copy-button" ref={reopen} onClick={() => setDismissed(false)}>პროცესის ნახვა</button>
     </section>
     {!dismissed ? <dialog ref={dialog} className="fp-progress-dialog" aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={(event) => { event.preventDefault(); dismiss() }}>
-      <header><p className="wp-eyebrow">Operator პოსტებზე მუშაობს</p><button type="button" className="fp-copy-button" onClick={dismiss} autoFocus>დახურვა</button></header>
+      <header><p className="wp-eyebrow">UNDA პოსტებზე მუშაობს</p><button type="button" className="fp-copy-button" onClick={dismiss} autoFocus>დახურვა</button></header>
       <div role="status"><h2 id={titleId}>{progress.title}</h2>{progress.repairMessage ? <p className="fp-repair-notice">{progress.repairMessage}</p> : <p>{savedCopies}</p>}</div>
       <p id={descriptionId}>{savedWorkMessage} ამ ფანჯრის დახურვის შემდეგ მუშაობა გაგრძელდება.</p>
       <ol className="fp-pipeline">{progress.stages.map((stage, i) => <li key={stage.key} className={stage.current ? "is-current" : stage.done ? "is-complete" : ""} aria-current={stage.current ? "step" : undefined}><span aria-hidden="true">{stage.done && !stage.current ? "✓" : i + 1}</span><div>{stage.label}<small>{stage.current ? "მიმდინარეობს" : stage.done ? "დასრულებულია" : stage.key === "repair" && !progress.repairKeys.length ? "მხოლოდ საჭიროების შემთხვევაში" : stage.key === "review" && progress.repairKeys.length ? "პირველმა შემოწმებამ დაზუსტება მოითხოვა" : "შემდეგი ეტაპი"}</small></div></li>)}</ol>
