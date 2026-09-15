@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:notes": "node --import tsx --test tests/contextual-notes.test.mts",
+    "test:notes:integration": "node --env-file=.env.local --import tsx --test tests/contextual-notes.integration.test.mts",
+    "test:notes:live": "node --env-file=.env.local --import tsx --test tests/contextual-notes.live.test.mts",
     "test:visuals": "node --import tsx --test tests/visuals.test.mts tests/visuals-ui.test.mts",
     "test:visuals:integration": "node --env-file=.env.local --import tsx --test tests/visuals.integration.test.mts",
     "test:strategy": "node --env-file=.env.local --import tsx --test tests/social-strategy.test.mts tests/strategic-operation.integration.test.mts",

@@ -25,7 +25,8 @@ const fields = "r.*,to_char(r.week_start,'YYYY-MM-DD') AS week"
 const owned = "r.owner_user_id=$1 AND EXISTS(SELECT 1 FROM brands b JOIN workspaces w ON w.id=b.workspace_id WHERE b.id=r.brand_id AND w.owner_user_id=$1)"
 const fromRow = (r: Row): PlanningRun => ({ id: r.id, ownerId: r.owner_user_id, brandId: r.brand_id, week: r.week, version: r.version, status: r.status, step: r.step, payload: r.payload, error: r.error, leaseUntil: r.lease_until?.toISOString() ?? null, createdAt: r.created_at.toISOString(), updatedAt: r.updated_at.toISOString() })
 export class PlanningConflict extends Error {}
-async function transaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
+async function transaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>, existing?: PoolClient): Promise<T> {
+  if (existing) return fn(existing)
   const c = await pool.connect()
   try { await c.query("BEGIN"); const result = await fn(c); await c.query("COMMIT"); return result }
   catch (error) { await c.query("ROLLBACK"); throw error }
@@ -79,7 +80,7 @@ export async function readPlanningView(pool: Pool, ownerId: string, brandId: str
 }
 
 export type BeginPlanningInput = { id: string; brandId: string; week: string; priority: string; parentId?: string; parentVersion?: number; revisionNote?: string }
-export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: BeginPlanningInput): Promise<PlanningRun> {
+export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: BeginPlanningInput, client?: PoolClient): Promise<PlanningRun> {
   if (!isDiscoveryId(input.id) || !isWeek(input.week) || typeof input.priority !== "string" || input.priority.length > 1200 || typeof input.brandId !== "string" || input.brandId.length > 160) throw new Error("შეამოწმეთ ბრენდი, კვირა და პრიორიტეტი.")
   if (input.parentId && (!isDiscoveryId(input.parentId) || !Number.isSafeInteger(input.parentVersion) || typeof input.revisionNote !== "string" || input.revisionNote.trim().length < 10 || input.revisionNote.length > 2000)) throw new Error("გეგმის დაზუსტება უნდა შეიცავდეს 10–2000 სიმბოლოს.")
   return transaction(pool, async (c) => {
@@ -128,7 +129,7 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (payload.priority) await c.query("INSERT INTO weekly_briefs(brand_id,week_start,objective,updated_by) VALUES($1,$2::date,$3,$4) ON CONFLICT(brand_id,week_start) DO UPDATE SET objective=excluded.objective,updated_by=excluded.updated_by,updated_at=now()", [input.brandId, input.week, payload.priority, ownerId])
     else await c.query("DELETE FROM weekly_briefs WHERE brand_id=$1 AND week_start=$2::date", [input.brandId, input.week])
     return fromRow(created.rows[0]!)
-  })
+  }, client)
 }
 
 /** A cadence edit versions the plan but never re-runs brand discovery or strategy. */

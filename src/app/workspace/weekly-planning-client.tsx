@@ -60,6 +60,13 @@ export function WeeklyPlanningClient({ initial, initialPriority, brandId, ownerI
   const contentApproved = run?.status === "approved" && Boolean(view.posts?.approvedAt)
 
   useEffect(() => {
+    const controller = new AbortController()
+    const refresh = () => { void fetch(url, { cache: "no-store", signal: controller.signal }).then(async response => { if (response.ok) { const latest = await response.json() as PlanningView; if (!controller.signal.aborted) setView(latest) } }).catch(() => {}) }
+    window.addEventListener("unda:notes-changed", refresh)
+    return () => { controller.abort(); window.removeEventListener("unda:notes-changed", refresh) }
+  }, [url])
+
+  useEffect(() => {
     let active = true
     queueMicrotask(() => {
       if (!active) return

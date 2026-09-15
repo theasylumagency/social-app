@@ -18,7 +18,8 @@ const sessionFromRow = (r: Row): DiscoverySession => ({ id: r.id, ownerId: r.own
 export class DiscoveryConflict extends Error { }
 export const isDiscoveryId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 
-async function transaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
+async function transaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>, existing?: PoolClient): Promise<T> {
+  if (existing) return fn(existing)
   const client = await pool.connect()
   try { await client.query("BEGIN"); const result = await fn(client); await client.query("COMMIT"); return result }
   catch (error) { await client.query("ROLLBACK"); throw error }
@@ -50,7 +51,7 @@ async function reserveAnalysisRequest(client: PoolClient, ownerId: string) {
   if (rate.rows[0]!.count >= 12) throw new Error("ბოლო საათში ბევრი ანალიზი დაიწყეთ. ცოტა მოგვიანებით სცადეთ; თქვენი ინფორმაცია შენახულია.")
 }
 
-export async function saveDiscoveryDraft(pool: Pool, ownerId: string, id: string, input: DiscoveryInput, brandId: string | null): Promise<DiscoverySession> {
+export async function saveDiscoveryDraft(pool: Pool, ownerId: string, id: string, input: DiscoveryInput, brandId: string | null, client?: PoolClient): Promise<DiscoverySession> {
   return transaction(pool, async (client) => {
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`brand-discovery:${ownerId}`])
     if (brandId) {
@@ -74,7 +75,7 @@ export async function saveDiscoveryDraft(pool: Pool, ownerId: string, id: string
     }
     const created = await client.query<Row>("INSERT INTO brand_discovery_sessions(id,owner_user_id,brand_id,payload) VALUES($1,$2,$3,$4::jsonb) RETURNING *", [id, ownerId, brandId, JSON.stringify(payload)])
     return sessionFromRow(created.rows[0]!)
-  })
+  }, client)
 }
 
 async function lockedSession(client: PoolClient, ownerId: string, id: string, revision: number): Promise<DiscoverySession> {

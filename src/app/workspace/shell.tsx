@@ -4,6 +4,10 @@ import type { DashboardBrand, DashboardSection } from "../../application/dashboa
 import { SessionRefresh, SignOutButton } from "../account/account-controls"
 import { BrandSwitcher } from "./controls"
 import { Icon } from "./icons"
+import { ContextualNotes } from "./contextual-notes"
+import { currentWeek } from "../../application/dashboard/model"
+import { speechConfig } from "../../infrastructure/speech/transcription"
+import "./contextual-notes.css"
 
 export const sectionLabels: Record<DashboardSection, string> = {
   overview: "შეჯამება", week: "კვირის გეგმა", strategy: "სტრატეგია", content: "კონტენტი", results: "შედეგები", brand: "ბრენდი", connections: "კავშირები", settings: "პარამეტრები",
@@ -14,6 +18,8 @@ export function WorkspaceShell({ section, brands, brand, user, children, week }:
   week?: string; section: DashboardSection; brands: DashboardBrand[]; brand: DashboardBrand
   user: { name: string; email: string }; children: ReactNode
 }) {
+  let voiceAvailable = false
+  try { speechConfig(); voiceAvailable = true } catch { /* Text notes remain available without voice configuration. */ }
   return <div className="ws-shell">
     <a className="ws-skip" href="#workspace-main">მთავარ შინაარსზე გადასვლა</a>
     <aside className="ws-sidebar">
@@ -27,7 +33,7 @@ export function WorkspaceShell({ section, brands, brand, user, children, week }:
     </aside>
     <div className="ws-main-shell">
       <header className="ws-topbar"><div><span>UNDA Social</span><Icon name="chevron" /><strong>{sectionLabels[section]}</strong></div><div><span className="ws-private"><Icon name="brand" /> პირადი სივრცე</span><SignOutButton /></div></header>
-      <main className="ws-main" id="workspace-main"><SessionRefresh />{children}</main>
+      <main className="ws-main" id="workspace-main"><SessionRefresh /><ContextualNotes key={`${brand.id}:${section}:${week}`} brandId={brand.id} brandName={brand.name} section={section} sectionLabel={sectionLabels[section]} week={week ?? currentWeek()} voiceAvailable={voiceAvailable}>{children}</ContextualNotes></main>
       <footer className="ws-footer"><span>UNDA Social</span><span>ნაბიჯ-ნაბიჯ, თქვენი ბრენდისთვის.</span></footer>
     </div>
   </div>

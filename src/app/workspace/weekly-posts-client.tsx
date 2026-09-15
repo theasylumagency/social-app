@@ -9,6 +9,7 @@ import { changedCopyParts, postPresentation, postsPresentation } from "./weekly-
 import { WeeklyPostsProgress } from "./weekly-posts-progress"
 import { VisualGenerationPanel, VisualsProvider } from "./visual-generation-panel"
 import { SocialScheduleControls } from "./social-schedule-controls"
+import { PostNoteButton } from "./contextual-notes"
 
 const formats = { text: "ტექსტური პოსტი", image: "პოსტი გამოსახულებით", carousel: "კარუსელი", story: "სთორი", reel: "რილი" }
 const channels = { facebook: "Facebook", instagram: "Instagram" }
@@ -35,7 +36,7 @@ function RepairHistory({ state, channel, format }: { state: ReturnType<typeof po
   </details>
 }
 
-function PostCard({ run, post, index, state, assets, onAssets, readOnly = false, approved = false, preferredChannel }: { run: PlanningRun; post: PostOutline; index: number; state: ReturnType<typeof postPresentation>; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; readOnly?: boolean; approved?: boolean; preferredChannel?: PostChannel | undefined }) {
+function PostCard({ run, post, index, state, assets, onAssets, readOnly = false, approved = false, preferredChannel, postVersion }: { run: PlanningRun; post: PostOutline; index: number; state: ReturnType<typeof postPresentation>; assets: PostAsset[]; onAssets: (assets: PostAsset[]) => void; readOnly?: boolean; approved?: boolean; preferredChannel?: PostChannel | undefined; postVersion: string }) {
   const [channel, setChannel] = useState<PostChannel>(preferredChannel ?? post.channels[0]!.channel)
   const [busy, setBusy] = useState<number | null>(null)
   const [error, setError] = useState("")
@@ -70,6 +71,7 @@ function PostCard({ run, post, index, state, assets, onAssets, readOnly = false,
   return <article className="fp-post" id={readOnly ? `previous-post-${index + 1}` : `post-${index + 1}`}>
     <header className="fp-post-heading"><span className="fp-number">{String(index + 1).padStart(2, "0")}</span><div><p className="fp-day">{day(run.week, post.dayOffset)} <span>· შეთავაზებული დღე</span></p><h3>{post.title}</h3></div><span className="fp-format">{formats[post.format]}</span></header>
     <p className="fp-why">{post.why}</p>
+    {!readOnly ? <PostNoteButton runId={run.id} postKey={postKey} channel={channel} title={post.title} postVersion={postVersion} /> : null}
     <div className={`fp-post-body ${post.format === "text" ? "fp-text-only" : ""}`}>
       <section className="fp-copy" aria-label={`პოსტი ${index + 1}: ტექსტი`}>
         <div className="fp-channel-tabs" aria-label="ტექსტის არხი">{post.channels.map((c) => <button type="button" key={c.channel} aria-pressed={channel === c.channel} onClick={() => { setChannel(c.channel); setCopied(false) }}><span className={`fp-channel-icon ${c.channel}`}>{c.channel === "facebook" ? "f" : "◎"}</span>{channels[c.channel]}</button>)}</div>
@@ -104,7 +106,7 @@ export function WeeklyPostsClient({ run, batch, assets, onAssets, onStart, onRet
     {outline ? <><details className="fp-decisions-detail wp-details"><summary>რატომ {outline.posts.length} პოსტი და რატომ ეს არხები?</summary><div className="fp-decisions"><section><h3>რატომ {outline.posts.length} პოსტი?</h3><p>{outline.cadenceReason}</p></section><section><h3>სად და რატომ?</h3><p>{outline.channelReason}</p></section></div></details><p className="fp-proposal-note">არხები და დღეები შეთავაზებულია. გამოქვეყნებისთვის საჭიროა დადასტურებული კონტენტი, მოქმედი კავშირი და შენახული ზუსტი განრიგი.</p><nav className="fp-agenda" aria-label="ამ კვირის პოსტები">{visible.map(({ post: p, index: i }) => <a key={i} href={readOnly ? `#previous-post-${i + 1}` : `#post-${i + 1}`}><span>{String(i + 1).padStart(2, "0")} · {formats[p.format]}</span><strong>{p.title}</strong><small>{p.channels.map((c) => channels[c.channel]).join(" + ")}</small></a>)}</nav></> : null}
 
     {batch.status === "failed" ? <section className="wp-error" role="alert"><p>{batch.error}</p><button className="wp-button" disabled={busy} onClick={onRetry}>მომზადების გაგრძელება</button></section> : null}
-    {visible.map(({ post, index }) => <PostCard key={`${run.id}:${index}:${filter}`} run={run} post={post} index={index} state={postPresentation(batch, `p${index + 1}`)} assets={assets} onAssets={onAssets} readOnly={readOnly} approved={run.status === "approved" && Boolean(batch.approvedAt)} preferredChannel={filter === "all" ? undefined : filter} />)}
+    {visible.map(({ post, index }) => <PostCard key={`${run.id}:${index}:${filter}`} run={run} post={post} index={index} state={postPresentation(batch, `p${index + 1}`)} assets={assets} onAssets={onAssets} readOnly={readOnly} approved={run.status === "approved" && Boolean(batch.approvedAt)} preferredChannel={filter === "all" ? undefined : filter} postVersion={batch.updatedAt} />)}
     {issues.length ? <section className="wp-concerns"><h2>რა არის გასათვალისწინებელი</h2>{issues.map((issue, i) => <p key={i}><strong>{outline?.posts[Number(issue.postKey.slice(1)) - 1]?.title}:</strong> {issue.message}</p>)}{batch.status === "ready" && issues.some((i) => i.severity === "blocking") && onRepair && !readOnly ? <button className="wp-button" disabled={busy} onClick={onRepair}>მხოლოდ დასაზუსტებელი პოსტების გასწორება</button> : null}</section> : null}
     {batch.status === "ready" ? <details className="wp-details fp-copy-review"><summary>ტექსტების შემოწმება</summary><p>{batch.payload.review?.summary}</p></details> : null}
   </div></VisualsProvider>
