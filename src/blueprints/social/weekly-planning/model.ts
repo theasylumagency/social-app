@@ -7,6 +7,7 @@ import type { ContentAudienceDirectionProposal } from "./content-audience-direct
 import type { ExperimentDecisionStructuredProposal } from "./experiment-decision-contract"
 import type { PostsBatch, PostAsset, PostCadence, PostsPayload } from "./posts"
 import type { SocialStrategy, WeekEvidence } from "../strategy/model"
+import type { ChannelOperatingPolicy, OperatingRule } from "../../../core/domain/operating-policy"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -29,6 +30,8 @@ export type PlanningPayload = {
   priorCopy?: string[]
   founderPosts?: boolean
   cadence?: PostCadence
+  operatingRules?: OperatingRule[]
+  channelPolicies?: ChannelOperatingPolicy[]
   basis: BrandDossier
   priority: string
   revisionNote: string

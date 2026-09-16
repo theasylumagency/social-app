@@ -9,6 +9,7 @@ import { validatePlanningProse } from "../../blueprints/social/weekly-planning/v
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
 import { compilePostGenerationContext, compilePostEditorialContext } from "../../blueprints/social/weekly-planning/post-context"
 import { POST_EDITORIAL_PROMPT, POST_EDITORIAL_SCHEMA, validatePostEditorialReview, consolidatePostReviews, type PostEditorialReview } from "../../blueprints/social/weekly-planning/post-editorial"
+import { operatingRuleViolations, ruleApplies } from "../../core/domain/operating-policy"
 
 export function postsContext(run: PlanningRun) {
   const context = compilePlanningContext(run)
@@ -25,7 +26,7 @@ function keys(run: PlanningRun) {
   return [...c.audiences.map((a) => a.audienceKey), ...c.selectedBrandGoals.map((g) => g.goalKey), ...c.contentDirections.map((d) => d.contentDirectionKey), ...Array.from({ length: 10 }, (_, i) => `p${i + 1}`)]
 }
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
-  const allowed = run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"]
+  const allowed = (run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"] as const).filter(channel => run.payload.channelPolicies?.find(policy => policy.channel === channel)?.active !== false)
   if (!allowed.length) throw Error("რეკომენდებული არხებისთვის კონტენტის შესრულება ჯერ ცალკე გამართვას საჭიროებს.")
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
@@ -37,7 +38,7 @@ export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner
 }
 export async function writePost(run: PlanningRun, payload: PostsPayload, key: string, reason: BrandReasoner) {
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
-  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v2", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(run, post), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...validatePlanningProse(v, keys(run))] })
+  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v3", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(run, post), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...(v as PostCopy).variants.flatMap(variant => operatingRuleViolations([variant.caption, variant.script, ...variant.onScreenText, ...variant.frames.flatMap(frame => [frame.heading, frame.body])].join("\n"), (run.payload.operatingRules ?? []).filter(rule => ruleApplies(rule, { channel: variant.channel })))), ...validatePlanningProse(v, keys(run))] })
 }
 export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner) {
   const postKeys = payload.outline!.posts.map((_, i) => `p${i + 1}`)

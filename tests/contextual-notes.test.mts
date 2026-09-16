@@ -1,9 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { decideNote, INTERPRETATION_SCHEMA, type Interpretation, type NoteContext, type Statement } from "../src/application/contextual-notes/model"
+import { decideNote, interpretChannelPolicy, interpretOperatingRule, targetHash, INTERPRETATION_SCHEMA, type Interpretation, type NoteContext, type Statement } from "../src/application/contextual-notes/model"
 import { validateSchema } from "../src/blueprints/social/brand-discovery/validation"
 import { createTranscriber, speechConfig } from "../src/infrastructure/speech/transcription"
 import { limitedBody } from "../src/app/_server/limited-body"
+import { operatingRuleViolations, ruleScopeOverlaps } from "../src/core/domain/operating-policy"
 
 export const noteContext: NoteContext = { brandId: "brand:test", section: "week", week: "2026-09-14", postKey: null, channel: null, runId: null }
 export function interpreted(kind: Statement["kind"], scope: Statement["scope"], action: Interpretation["action"], quote = "მოკლე."): Interpretation {
@@ -19,22 +20,41 @@ test("noisy objectives and objections do not authorize state changes, even if mo
     assert.equal(decideNote(interpreted(kind, "week", "revise_plan", quote), noteContext).action, "none")
   }
 })
-test("standing rules and channel removal cannot bypass unsupported operational boundaries", () => {
-  for (const value of [interpreted("standing_rule", "ongoing", "revise_brand", "ამიერიდან ემოჯი საერთოდ არ გამოიყენოთ."), interpreted("channel_policy", "channel", "revise_plan", "Instagram-ს არ ვენდობი. მოდი ამოვიღოთ.")]) assert.equal(decideNote(value, noteContext).action, "none")
+test("explicit standing rules and channel policy require consequence confirmation", () => {
+  const standing = interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან ემოჯი საერთოდ არ გამოიყენოთ.")
+  standing.instruction = standing.statements[0]!.quote
+  assert.deepEqual(interpretOperatingRule(standing)?.scope.channel, "all")
+  assert.equal(decideNote(standing, noteContext).action, "set_operating_rule")
+  assert.equal(decideNote(standing, noteContext).mode, "confirm")
+  const channel = interpreted("channel_policy", "channel", "set_channel_policy", "Instagram-ს არ ვენდობი. მოდი ამოვიღოთ.")
+  channel.instruction = channel.statements[0]!.quote
+  assert.deepEqual(interpretChannelPolicy(channel), { channel: "instagram", active: false })
+  assert.equal(decideNote(channel, noteContext).mode, "confirm")
 })
 test("short and tone feedback resolve to the selected post and channel, never a permanent rule", () => {
   const selected: NoteContext = { ...noteContext, section: "content", postKey: "p1", channel: "facebook", runId: "run" }
   for (const quote of ["მოკლე.", "ძალიან ოფიციალურია."]) assert.equal(decideNote(interpreted("draft_correction", "post", "revise_post", quote), selected).mode, "apply")
   assert.equal(decideNote(interpreted("draft_correction", "post", "revise_post"), { ...selected, postKey: null }).mode, "clarify")
 })
-test("vague requests ask one question; multi-scope input retains atoms without guessing an operation", () => {
+test("vague requests ask one question; independent challenge does not block a clear weekly constraint", () => {
   const value = interpreted("instruction", "unclear", "revise_plan", "მოდი ეს ცოტა სხვანაირად გავაკეთოთ.")
   value.ambiguous = true; value.clarification = "რაოდენობა გსურთ შეიცვალოს თუ მიმართულება?"
   assert.equal(decideNote(value, noteContext).message, value.clarification)
   const multi = interpreted("constraint", "week", "revise_plan")
-  multi.statements.push({ ...multi.statements[0]!, kind: "correction", scope: "brand" })
-  assert.equal(decideNote(multi, noteContext).mode, "clarify")
+  multi.statements.push({ ...multi.statements[0]!, kind: "challenge", scope: "week" })
+  assert.equal(decideNote(multi, noteContext).mode, "apply")
   assert.equal(multi.statements.length, 2)
+})
+test("typed rules have deterministic scope/conflict and validation behavior", () => {
+  const global = interpretOperatingRule({ ...interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან ემოჯი საერთოდ არ გამოიყენოთ."), instruction: "ამიერიდან ემოჯი საერთოდ არ გამოიყენოთ." })!
+  const instagram = interpretOperatingRule({ ...interpreted("standing_rule", "ongoing", "set_operating_rule", "Instagram-ზე ერთი ემოჯი შეიძლება გამოვიყენოთ."), instruction: "Instagram-ზე ერთი ემოჯი შეიძლება გამოვიყენოთ." })!
+  assert.equal(ruleScopeOverlaps(global.scope, instagram.scope), true)
+  assert.equal(global.effect, "forbid")
+  assert.equal(instagram.effect, "allow")
+  assert.deepEqual(operatingRuleViolations("მოგესალმებით 😊", [global]), ["Active operating rule forbids emoji"])
+})
+test("generic target hashes are stable across object key order", () => {
+  assert.equal(targetHash({ direction: "A", order: 1 }), targetHash({ order: 1, direction: "A" }))
 })
 test("brand facts require an explicit draft consequence confirmation and valid semantic schema", () => {
   const v = interpreted("correction", "brand", "revise_brand")

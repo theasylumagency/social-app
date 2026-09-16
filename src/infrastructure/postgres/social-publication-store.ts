@@ -76,6 +76,8 @@ export class PostgresSocialPublicationStore implements SocialPublicationStore {
           WHERE a.id=$1 AND a.brand_id=$2 AND a.channel=$3 AND b.connection_status='connected' AND b.can_publish=true AND profile.status='active'`,
         [item.publishingAccountId, input.brandId, p.channel])
         if (!account.rowCount) throw new Error("Publishing account is not connected or cannot publish")
+        const policy = await client.query<{ active: boolean }>("SELECT active FROM brand_channel_operating_policies WHERE brand_id=$1 AND channel=$2", [input.brandId, p.channel])
+        if (policy.rows[0]?.active === false) throw new Error("Channel is inactive for future operation")
         await client.query(`INSERT INTO social_publication_inputs(id,brand_id,source_weekly_run_id,post_key,channel,content_id,
           content_brief_id,content_execution_spec_id,draft_id,draft_version,bundle_schema,bundle_version,bundle)
           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)
@@ -161,8 +163,9 @@ export class PostgresSocialPublicationStore implements SocialPublicationStore {
       LEFT JOIN reconciled c ON c.schedule_id=s.id
       JOIN social_provider_account_bindings b ON b.publishing_account_id=s.publishing_account_id AND b.channel=s.channel AND b.binding_status='active'
       JOIN social_provider_profiles p ON p.brand_id=b.brand_id AND p.provider=b.provider AND p.provider_profile_ref=b.provider_profile_ref
+      LEFT JOIN brand_channel_operating_policies policy ON policy.brand_id=s.brand_id AND policy.channel=s.channel
       WHERE coalesce(e.event_type,'rescheduled')<>'cancelled' AND coalesce(e.publish_at,s.publish_at)<=$1::timestamptz
-        AND b.connection_status='connected' AND b.can_publish=true AND p.status='active'
+        AND b.connection_status='connected' AND b.can_publish=true AND p.status='active' AND coalesce(policy.active,true)=true
         AND (l.attempt_number IS NULL OR (t.status='retryableFailure' AND l.attempt_number<$2 AND (t.retry_after IS NULL OR t.retry_after<=$1::timestamptz))
           OR (t.status='unknownOutcome' AND l.attempt_number<$2 AND (c.status='confirmedAbsent' OR (c.status='publicationFailed' AND c.failure_type='retryable'))))
       ORDER BY coalesce(e.publish_at,s.publish_at),s.id LIMIT $3`, [now, maxAttempts, limit])

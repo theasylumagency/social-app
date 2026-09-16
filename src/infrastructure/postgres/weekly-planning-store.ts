@@ -19,6 +19,7 @@ import { emptyPosts, isPostCadence, countPostChannels, type PostsPayload, type P
 import { resizePostSchedule, spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
 import { assemblePlanningRun } from "../../application/weekly-planning/advance"
 import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
+import { listChannelPolicies, listOperatingRules } from "./operating-policy-store"
 
 type Row = { id: string; owner_user_id: string; brand_id: string; week: string; version: number; status: PlanningRun["status"]; step: PlanningRun["step"]; payload: PlanningPayload; error: string | null; lease_until: Date | null; created_at: Date; updated_at: Date }
 const fields = "r.*,to_char(r.week_start,'YYYY-MM-DD') AS week"
@@ -66,7 +67,7 @@ export async function readPlanningRun(pool: Pool, ownerId: string, id: string): 
 }
 export async function readPlanningView(pool: Pool, ownerId: string, brandId: string, week: string): Promise<PlanningView> {
   const [r, approved, history, foundation, strategy] = await Promise.all([
-    pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date ORDER BY r.version DESC LIMIT 1`, [ownerId, brandId, week]),
+    pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date AND r.status NOT IN ('superseded','changesRequested') ORDER BY r.version DESC LIMIT 1`, [ownerId, brandId, week]),
     pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date AND r.status='approved' LIMIT 1`, [ownerId, brandId, week]),
     pool.query<{ id: string; version: number; status: PlanningRun["status"]; updated_at: Date; objective: string | null }>(`SELECT r.id,r.version,r.status,r.updated_at,r.payload->'objective'->>'objective' AS objective FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date ORDER BY r.version DESC LIMIT 20`, [ownerId, brandId, week]),
     basis(pool, ownerId, brandId),
@@ -91,8 +92,9 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
       const r = fromRow(duplicate.rows[0]); if (r.ownerId !== ownerId || r.brandId !== input.brandId || r.week !== input.week) throw new Error("გეგმა ვერ მოიძებნა.")
       return r
     }
-    const latest = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date ORDER BY r.version DESC LIMIT 1 FOR UPDATE`, [input.brandId, input.week])
+    const latest = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date AND r.status NOT IN ('superseded','changesRequested') ORDER BY r.version DESC LIMIT 1 FOR UPDATE`, [input.brandId, input.week])
     const previous = latest.rows[0] ? fromRow(latest.rows[0]) : null
+    const nextVersion = Number((await c.query<{ n: number }>("SELECT coalesce(max(version),0)+1 AS n FROM weekly_planning_runs WHERE brand_id=$1 AND week_start=$2::date", [input.brandId, input.week])).rows[0]!.n)
     if (!input.parentId && previous) return previous
     if (input.parentId && (!previous || previous.id !== input.parentId || previous.version !== input.parentVersion || !["ready", "approved", "failed"].includes(previous.status))) throw new PlanningConflict("გეგმა სხვა ჩანართში შეიცვალა ან ჯერ მზადდება. განაახლეთ გვერდი.")
     if (input.week !== currentWeek()) throw new Error("ახალი გეგმა მხოლოდ მიმდინარე კვირისთვის იქმნება. ძველი კვირები ისტორიად რჩება.")
@@ -101,11 +103,12 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (!strategy?.payload.proposal) throw new Error("ჯერ სოციალური სტრატეგიის მიზანი დაადასტურეთ.")
     const evidence = (await readWeekEvidence(c, ownerId, input.brandId)).filter((e) => e.week <= input.week)
     const foundation = await basis(c, ownerId, input.brandId)
+    const [operatingRules, channelPolicies] = await Promise.all([listOperatingRules(c, ownerId, input.brandId), listChannelPolicies(c, ownerId, input.brandId)])
     assertBasis(foundation)
     // Execution history is not evidence of exposure or performance.
     // One current usable version per recent week; failed/rejected/superseded plans are not exposure.
     const prior = await c.query<Row & { posts_payload: PostsPayload | null }>(`SELECT DISTINCT ON (r.week_start) ${fields},p.payload AS posts_payload FROM weekly_planning_runs r LEFT JOIN weekly_post_batches p ON p.run_id=r.id WHERE r.brand_id=$1 AND r.owner_user_id=$3 AND r.week_start<$2::date AND r.week_start>=$2::date-28 AND r.status IN ('ready','approved') ORDER BY r.week_start DESC,r.version DESC LIMIT 3`, [input.brandId, input.week, ownerId])
-    const payload: PlanningPayload = { socialStrategy: strategy, evidence, priorCopy: prior.rows.flatMap((r) => r.posts_payload ? copyTexts(r.posts_payload).map((c) => c.text) : []), basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null }
+    const payload: PlanningPayload = { socialStrategy: strategy, evidence, priorCopy: prior.rows.flatMap((r) => r.posts_payload ? copyTexts(r.posts_payload).map((c) => c.text) : []), basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null, operatingRules, channelPolicies }
     const now = new Date().toISOString() as IsoDateTime
     // Reviewing no observations is an explicit unknown state, never fabricated progress.
     for (const row of prior.rows) {
@@ -114,7 +117,7 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (!evidence.length) evidence.push({ week: input.week, reviewedAt: now, availability: "unavailable", observations: [], execution: [], unknowns: ["ეს საწყისი გეგმაა; წინა შედეგები არ გვაქვს."], businessContext: "" })
     payload.founderPosts = true
     if (previous?.payload.cadence) payload.cadence = previous.payload.cadence
-    const allowed = operatingChannels(strategy.payload.proposal)
+    const allowed = operatingChannels(strategy.payload.proposal).filter(channel => channelPolicies.find(policy => policy.channel === channel)?.active !== false)
     if (!allowed.length) payload.cadence = { facebook: 0, instagram: 0 }
     else if (payload.cadence) for (const channel of ["facebook", "instagram"] as const) if (!allowed.includes(channel)) payload.cadence[channel] = 0
     if (previous && previous.status !== "approved") {
@@ -124,12 +127,37 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     }
     if (previous) await event(c, previous.id, "changes-requested", { note: payload.revisionNote, replacementRunId: input.id, previousPlan: previous.payload.plan })
     if (previous) await c.query("UPDATE weekly_post_batches SET status='failed',lease_token=NULL,lease_until=NULL,error=$2,updated_at=now() WHERE run_id=$1 AND status IN ('queued','running')", [previous.id, "მომზადება გაგრძელდა ახალ ვერსიაში."])
-    const created = await c.query<Row>(`INSERT INTO weekly_planning_runs(id,owner_user_id,brand_id,week_start,version,status,step,payload) VALUES($1,$2,$3,$4::date,$5,'queued','objective',$6::jsonb) RETURNING *,to_char(week_start,'YYYY-MM-DD') AS week`, [input.id, ownerId, input.brandId, input.week, (previous?.version ?? 0) + 1, JSON.stringify(payload)])
+    const created = await c.query<Row>(`INSERT INTO weekly_planning_runs(id,owner_user_id,brand_id,week_start,version,status,step,payload) VALUES($1,$2,$3,$4::date,$5,'queued','objective',$6::jsonb) RETURNING *,to_char(week_start,'YYYY-MM-DD') AS week`, [input.id, ownerId, input.brandId, input.week, nextVersion, JSON.stringify(payload)])
     await event(c, input.id, "started", { basisSessionId: foundation.sessionId, basisRevision: foundation.revision, priority: payload.priority, revisionNote: payload.revisionNote })
     if (payload.priority) await c.query("INSERT INTO weekly_briefs(brand_id,week_start,objective,updated_by) VALUES($1,$2::date,$3,$4) ON CONFLICT(brand_id,week_start) DO UPDATE SET objective=excluded.objective,updated_by=excluded.updated_by,updated_at=now()", [input.brandId, input.week, payload.priority, ownerId])
     else await c.query("DELETE FROM weekly_briefs WHERE brand_id=$1 AND week_start=$2::date", [input.brandId, input.week])
     return fromRow(created.rows[0]!)
   }, client)
+}
+
+/** Restores the prior version only while the contextual candidate has no meaningful descendants. */
+export async function revertContextualPlanningRevision(c: PoolClient, ownerId: string, brandId: string, week: string, candidateId: string, previousId: string) {
+  await lockBrandWeek(c, ownerId, brandId, week)
+  const rows = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date AND r.id=ANY($3::uuid[]) ORDER BY r.version FOR UPDATE`, [brandId, week, [previousId, candidateId]])
+  const previous = rows.rows.find(row => row.id === previousId)
+  const candidate = rows.rows.find(row => row.id === candidateId)
+  const latest = (await c.query<{ id: string }>("SELECT id FROM weekly_planning_runs WHERE brand_id=$1 AND week_start=$2::date ORDER BY version DESC LIMIT 1", [brandId, week])).rows[0]
+  if (!previous || !candidate || candidate.owner_user_id !== ownerId || latest?.id !== candidateId) throw new PlanningConflict("გეგმის შემდეგ უფრო ახალი ვერსია შეიქმნა. დაბრუნება მას გადაფარავდა.")
+  if (["approved", "running"].includes(candidate.status)) throw new PlanningConflict("ახალი გეგმა უკვე დამტკიცდა ან მუშავდება; პირდაპირი დაბრუნება უსაფრთხო აღარ არის.")
+  const downstream = await c.query<{ payload: PostsPayload; approved_at: Date | null }>("SELECT payload,approved_at FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [candidateId])
+  const batch = downstream.rows[0]
+  const hasGeneratedContent = !!batch && (!!batch.approved_at || !!batch.payload.outline?.posts.length || Object.keys(batch.payload.copies ?? {}).length > 0)
+  const assets = await c.query("SELECT 1 FROM weekly_post_assets WHERE run_id=$1 LIMIT 1", [candidateId])
+  const publication = await c.query("SELECT 1 FROM social_publication_inputs WHERE source_weekly_run_id=$1 LIMIT 1", [candidateId])
+  if (hasGeneratedContent || assets.rowCount || publication.rowCount) throw new PlanningConflict("ახალი ვერსიიდან უკვე შეიქმნა კონტენტი ან გამოქვეყნების სამუშაო. პირდაპირი დაბრუნება ამ შედეგს გადაფარავდა.")
+  const eventRow = (await c.query<{ payload: { previousPlan?: PlanningPayload["plan"] } }>("SELECT payload FROM weekly_planning_events WHERE run_id=$1 AND kind='changes-requested' AND payload->>'replacementRunId'=$2 ORDER BY created_at DESC LIMIT 1", [previousId, candidateId])).rows[0]
+  const restoredPayload = structuredClone(previous.payload)
+  if (eventRow?.payload.previousPlan) restoredPayload.plan = eventRow.payload.previousPlan
+  await c.query("UPDATE weekly_planning_runs SET status='superseded',lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=$1", [candidateId])
+  await c.query("UPDATE weekly_post_batches SET status='failed',lease_token=NULL,lease_until=NULL,error='კონტექსტური ცვლილება დაბრუნებულია.',updated_at=now() WHERE run_id=$1", [candidateId])
+  const restoredStatus = previous.status === "approved" ? "approved" : "ready"
+  await c.query("UPDATE weekly_planning_runs SET status=$2,payload=$3::jsonb,updated_at=now() WHERE id=$1", [previousId, restoredStatus, JSON.stringify(restoredPayload)])
+  await event(c, candidateId, "contextual-reverted", { restoredRunId: previousId })
 }
 
 /** A cadence edit versions the plan but never re-runs brand discovery or strategy. */

@@ -1,6 +1,7 @@
 import { compileBrandVoice } from "../brand-voice"
 import type { PlanningRun } from "./model"
 import type { PostOutline } from "./posts"
+import { ruleApplies } from "../../../core/domain/operating-policy"
 
 /** The approved post job is the relevance boundary; global goals are upstream planning input. */
 export function compilePostGenerationContext(run: PlanningRun, post: PostOutline) {
@@ -33,6 +34,7 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
     voice: compileBrandVoice(u.voice, basis.sources),
     // These are boundaries/defaults, never additional communication jobs.
     communication: { toneRange: envelope.toneRange, terminologyRules: envelope.terminologyRules, ctaStyle: envelope.ctaStyle, salesPressure: envelope.salesPressure, inclusivityRules: envelope.inclusivityRules },
+    operatingRules: (p.operatingRules ?? []).filter(rule => post.channels.some(channel => ruleApplies(rule, { channel: channel.channel }))).map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: rule.scope })),
     constraints: [...u.constraints, ...envelope.avoid, ...post.brief.mustNotSay],
     // Discovery interpretations and style excerpts are not public-claim authorization.
     publicFacts: [], eligibleProof: [],
