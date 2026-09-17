@@ -75,13 +75,16 @@ test("HTTP foundation authenticates, bounds resources, rejects redirects, and ne
   const config = readZernioEnvironment({ NODE_ENV: "test", ZERNIO_API_KEY: "secret-api-key", ZERNIO_API_BASE_URL: `http://127.0.0.1:${address.port}/api/v1` })
   const client = createZernioClient(config)
 
-  await t.test("GET/POST use bearer auth and correctly encoded JSON/query", async () => {
+  await t.test("GET/POST/DELETE use bearer auth and correctly encoded JSON/query", async () => {
     assert.deepEqual(await client.request({ method: "GET", path: "profiles", query: { search: "A & B" } }), { status: 200, data: { profiles: [{ id: "profile" }] } })
     assert.equal(calls.at(-1)?.url, "/api/v1/profiles?search=A+%26+B")
     assert.equal(calls.at(-1)?.authorization, "Bearer secret-api-key")
     await client.request({ method: "POST", path: "profiles", body: { name: "Test" } })
     assert.equal(calls.at(-1)?.method, "POST")
     assert.equal(calls.at(-1)?.body, '{"name":"Test"}')
+    await client.request({ method: "DELETE", path: "accounts/account-1" })
+    assert.equal(calls.at(-1)?.method, "DELETE")
+    assert.equal(calls.at(-1)?.body, "")
     assert.deepEqual(await client.request({ method: "GET", path: "empty" }), { status: 204, data: null })
     const requestId = "c04d6a5e-f8ae-4d4f-94d7-c945641d3c30"
     await client.request({ method: "GET", path: "profiles", requestId })
@@ -94,6 +97,7 @@ test("HTTP foundation authenticates, bounds resources, rejects redirects, and ne
       await assert.rejects(client.request({ method: "GET", path }), { code: "invalidRequest" })
     }
     await assert.rejects(client.request({ method: "GET", path: "profiles", body: {} }), { code: "invalidRequest" })
+    await assert.rejects(client.request({ method: "DELETE", path: "accounts/account-1", body: {} }), { code: "invalidRequest" })
     await assert.rejects(createZernioClient(config, { maxRequestBytes: 100 }).request({ method: "POST", path: "profiles", body: "x".repeat(200) }), { code: "requestTooLarge" })
     assert.equal(calls.length, count)
   })

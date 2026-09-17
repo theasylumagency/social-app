@@ -45,6 +45,37 @@ export class SocialConnectionService {
     catch (error) { await this.fail(ownerId, prepared.id); throw error }
   }
 
+  /**
+   * Disconnects only the live provider binding. Canonical UNDA accounts and all
+   * historic binding rows remain intact so old posts and analytics stay readable.
+   */
+  async disconnect(ownerId: string, brandId: string, accountId: string) {
+    if (!brandId || brandId.length > 160 || !accountId || accountId.length > 160) throw new ConnectionFlowError("invalidFlow")
+    let diagnostic: { provider: string | null; channel: string | null; accountId: string; stage: string } = {
+      provider: null, channel: null, accountId, stage: "resolve-binding"
+    }
+    try {
+      return await this.store.transaction(ownerId, { brandId }, async (session) => {
+        const resolved = await session.accounts.resolveAccount(session.scope, accountId as SocialPublishingAccountId)
+        if (!resolved) throw new ConnectionFlowError("accountMismatch")
+        const { binding } = resolved
+        diagnostic = { provider: binding.provider, channel: binding.channel, accountId, stage: "provider-disconnect" }
+        if (binding.connectionStatus === "disconnected") return { brandId: session.scope.brandId, outcome: "alreadyDisconnected" as const }
+        await this.providers.resolve(binding.provider).disconnect(binding.providerProfileRef, binding.providerAccountRef)
+        diagnostic = { ...diagnostic, stage: "persist-disconnect" }
+        await session.accounts.disconnectBinding(session.scope, binding.id)
+        return { brandId: session.scope.brandId, outcome: "disconnected" as const }
+      })
+    } catch (error) {
+      console.error("[social-disconnect] failed", {
+        operation: "disconnect", ...diagnostic,
+        code: error instanceof ConnectionFlowError ? error.code : "providerOrStoreFailure",
+        status: error instanceof Error && "status" in error && typeof error.status === "number" ? error.status : null,
+      })
+      throw error
+    }
+  }
+
   private live(intent: ConnectionIntent | null, step: ConnectionIntent["step"]): asserts intent is ConnectionIntent {
     if (!intent) throw new ConnectionFlowError("invalidFlow")
     if (intent.expiresAt.getTime() <= Date.now()) throw new ConnectionFlowError("expired")

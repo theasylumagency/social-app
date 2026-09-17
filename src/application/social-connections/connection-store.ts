@@ -55,6 +55,8 @@ export interface SocialConnectionsStore {
   listBindings(scope: SocialConnectionScope, accountId: SocialPublishingAccountId): Promise<readonly ProviderAccountBinding[]>
   activateBinding(scope: SocialConnectionScope, input: ActivateProviderBindingInput): Promise<ProviderAccountBinding>
   updateBindingHealth(scope: SocialConnectionScope, bindingId: string, health: ProviderBindingHealth): Promise<void>
+  /** Intentionally disables an active binding while retaining all account and binding history. */
+  disconnectBinding(scope: SocialConnectionScope, bindingId: string): Promise<void>
   resolveAccount(scope: SocialConnectionScope, accountId: SocialPublishingAccountId): Promise<{
     readonly account: SocialPublishingAccount
     readonly binding: ProviderAccountBinding

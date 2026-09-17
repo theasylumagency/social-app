@@ -23,7 +23,7 @@ export function fakeZernio() {
   const profiles = new Map<string, string>()
   const state = {
     callback: "", pageId: "page-2", pages: [{ id: "page-1", name: "First Page", access_token: secrets[2] }, { id: "page-2", name: "Chosen Page", access_token: secrets[2] }],
-    failPath: "", transform: (_url: URL, data: Record<string, unknown>): Record<string, unknown> => data,
+    failPath: "", disconnectStatus: 200, transform: (_url: URL, data: Record<string, unknown>): Record<string, unknown> => data,
   }
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input))
@@ -56,6 +56,10 @@ export function fakeZernio() {
       const platform = path.includes("facebook") ? "facebook" : "instagram"
       data = { accountId: `account-${platform}`, platform, status: "healthy", tokenStatus: { valid: true }, permissions: { canPost: true, canFetchAnalytics: true } }
     } else if (path === "accounts/account-facebook/facebook-page") data = { selectedPageId: state.pageId, pages: state.pages }
+    else if (/^accounts\/account-(facebook|instagram)$/u.test(path) && method === "DELETE") {
+      if (state.disconnectStatus === 404) return Response.json({ error: "Not found" }, { status: 404 })
+      data = { message: "Account disconnected successfully" }
+    }
     else throw new Error(`Unexpected fixture endpoint: ${method} ${path}`)
     return Response.json(state.transform(url, data))
   }

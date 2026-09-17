@@ -36,6 +36,12 @@ function failure(error: unknown) {
     ? "დაკავშირების ბევრი მცდელობაა. მოგვიანებით სცადეთ." : "ანგარიშის დაკავშირება ვერ დასრულდა. სცადეთ თავიდან." },
   { status: code === "unavailable" ? 503 : code === "rateLimited" ? 429 : 422, headers: privateHeaders })
 }
+function disconnectFailure(error: unknown) {
+  const code = error instanceof ConnectionFlowError ? error.code : "unavailable"
+  return Response.json({ code, message: code === "accountMismatch" || code === "invalidFlow"
+    ? "ეს სოციალური ანგარიში ვერ მოიძებნა." : "კავშირის გაუქმება ვერ დასრულდა. სცადეთ მოგვიანებით." },
+  { status: code === "unavailable" ? 503 : 422, headers: privateHeaders })
+}
 
 /** Shared request adapter keeps production auth hooks and tests on the same route logic. */
 export function createSocialConnectionHttp(deps: Dependencies) {
@@ -49,6 +55,17 @@ export function createSocialConnectionHttp(deps: Dependencies) {
         if (typeof input.brandId !== "string" || (input.accountId !== undefined && (typeof input.accountId !== "string" || input.accountId.length > 160))) throw new ConnectionFlowError("invalidFlow")
         return Response.json(await deps.service().begin(access.session.user.id, input.brandId, platform, input.accountId as string | undefined ?? null), { headers: privateHeaders })
       } catch (error) { return failure(error) }
+    },
+    async disconnect(request: Request) {
+      const access = await deps.authenticate(request)
+      if ("error" in access) return access.error
+      try {
+        const input = await body(request)
+        if (typeof input.brandId !== "string" || typeof input.accountId !== "string") throw new ConnectionFlowError("invalidFlow")
+        const result = await deps.service().disconnect(access.session.user.id, input.brandId, input.accountId)
+        await deps.rememberBrand(result.brandId)
+        return Response.json({ outcome: result.outcome }, { headers: privateHeaders })
+      } catch (error) { return disconnectFailure(error) }
     },
     async callback(request: Request) {
       const origin = deps.origin()

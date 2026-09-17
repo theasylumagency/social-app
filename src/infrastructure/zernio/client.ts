@@ -11,7 +11,7 @@ export class ZernioClientError extends Error {
 }
 
 export type ZernioRequest = {
-  readonly method: "GET" | "POST"
+  readonly method: "GET" | "POST" | "DELETE"
   /** Relative endpoint without query, leading slash, or traversal segments. */
   readonly path: string
   readonly query?: Readonly<Record<string, string>>
@@ -49,7 +49,7 @@ export function createZernioClient(config: ZernioEnvironment, options: ZernioCli
   return {
     async request(input: ZernioRequest): Promise<{ readonly status: number; readonly data: unknown; readonly retryAfter?: string }> {
       if (!/^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/u.test(input.path)
-        || !["GET", "POST"].includes(input.method) || (input.method === "GET" && input.body !== undefined)) {
+        || !["GET", "POST", "DELETE"].includes(input.method) || (input.method !== "POST" && input.body !== undefined)) {
         throw new ZernioClientError("invalidRequest")
       }
       for (const header of [input.connectToken, input.idempotencyKey, input.requestId]) {

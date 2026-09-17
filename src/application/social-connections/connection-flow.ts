@@ -16,6 +16,8 @@ export interface SocialConnectionProvider {
     { readonly type: "selection"; readonly context: string; readonly pages: readonly PageChoice[] }
     | { readonly type: "connected"; readonly account: VerifiedConnection }>
   selectPage(profileRef: string, context: string, pageId: string): Promise<VerifiedConnection>
+  /** Removes the external account; a confirmed provider absence is safe to treat as disconnected. */
+  disconnect(profileRef: string, providerAccountRef: string): Promise<{ readonly outcome: "disconnected" | "alreadyDisconnected" }>
 }
 export type EncryptedConnectionContext = { readonly ciphertext: Buffer; readonly iv: Buffer; readonly tag: Buffer }
 export interface ConnectionContextCipher {

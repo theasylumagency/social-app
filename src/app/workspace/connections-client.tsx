@@ -10,7 +10,10 @@ import { Icon } from "./icons"
 export function ConnectionsClient({ brandId, accounts, available, intentId, outcome }: {
   brandId: string; accounts: ConnectionAccountView[]; available: boolean; intentId: string; outcome: string
 }) {
+  const router = useRouter()
   const [busy, setBusy] = useState(false)
+  const [disconnectingAccountId, setDisconnectingAccountId] = useState<string | null>(null)
+  const [confirmingAccountId, setConfirmingAccountId] = useState<string | null>(null)
   const [message, setMessage] = useState(outcome === "failed" ? "ანგარიშის დაკავშირება ვერ დასრულდა. სცადეთ თავიდან." : outcome === "connected" ? "ანგარიში დაკავშირებულია." : "")
   async function begin(channel: "facebook" | "instagram", accountId?: string) {
     setBusy(true); setMessage("")
@@ -22,23 +25,41 @@ export function ConnectionsClient({ brandId, accounts, available, intentId, outc
       window.location.assign(result.authUrl)
     } catch { setMessage("დაკავშირება ვერ დაიწყო. მოგვიანებით სცადეთ."); setBusy(false) }
   }
+  async function disconnect(accountId: string) {
+    if (busy || disconnectingAccountId) return
+    setDisconnectingAccountId(accountId); setMessage("")
+    try {
+      const response = await fetch("/api/social/connections/disconnect", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ brandId, accountId }) })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.message)
+      setMessage("კავშირი გაუქმებულია. არსებული ისტორია შენარჩუნებულია.")
+      setConfirmingAccountId(null)
+      router.refresh()
+    } catch { setMessage("კავშირის გაუქმება ვერ დასრულდა. სცადეთ მოგვიანებით."); setConfirmingAccountId(null) }
+    finally { setDisconnectingAccountId(null) }
+  }
   return <section className="ws-card ws-connection-card">
     <div className="ws-card-heading"><h2>სოციალური ანგარიშები</h2><span>{accounts.filter((a) => a.connected).length} დაკავშირებული</span></div>
     {message ? <p role="status" className="ws-connection-note">{message}</p> : null}
     {(["facebook", "instagram"] as const).map((channel) => <div key={channel}>
       <div className="ws-channel-row"><span className={`ws-channel-icon ws-${channel}`}><Icon name={channel} /></span>
         <div><h3>{channel === "facebook" ? "Facebook" : "Instagram"}</h3><p>{channel === "facebook" ? "აირჩიეთ თქვენი Facebook გვერდი" : "დააკავშირეთ პროფესიული Instagram ანგარიში"}</p></div>
-        <button type="button" className="ws-button ws-button-outline" disabled={!available || busy} onClick={() => begin(channel)}>დაკავშირება</button>
+        <button type="button" className="ws-button ws-button-outline" disabled={!available || busy || disconnectingAccountId !== null || confirmingAccountId !== null} onClick={() => begin(channel)}>დაკავშირება</button>
       </div>
       {accounts.filter((a) => a.channel === channel).map((account) => <div className="ws-channel-row" key={account.id}>
-        <div><h3>{account.name}</h3><p>{account.connected ? "დაკავშირებულია" : "საჭიროა ხელახლა დაკავშირება"}</p>
+        <div><h3>{account.name}</h3><p>{account.connected ? "დაკავშირებულია" : "კავშირი გაუქმებულია"}</p>
           {account.connected ? <small>გამოქვეყნების წვდომა: {account.canPublish ? "არის" : "არ არის"} · შედეგების წვდომა: {account.canFetchAnalytics ? "არის" : "არ არის"}</small> : null}</div>
-        <button type="button" className="ws-button ws-button-outline" disabled={!available || busy} onClick={() => begin(channel, account.id)}>ხელახლა დაკავშირება</button>
+        {account.connected ? <button type="button" className="ws-button ws-button-outline" disabled={!available || busy || disconnectingAccountId !== null || confirmingAccountId !== null} onClick={() => setConfirmingAccountId(account.id)}>კავშირის გაუქმება</button> : null}
       </div>)}
     </div>)}
     {!available ? <p className="ws-connection-note">დაკავშირება ჯერ არ არის გააქტიურებული.</p> : null}
     {intentId ? <FacebookPagePicker key={intentId} intentId={intentId} brandId={brandId} /> : null}
     <p className="ws-connection-note">ანგარიშის დაკავშირება პოსტებს არ აქვეყნებს. გამოქვეყნების ფუნქცია შემდეგ ეტაპზე დაემატება.</p>
+    {confirmingAccountId ? <div className="ws-confirm-backdrop" role="presentation"><section className="ws-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="disconnect-title" aria-describedby="disconnect-description">
+      <h3 id="disconnect-title">გსურთ კავშირის გაუქმება?</h3>
+      <p id="disconnect-description">კავშირის გაუქმების შემდეგ UNDA ვეღარ გამოაქვეყნებს პოსტებს და ვეღარ მიიღებს ახალ მონაცემებს ამ ანგარიშიდან. არსებული ისტორია შენარჩუნდება.</p>
+      <div><button type="button" className="ws-button ws-button-outline" disabled={disconnectingAccountId !== null} onClick={() => setConfirmingAccountId(null)}>გაუქმება</button><button type="button" className="ws-button ws-button-green" disabled={disconnectingAccountId !== null} onClick={() => void disconnect(confirmingAccountId)}>{disconnectingAccountId ? "ითიშება…" : "კავშირის გაუქმება"}</button></div>
+    </section></div> : null}
   </section>
 }
 

@@ -284,6 +284,11 @@
 .ws-result-card dt { font-size:10px; overflow:hidden; color:#76866a; }.ws-result-card dd { margin:7px 0 0; font-size:19px; color:#34533b; }
 .ws-connection-card button:disabled { opacity: .55; cursor: not-allowed; }
 .ws-connection-card .ws-channel-row > div { min-width: 0; overflow-wrap: anywhere; }
+.ws-confirm-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: #13291f85; }
+.ws-confirm-dialog { width: min(480px, 100%); padding: 24px; border: 1px solid #ced9bf; border-radius: 18px; background: #fffefb; color: #304d35; box-shadow: 0 20px 80px #13291f35; }
+.ws-confirm-dialog h3 { margin: 0 0 12px; font-size: 20px; }
+.ws-confirm-dialog p { margin: 0; line-height: 1.7; }
+.ws-confirm-dialog > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
 @media (max-width: 640px) {
   .ws-connection-card .ws-channel-row { flex-wrap: wrap; }
   .ws-connection-card .ws-channel-row button { margin-left: auto; }

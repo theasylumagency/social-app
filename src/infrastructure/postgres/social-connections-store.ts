@@ -153,6 +153,19 @@ export class PostgresSocialConnectionsStore implements SocialConnectionsStore {
     })
   }
 
+  async disconnectBinding(scope: SocialConnectionScope, bindingId: string) {
+    await this.transaction(scope, async (c) => {
+      const binding = (await c.query<ProviderAccountBinding>(`SELECT ${bindingFields} FROM social_provider_account_bindings
+        WHERE id=$1 AND brand_id=$2 AND binding_status='active' FOR UPDATE`, [bindingId, scope.brandId])).rows[0]
+      if (!binding) throw new SocialConnectionConflict("Active provider binding not found")
+      const capabilities = Object.fromEntries(Array.from(new Set(["publish", "analytics", ...Object.keys(binding.capabilities)]), (name) => [name, false]))
+      await c.query(`UPDATE social_provider_account_bindings SET connection_status='disconnected',can_publish=false,
+        can_fetch_analytics=false,capabilities=$3::jsonb,health_checked_at=now(),updated_at=now(),
+        disconnected_at=COALESCE(disconnected_at,now()) WHERE id=$1 AND brand_id=$2 AND binding_status='active'`,
+      [bindingId, scope.brandId, JSON.stringify(capabilities)])
+    })
+  }
+
   async resolveAccount(scope: SocialConnectionScope, accountId: SocialPublishingAccountId) {
     return this.transaction(scope, async (c) => {
       const binding = (await c.query<ProviderAccountBinding>(`SELECT ${bindingFields} FROM social_provider_account_bindings

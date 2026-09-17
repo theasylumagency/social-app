@@ -210,5 +210,21 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
       if (selected.platform !== "facebook") throw new ConnectionFlowError("accountMismatch")
       return verify("facebook", profileRef, ref(selected.accountId), pageId)
     },
+    async disconnect(profileRef, providerAccountRef) {
+      // profileRef is intentionally part of the port: it was resolved from the
+      // owned binding, never supplied by the browser. Zernio's delete contract
+      // itself requires only the provider account ID.
+      if (!profileRef || !/^[A-Za-z0-9_-]+$/u.test(profileRef)) throw new ConnectionFlowError("accountMismatch")
+      try {
+        const response = await client.request({ method: "DELETE", path: `accounts/${ref(providerAccountRef)}`, acceptedStatuses: [404] })
+        if (response.status === 404) return { outcome: "alreadyDisconnected" as const }
+        const data = record(response.data)
+        if (data.message !== "Account disconnected successfully") throw new ConnectionFlowError("providerRejected")
+        return { outcome: "disconnected" as const }
+      } catch (error) {
+        if (error instanceof ZernioClientError && error.status === 404) return { outcome: "alreadyDisconnected" as const }
+        throw error
+      }
+    },
   }
 }

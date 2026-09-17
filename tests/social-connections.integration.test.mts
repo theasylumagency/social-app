@@ -3,6 +3,7 @@ import test from "node:test"
 import { randomUUID } from "node:crypto"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { ConnectionsClient } from "../src/app/workspace/connections-client"
 import { ConnectionFlowError } from "../src/application/social-connections/connection-flow"
 import { readConnectionAccounts } from "../src/application/social-connections/view"
@@ -80,6 +81,69 @@ test("Instagram refetch binds once and reconnect reuses the same stable account"
   assert.equal(f.fake.calls.filter((c) => c.url.pathname.includes("select-page")).length, 0)
 })
 
+test("Facebook and Instagram disconnect through the stored provider binding while preserving UNDA history", async (t) => {
+  const f = await connectionFixture(t)
+  for (const channel of ["facebook", "instagram"] as const) {
+    const flow = await f.begin(channel)
+    if (channel === "facebook") {
+      await f.service.callback("owner", flow.query)
+      await f.service.selectPage("owner", flow.id, "page-2")
+    } else await f.service.callback("owner", flow.query)
+  }
+  const accounts = await f.accounts.listAccounts(f.scope)
+  assert.equal(accounts.length, 2)
+  const facebook = accounts.find((account) => account.channel === "facebook")!
+  const instagram = accounts.find((account) => account.channel === "instagram")!
+  const historyBefore = await f.pool.query("SELECT count(*)::int AS n FROM social_publishing_accounts")
+  const bindingsBefore = await f.pool.query("SELECT count(*)::int AS n FROM social_provider_account_bindings")
+
+  await f.service.disconnect("owner", f.scope.brandId, facebook.id)
+  await f.service.disconnect("owner", f.scope.brandId, instagram.id)
+
+  assert.deepEqual(f.fake.calls.filter((call) => call.method === "DELETE").map((call) => call.url.pathname).sort(), [
+    "/api/v1/accounts/account-facebook", "/api/v1/accounts/account-instagram",
+  ])
+  assert.equal((await f.pool.query("SELECT count(*)::int AS n FROM social_publishing_accounts")).rows[0]!.n, historyBefore.rows[0]!.n)
+  assert.equal((await f.pool.query("SELECT count(*)::int AS n FROM social_provider_account_bindings")).rows[0]!.n, bindingsBefore.rows[0]!.n)
+  for (const account of [facebook, instagram]) {
+    const [binding] = await f.accounts.listBindings(f.scope, account.id)
+    assert.equal(binding!.connectionStatus, "disconnected")
+    assert.equal(binding!.canPublish, false)
+    assert.equal(binding!.canFetchAnalytics, false)
+    assert.deepEqual(binding!.capabilities, { publish: false, analytics: false })
+  }
+  assert.deepEqual(await readConnectionAccounts(f.accounts, f.scope), [
+    { id: facebook.id, channel: "facebook", name: "Connected account", connected: false, canPublish: false, canFetchAnalytics: false },
+    { id: instagram.id, channel: "instagram", name: "Connected account", connected: false, canPublish: false, canFetchAnalytics: false },
+  ])
+  await f.service.disconnect("owner", f.scope.brandId, facebook.id)
+  assert.equal(f.fake.calls.filter((call) => call.method === "DELETE" && call.url.pathname.endsWith("account-facebook")).length, 1, "a stale second request is safe")
+})
+
+test("disconnect enforces ownership and preserves local state when the provider outcome is unknown", async (t) => {
+  const f = await connectionFixture(t)
+  const flow = await f.begin("instagram")
+  await f.service.callback("owner", flow.query)
+  const [account] = await f.accounts.listAccounts(f.scope)
+  assert.ok(account)
+  const before = await f.accounts.listBindings(f.scope, account.id)
+  await assert.rejects(f.service.disconnect("other", f.scope.brandId, account.id))
+  await assert.rejects(f.service.disconnect("owner", "brand-other", account.id))
+  assert.equal(f.fake.calls.filter((call) => call.method === "DELETE").length, 0)
+  f.fake.state.failPath = "/api/v1/accounts/account-instagram"
+  const diagnostics: unknown[] = []
+  const error = console.error
+  console.error = (...values: unknown[]) => { diagnostics.push(values) }
+  try { await assert.rejects(f.service.disconnect("owner", f.scope.brandId, account.id)) }
+  finally { console.error = error }
+  for (const secret of secrets) assert.ok(!JSON.stringify(diagnostics).includes(secret), "disconnect diagnostics must not expose provider credentials")
+  assert.deepEqual(await f.accounts.listBindings(f.scope, account.id), before)
+  f.fake.state.failPath = ""
+  f.fake.state.disconnectStatus = 404
+  await f.service.disconnect("owner", f.scope.brandId, account.id)
+  assert.equal((await f.accounts.listBindings(f.scope, account.id))[0]!.connectionStatus, "disconnected", "a confirmed provider absence is safe to disconnect locally")
+})
+
 test("owner, brand, hashed state and expiry are enforced before provider requests", async (t) => {
   const f = await connectionFixture(t)
   await assert.rejects(f.service.begin("other", "brand-owner", "facebook"))
@@ -155,6 +219,7 @@ test("HTTP routes enforce the shared auth/origin policy, owner scope and clean p
   for (const requestOrigin of [null, "https://evil.example", "null", "http://127.0.0.1:3000"]) {
     assert.equal((await http.begin(post({ brandId: "brand-owner" }, requestOrigin), "facebook")).status, 403)
     assert.equal((await http.select(post({ intentId: randomUUID(), pageId: "page-1" }, requestOrigin))).status, 403)
+    assert.equal((await http.disconnect(post({ brandId: "brand-owner", accountId: "not-owned" }, requestOrigin))).status, 403)
   }
   current = null
   assert.equal((await http.begin(post({ brandId: "brand-owner" }), "facebook")).status, 401)
@@ -200,6 +265,15 @@ test("HTTP routes enforce the shared auth/origin policy, owner scope and clean p
   const selected = await http.select(post({ intentId: flow.id, pageId: "page-2" }))
   assert.equal(selected.status, 200)
   assert.deepEqual(await selected.json(), { redirect: "/workspace/connections?connection=connected" })
+  const [account] = await f.accounts.listAccounts(f.scope)
+  assert.ok(account)
+  current = { user: { id: "other", emailVerified: true } }
+  assert.equal((await http.disconnect(post({ brandId: "brand-owner", accountId: account.id }))).status, 422)
+  current = { user: { id: "owner", emailVerified: true } }
+  const disconnected = await http.disconnect(post({ brandId: "brand-owner", accountId: account.id }))
+  assert.equal(disconnected.status, 200)
+  assert.deepEqual(await disconnected.json(), { outcome: "disconnected" })
+  assert.equal((await http.disconnect(post({ brandId: "brand-owner", accountId: account.id })).then((response) => response.json())).outcome, "alreadyDisconnected")
   const replay = await http.callback(new Request(`${origin}/callback?${flow.query}`))
   assert.equal(replay.headers.get("location"), `${origin}/workspace/connections?connection=failed`)
   f.fake.state.failPath = "/api/v1/connect/facebook"
@@ -211,13 +285,16 @@ test("HTTP routes enforce the shared auth/origin policy, owner scope and clean p
 })
 
 test("Connections UI renders canonical display data, escaped names and configuration-disabled actions", () => {
-  const html = renderToStaticMarkup(createElement(ConnectionsClient, { brandId: "brand-owner", available: false, intentId: "", outcome: "",
-    accounts: [{ id: "canonical-account", channel: "facebook", name: "<script>unsafe</script>", connected: true, canPublish: false, canFetchAnalytics: true }] }))
+  const html = renderToStaticMarkup(createElement(AppRouterContext.Provider, { value: { refresh() {} } as never }, createElement(ConnectionsClient, { brandId: "brand-owner", available: false, intentId: "", outcome: "",
+    accounts: [{ id: "canonical-account", channel: "facebook", name: "<script>unsafe</script>", connected: true, canPublish: false, canFetchAnalytics: true }] })))
   assert.ok(html.includes("1 დაკავშირებული"))
   assert.ok(html.includes("&lt;script&gt;unsafe&lt;/script&gt;"))
   assert.ok(!html.includes("<script>unsafe</script>"))
   assert.equal((html.match(/disabled=""/gu) ?? []).length, 3)
   assert.ok(!html.includes("providerAccountRef"))
   assert.ok(!html.includes("providerProfileRef"))
+  assert.ok(html.includes("კავშირის გაუქმება"))
+  assert.ok(!html.includes("ხელახლა დაკავშირება"))
+  assert.ok(html.includes("დაკავშირება"), "the normal channel-level connect action remains available")
   assert.ok(html.includes("შემდეგ ეტაპზე"), "connection must not imply publishing is enabled")
 })
