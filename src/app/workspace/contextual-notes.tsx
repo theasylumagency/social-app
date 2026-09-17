@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import type { DashboardSection } from "../../application/dashboard/model"
 import { targetHash, type NoteContext, type NoteEntry, type NoteTarget } from "../../application/contextual-notes/model"
 import { VoiceNoteInput } from "./voice-note-input"
-import type { ChannelOperatingPolicy, OperatingRule } from "../../core/domain/operating-policy"
+import { operatingRuleScopeLabel, type ChannelOperatingPolicy, type OperatingRule } from "../../core/domain/operating-policy"
 
 type Selection = { title: string; target: NoteTarget; postKey: string | null; channel: "facebook" | "instagram" | null; runId: string | null; postVersion: string | null }
 type PostSelectionProps = { postKey: string; channel: "facebook" | "instagram"; runId: string; title: string; postVersion: string }
@@ -117,7 +117,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
         {!text && !selection ? <div className="cn-examples" aria-label="შენიშვნის მაგალითები">{examples[section].map(example => <button key={example} disabled={busy || voiceBusy} type="button" onClick={() => { setText(example); requestId.current = null; inputRef.current?.focus() }}>{example}</button>)}</div> : null}
         {section === "content" && !selection ? <p className="cn-hint">კონკრეტული ტექსტის შესაცვლელად პოსტთან აირჩიეთ „ამ პოსტზე შენიშვნა“.</p> : null}
         <p className="cn-hint">შენიშვნა ამ გვერდის კონტექსტს უკავშირდება. ფართო ცვლილებამდე შედეგს გაჩვენებთ.</p>
-        {(rules.length || channels.some(channel => !channel.active)) ? <details className="cn-policies"><summary>მოქმედი წესები და არხები</summary>{rules.length ? <ul>{rules.map(rule => <li key={rule.id}>{rule.directive} <small>{rule.scope.channel === "all" ? "ყველა არხი" : rule.scope.channel}</small></li>)}</ul> : <p>მუდმივი წესი ჯერ არ არის.</p>}<p>{channels.map(channel => `${channel.channel === "instagram" ? "Instagram" : "Facebook"}: ${channel.active ? "აქტიური" : "შეჩერებული"}`).join(" · ")}</p></details> : null}
+        {(rules.length || channels.some(channel => !channel.active)) ? <details className="cn-policies"><summary>მოქმედი წესები და არხები</summary>{rules.length ? <ul>{rules.map(rule => <li key={rule.id}>{rule.directive} <small>{operatingRuleScopeLabel(rule.scope)}</small></li>)}</ul> : <p>მუდმივი წესი ჯერ არ არის.</p>}<p>{channels.map(channel => `${channel.channel === "instagram" ? "Instagram" : "Facebook"}: ${channel.active ? "აქტიური" : "შეჩერებული"}`).join(" · ")}</p></details> : null}
         {busy ? <p className="cn-working" role="status">ვკითხულობთ შენიშვნას და ამ გვერდის კონტექსტს…</p> : null}
         {error ? <div className="cn-error" role="alert">{error} <button type="button" onClick={() => { setError(""); setReload(n => n + 1) }}>ისტორიის განახლება</button></div> : null}
         <div className="cn-history" aria-live="polite" aria-busy={loading}>

@@ -4,7 +4,9 @@ import { decideNote, interpretChannelPolicy, interpretOperatingRule, targetHash,
 import { validateSchema } from "../src/blueprints/social/brand-discovery/validation"
 import { createTranscriber, speechConfig } from "../src/infrastructure/speech/transcription"
 import { limitedBody } from "../src/app/_server/limited-body"
-import { operatingRuleViolations, ruleScopeOverlaps } from "../src/core/domain/operating-policy"
+import { operatingRuleEnforcement, operatingRuleScope, operatingRuleViolations, ruleApplies, ruleScopeOverlaps, subtractRuleScope, type OperatingRuleDraft } from "../src/core/domain/operating-policy"
+import { validateVariantOperatingRules } from "../src/blueprints/social/weekly-planning/post-context"
+import { POST_EDITORIAL_PROMPT } from "../src/blueprints/social/weekly-planning/post-editorial"
 
 export const noteContext: NoteContext = { brandId: "brand:test", section: "week", week: "2026-09-14", postKey: null, channel: null, runId: null }
 export function interpreted(kind: Statement["kind"], scope: Statement["scope"], action: Interpretation["action"], quote = "მოკლე."): Interpretation {
@@ -23,7 +25,7 @@ test("noisy objectives and objections do not authorize state changes, even if mo
 test("explicit standing rules and channel policy require consequence confirmation", () => {
   const standing = interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან ემოჯი საერთოდ არ გამოიყენოთ.")
   standing.instruction = standing.statements[0]!.quote
-  assert.deepEqual(interpretOperatingRule(standing)?.scope.channel, "all")
+  assert.deepEqual(interpretOperatingRule(standing)?.scope.channels.include, "all")
   assert.equal(decideNote(standing, noteContext).action, "set_operating_rule")
   assert.equal(decideNote(standing, noteContext).mode, "confirm")
   const channel = interpreted("channel_policy", "channel", "set_channel_policy", "Instagram-ს არ ვენდობი. მოდი ამოვიღოთ.")
@@ -52,6 +54,36 @@ test("typed rules have deterministic scope/conflict and validation behavior", ()
   assert.equal(global.effect, "forbid")
   assert.equal(instagram.effect, "allow")
   assert.deepEqual(operatingRuleViolations("მოგესალმებით 😊", [global]), ["Active operating rule forbids emoji"])
+})
+test("channel and content-type scopes intersect, while unknown dimensions never broaden a narrow rule", () => {
+  const rule: OperatingRuleDraft = { kind: "emoji", effect: "allow", parameter: "1", directive: "ერთი ემოჯი შეიძლება.", scope: operatingRuleScope({ channel: "instagram", contentType: "advertising" }) }
+  assert.equal(ruleApplies(rule, { channel: "instagram", contentType: "advertising", campaign: null, communicationElement: "caption" }), true)
+  assert.equal(ruleApplies(rule, { channel: "facebook", contentType: "advertising", campaign: null, communicationElement: "caption" }), false)
+  assert.equal(ruleApplies(rule, { channel: "instagram", contentType: "organic", campaign: null, communicationElement: "caption" }), false)
+  assert.equal(ruleApplies(rule, { channel: "instagram", campaign: null, communicationElement: "caption" }), false)
+  const residual = subtractRuleScope(operatingRuleScope(), operatingRuleScope({ contentType: "advertising" }))[0]!
+  assert.equal(ruleApplies({ ...rule, scope: residual }, { channel: "instagram", campaign: null, communicationElement: "caption" }), false)
+})
+test("communication-element scope validates only the mapped generated field", () => {
+  const rule: OperatingRuleDraft = { kind: "emoji", effect: "forbid", parameter: null, directive: "ქეფშენში ემოჯი არ გამოიყენოთ.", scope: operatingRuleScope({ communicationElement: "caption" }) }
+  const variant = { channel: "instagram" as const, caption: "სუფთა ქეფშენი", script: "ვიდეო 😊", onScreenText: [], frames: [] }
+  assert.deepEqual(validateVariantOperatingRules(variant, [rule]), [])
+  assert.deepEqual(validateVariantOperatingRules({ ...variant, caption: "ქეფშენი 😊" }, [rule]), ["Active operating rule forbids emoji"])
+})
+test("residual scope subtraction also preserves campaign and communication-element remainders", () => {
+  const base: OperatingRuleDraft = { kind: "price", effect: "forbid", parameter: null, directive: "ფასი არ ახსენოთ.", scope: operatingRuleScope() }
+  const elementResidual = subtractRuleScope(base.scope, operatingRuleScope({ communicationElement: "caption" }))[0]!
+  assert.equal(ruleApplies({ ...base, scope: elementResidual }, { channel: "facebook", contentType: "organic", campaign: null, communicationElement: "script" }), true)
+  assert.equal(ruleApplies({ ...base, scope: elementResidual }, { channel: "facebook", contentType: "organic", campaign: null, communicationElement: "caption" }), false)
+  const campaign = { ...base, scope: operatingRuleScope({ campaign: "შემოდგომა" }) }
+  assert.equal(ruleApplies(campaign, { channel: "facebook", contentType: "organic", campaign: "შემოდგომა", communicationElement: "caption" }), true)
+  assert.equal(ruleApplies(campaign, { channel: "facebook", contentType: "organic", campaign: null, communicationElement: "caption" }), false)
+})
+test("Georgian address form follows the semantic editorial path", () => {
+  const rule: OperatingRuleDraft = { kind: "address_form", effect: "require", parameter: "formal", directive: "აუდიტორიას თქვენობით მიმართეთ.", scope: operatingRuleScope() }
+  assert.equal(operatingRuleEnforcement(rule), "semantic")
+  assert.deepEqual(operatingRuleViolations("შენ ნახე შეთავაზება", [rule]), [])
+  assert.match(POST_EDITORIAL_PROMPT, /address_form\/formal[\s\S]*Georgian phrasing/)
 })
 test("generic target hashes are stable across object key order", () => {
   assert.equal(targetHash({ direction: "A", order: 1 }), targetHash({ order: 1, direction: "A" }))

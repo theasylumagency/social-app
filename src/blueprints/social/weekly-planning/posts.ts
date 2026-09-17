@@ -1,6 +1,7 @@
 import type { JsonSchema } from "../brand-discovery/schemas"
 import type { PostEditorialReview } from "./post-editorial"
 import type { SequenceReview } from "./sequence"
+import type { OperatingRule } from "../../../core/domain/operating-policy"
 
 export type PostChannel = "facebook" | "instagram"
 export type PostCadence = Record<PostChannel, number>
@@ -26,6 +27,8 @@ export type PostSchedule = { summary: string; cadenceReason: string; channelReas
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
 export type PostRepairFeedback = { issues: PostsReview["issues"]; instructions: string[] }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  /** Current rules captured whenever an existing batch is directly revised. */
+  operatingRules?: OperatingRule[]
   /** Decision evidence paired with repairDrafts; final review replaces review. */
   repairFeedback?: Record<string, PostRepairFeedback>
   sequenceReview?: SequenceReview

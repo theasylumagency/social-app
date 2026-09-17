@@ -1,6 +1,6 @@
 import type { DashboardSection } from "../dashboard/model"
 import type { JsonSchema } from "../../blueprints/social/brand-discovery/schemas"
-import type { OperatingRuleDraft, SocialChannel } from "../../core/domain/operating-policy"
+import { operatingRuleScope, operatingRuleScopeLabel, type CommunicationElement, type OperatingContentType, type OperatingRuleDraft, type SocialChannel } from "../../core/domain/operating-policy"
 
 export type NoteTarget = { type: "post" | "weekly_objective" | "audience_focus" | "content_direction" | "progress_signal" | "business_summary" | "positioning" | "audience_hypothesis" | "offer" | "communication_rule"; id: string; label: string; version: string; hash: string; data: Record<string, unknown> }
 export type NoteContext = { brandId: string; section: DashboardSection; week: string; postKey: string | null; channel: SocialChannel | null; runId: string | null; postVersion?: string | null; target?: NoteTarget | null }
@@ -29,9 +29,11 @@ export function interpretOperatingRule(value: Interpretation): OperatingRuleDraf
   const statement = value.statements.find(s => s.kind === "standing_rule" && s.actionable)
   if (!statement) return null
   const text = normalized(`${statement.quote} ${statement.meaning} ${value.instruction}`)
-  const channel: OperatingRuleDraft["scope"]["channel"] = /instagram|ინსტაგრამ/u.test(text) ? "instagram" : /facebook|ფეისბუქ/u.test(text) ? "facebook" : "all"
-  const contentType: OperatingRuleDraft["scope"]["contentType"] = /სარეკლამო|რეკლამ/u.test(text) ? "advertising" : "all"
-  const scope = { channel, contentType, campaign: null, communicationElement: "all" as const }
+  const channel: SocialChannel | "all" = /instagram|ინსტაგრამ/u.test(text) ? "instagram" : /facebook|ფეისბუქ/u.test(text) ? "facebook" : "all"
+  const contentType: OperatingContentType | "all" = /სარეკლამო|რეკლამ/u.test(text) ? "advertising" : /ორგანულ/u.test(text) ? "organic" : "all"
+  const communicationElement: CommunicationElement | "all" = /ქეფშენ|caption/u.test(text) ? "caption" : /სცენარ|script/u.test(text) ? "script" : /ეკრან(?:ზე|ის).*ტექსტ|on.?screen/u.test(text) ? "on_screen_text" : /(?:კადრ|სლაიდ).*ტექსტ|frame.?text/u.test(text) ? "frame_text" : "all"
+  const campaign = statement.quote.match(/[„"]([^“”"]+)[“”"]\s*კამპანი/u)?.[1]?.trim() ?? null
+  const scope = operatingRuleScope({ channel, contentType, campaign, communicationElement })
   if (/ემოჯ|emoji/u.test(text)) {
     const allow = /შეიძლება|დაშვებულ|გამოვიყენ/u.test(text) && !/არ გამოიყენ|ნუ გამოიყენ|გარეშე/u.test(text)
     return { kind: "emoji", effect: allow ? "allow" : "forbid", parameter: allow ? "1" : null, directive: allow ? "შესაბამის კონტექსტში მაქსიმუმ ერთი ემოჯი შეიძლება." : "ემოჯი არ გამოიყენოთ.", scope }
@@ -60,7 +62,7 @@ export function decideNote(value: Interpretation, context: NoteContext): Decisio
   if (value.ambiguous || value.clarification) return clarify(value.clarification || "კონკრეტულად რის შეცვლას გულისხმობთ ამ გვერდზე?")
   if (!actionable.length || actionable.every(s => inert.has(s.kind))) return { mode: "explain", action: "none", message: value.response }
   const rule = interpretOperatingRule(value)
-  if (actionable.some(s => s.kind === "standing_rule")) return rule ? { mode: "confirm", action: "set_operating_rule", message: `გავიგე ასე: ${rule.directive} მოქმედების არე: ${rule.scope.channel === "all" ? "ამ ბრენდის ყველა სოციალურ არხზე" : rule.scope.channel === "instagram" ? "Instagram-ზე" : "Facebook-ზე"}${rule.scope.contentType === "advertising" ? ", მხოლოდ სარეკლამო კონტენტში" : ""}. წესი იმოქმედებს მომავალ კონტენტზე; უკვე არსებული პოსტები არ შეიცვლება. სწორია?` } : clarify("რომელი ზუსტი წესი უნდა იმოქმედოს მომავალ კონტენტზე და რომელ არხზე?")
+  if (actionable.some(s => s.kind === "standing_rule")) return rule ? { mode: "confirm", action: "set_operating_rule", message: `გავიგე ასე: ${rule.directive} მოქმედების არე: ${operatingRuleScopeLabel(rule.scope)}. წესი იმოქმედებს მომავალ შესაბამის კონტენტზე; უკვე არსებული პოსტები არ შეიცვლება. სწორია?` } : clarify("რომელი ზუსტი წესი უნდა იმოქმედოს მომავალ კონტენტზე და რომელ არხზე?")
   const channelPolicy = interpretChannelPolicy(value)
   if (actionable.some(s => s.kind === "channel_policy")) return channelPolicy ? { mode: "confirm", action: "set_channel_policy", message: `${channelPolicy.channel === "instagram" ? "Instagram" : "Facebook"} ${channelPolicy.active ? "კვლავ გახდება აქტიური სამუშაო არხი და მომავალ გეგმებში დაბრუნდება" : "აღარ იქნება აქტიური სამუშაო არხი; ახალი კონტენტი აღარ დაიგეგმება და მიმდინარე გეგმა დარჩენილ არხებზე თავიდან შეფასდება"}. კავშირი, ისტორია და ანალიტიკა შენარჩუნდება. დასადასტურებლად გაჩვენებთ დაგეგმილ მასალებზეც ზუსტ გავლენას.` } : { mode: "explain", action: "none", message: `${value.response}\nანგარიშის კავშირის წაშლა ცალკე მოქმედებაა და ამ შენიშვნიდან არ სრულდება.` }
   if (actionable.some(s => s.kind === "strategy" || s.scope === "strategy")) return { mode: "explain", action: "none", message: value.response }

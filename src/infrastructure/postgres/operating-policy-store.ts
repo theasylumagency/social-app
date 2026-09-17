@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto"
 import type { Pool, PoolClient } from "pg"
 import type { ChannelOperatingPolicy, OperatingRule, OperatingRuleDraft, SocialChannel } from "../../core/domain/operating-policy"
-import { ruleScopeOverlaps, ruleSubject, SOCIAL_CHANNELS } from "../../core/domain/operating-policy"
+import { normalizeRuleScope, ruleScopeOverlaps, ruleSubject, SOCIAL_CHANNELS, subtractRuleScope } from "../../core/domain/operating-policy"
 
-type RuleRow = { id: string; revision: number; status: OperatingRule["status"]; kind: OperatingRule["kind"]; effect: OperatingRule["effect"]; parameter: string | null; directive: string; scope: OperatingRule["scope"]; source_note_id: string; superseded_by: string | null; activated_at: Date; deactivated_at: Date | null }
-const fromRule = (r: RuleRow): OperatingRule => ({ id: r.id, revision: r.revision, status: r.status, kind: r.kind, effect: r.effect, parameter: r.parameter, directive: r.directive, scope: r.scope, sourceNoteId: r.source_note_id, supersededBy: r.superseded_by, activatedAt: r.activated_at.toISOString(), deactivatedAt: r.deactivated_at?.toISOString() ?? null })
+type RuleRow = { id: string; revision: number; status: OperatingRule["status"]; kind: OperatingRule["kind"]; effect: OperatingRule["effect"]; parameter: string | null; directive: string; scope: unknown; source_note_id: string; superseded_by: string | null; activated_at: Date; deactivated_at: Date | null }
+const fromRule = (r: RuleRow): OperatingRule => ({ id: r.id, revision: r.revision, status: r.status, kind: r.kind, effect: r.effect, parameter: r.parameter, directive: r.directive, scope: normalizeRuleScope(r.scope), sourceNoteId: r.source_note_id, supersededBy: r.superseded_by, activatedAt: r.activated_at.toISOString(), deactivatedAt: r.deactivated_at?.toISOString() ?? null })
 
 export async function listOperatingRules(db: Pool | PoolClient, ownerId: string, brandId: string, activeOnly = true) {
   const rows = await db.query<RuleRow>(`SELECT r.* FROM brand_operating_rules r JOIN brands b ON b.id=r.brand_id JOIN workspaces w ON w.id=b.workspace_id
@@ -14,22 +14,24 @@ export async function listOperatingRules(db: Pool | PoolClient, ownerId: string,
 
 export async function activateOperatingRule(c: PoolClient, input: { ownerId: string; brandId: string; noteId: string; rule: OperatingRuleDraft }) {
   await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`operating-rules:${input.brandId}`])
+  const rule = { ...input.rule, scope: normalizeRuleScope(input.rule.scope) }
   const existing = await listOperatingRules(c, input.ownerId, input.brandId)
-  const conflicts = existing.filter(old => ruleSubject(old) === ruleSubject(input.rule) && ruleScopeOverlaps(old.scope, input.rule.scope) && old.effect !== input.rule.effect)
-  const duplicate = existing.find(old => ruleSubject(old) === ruleSubject(input.rule) && old.effect === input.rule.effect && JSON.stringify(old.scope) === JSON.stringify(input.rule.scope))
+  const conflicts = existing.filter(old => ruleSubject(old) === ruleSubject(rule) && ruleScopeOverlaps(old.scope, rule.scope) && old.effect !== rule.effect)
+  const duplicate = existing.find(old => ruleSubject(old) === ruleSubject(rule) && old.effect === rule.effect && JSON.stringify(old.scope) === JSON.stringify(rule.scope))
   if (duplicate) return { rule: duplicate, superseded: [] as OperatingRule[], created: false }
   const revision = Number((await c.query<{ n: number }>("SELECT coalesce(max(revision),0)+1 AS n FROM brand_operating_rules WHERE brand_id=$1", [input.brandId])).rows[0]!.n)
   const id = randomUUID()
   const row = (await c.query<RuleRow>(`INSERT INTO brand_operating_rules(id,owner_user_id,brand_id,revision,status,kind,effect,parameter,directive,scope,source_note_id)
-    VALUES($1,$2,$3,$4,'active',$5,$6,$7,$8,$9::jsonb,$10) RETURNING *`, [id, input.ownerId, input.brandId, revision, input.rule.kind, input.rule.effect, input.rule.parameter, input.rule.directive, JSON.stringify(input.rule.scope), input.noteId])).rows[0]!
+    VALUES($1,$2,$3,$4,'active',$5,$6,$7,$8,$9::jsonb,$10) RETURNING *`, [id, input.ownerId, input.brandId, revision, rule.kind, rule.effect, rule.parameter, rule.directive, JSON.stringify(rule.scope), input.noteId])).rows[0]!
   if (conflicts.length) await c.query("UPDATE brand_operating_rules SET status='superseded',superseded_by=$2,deactivated_at=now() WHERE id=ANY($1::uuid[]) AND status='active'", [conflicts.map(r => r.id), id])
-  // A channel-specific exception narrows a global rule; preserve the rule on the other channel.
+  // Preserve every representable part of a broader rule outside the incoming exception.
   let residualRevision = revision
-  for (const old of conflicts.filter(rule => rule.scope.channel === "all" && input.rule.scope.channel !== "all")) {
-    const residualChannel = input.rule.scope.channel === "instagram" ? "facebook" : "instagram"
-    residualRevision++
-    await c.query(`INSERT INTO brand_operating_rules(id,owner_user_id,brand_id,revision,status,kind,effect,parameter,directive,scope,source_note_id,superseded_by)
-      VALUES($1,$2,$3,$4,'active',$5,$6,$7,$8,$9::jsonb,$10,$11)`, [randomUUID(), input.ownerId, input.brandId, residualRevision, old.kind, old.effect, old.parameter, old.directive, JSON.stringify({ ...old.scope, channel: residualChannel }), input.noteId, id])
+  for (const old of conflicts) {
+    for (const residual of subtractRuleScope(old.scope, rule.scope)) {
+      residualRevision++
+      await c.query(`INSERT INTO brand_operating_rules(id,owner_user_id,brand_id,revision,status,kind,effect,parameter,directive,scope,source_note_id,superseded_by)
+        VALUES($1,$2,$3,$4,'active',$5,$6,$7,$8,$9::jsonb,$10,$11)`, [randomUUID(), input.ownerId, input.brandId, residualRevision, old.kind, old.effect, old.parameter, old.directive, JSON.stringify(residual), input.noteId, id])
+    }
   }
   return { rule: fromRule(row), superseded: conflicts, created: true }
 }

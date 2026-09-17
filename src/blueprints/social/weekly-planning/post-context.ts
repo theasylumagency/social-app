@@ -1,7 +1,26 @@
 import { compileBrandVoice } from "../brand-voice"
 import type { PlanningRun } from "./model"
-import type { PostOutline } from "./posts"
-import { ruleApplies } from "../../../core/domain/operating-policy"
+import type { PostOutline, PostVariant } from "./posts"
+import { COMMUNICATION_ELEMENTS, normalizeRuleScope, operatingRuleEnforcement, operatingRuleViolations, ruleApplies, type OperatingRuleDraft } from "../../../core/domain/operating-policy"
+
+// The current weekly-post contract is organic and has no campaign identity. Campaign-scoped
+// and advertising-scoped rules therefore stay out until a future workflow supplies those fields.
+const organicContext = { contentType: "organic" as const, campaign: null }
+
+export function applicablePostOperatingRules(rules: readonly OperatingRuleDraft[], channels: readonly { channel: "facebook" | "instagram" }[]) {
+  return rules.filter(rule => channels.some(({ channel }) => COMMUNICATION_ELEMENTS.some(communicationElement => ruleApplies(rule, { channel, ...organicContext, communicationElement }))))
+}
+
+/** Generated fields are mapped explicitly: caption, script, on-screen text, and frame text. */
+export function validateVariantOperatingRules(variant: PostVariant, rules: readonly OperatingRuleDraft[]) {
+  const fields = [
+    ["caption", variant.caption],
+    ["script", variant.script],
+    ["on_screen_text", variant.onScreenText.join("\n")],
+    ["frame_text", variant.frames.flatMap(frame => [frame.heading, frame.body]).join("\n")],
+  ] as const
+  return fields.flatMap(([communicationElement, text]) => operatingRuleViolations(text, rules.filter(rule => ruleApplies(rule, { channel: variant.channel, ...organicContext, communicationElement }))))
+}
 
 /** The approved post job is the relevance boundary; global goals are upstream planning input. */
 export function compilePostGenerationContext(run: PlanningRun, post: PostOutline) {
@@ -34,7 +53,7 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
     voice: compileBrandVoice(u.voice, basis.sources),
     // These are boundaries/defaults, never additional communication jobs.
     communication: { toneRange: envelope.toneRange, terminologyRules: envelope.terminologyRules, ctaStyle: envelope.ctaStyle, salesPressure: envelope.salesPressure, inclusivityRules: envelope.inclusivityRules },
-    operatingRules: (p.operatingRules ?? []).filter(rule => post.channels.some(channel => ruleApplies(rule, { channel: channel.channel }))).map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: rule.scope })),
+    operatingRules: applicablePostOperatingRules(p.operatingRules ?? [], post.channels).map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: normalizeRuleScope(rule.scope), enforcement: operatingRuleEnforcement(rule) })),
     constraints: [...u.constraints, ...envelope.avoid, ...post.brief.mustNotSay],
     // Discovery interpretations and style excerpts are not public-claim authorization.
     publicFacts: [], eligibleProof: [],
@@ -42,6 +61,6 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
 }
 
 export function compilePostEditorialContext(run: PlanningRun, post: PostOutline) {
-  const { task, internalGuidance, voice, communication } = compilePostGenerationContext(run, post)
-  return { task, voice, communication, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
+  const { task, internalGuidance, voice, communication, operatingRules } = compilePostGenerationContext(run, post)
+  return { task, voice, communication, operatingRules, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
 }

@@ -31,14 +31,20 @@ test("notes persist with tenant isolation, idempotent execution, review, conflic
   await finishPlanningStep(pool, claim.run, claim.token, ready.payload, "ready")
   const payload = { ...emptyPosts(), outline: scheduleFixture(), copies: { p1: copyFixture(), p2: copyFixture(), p3: copyFixture() }, review: { summary: "შემოწმებულია", issues: [] } }
   await pool.query("UPDATE weekly_post_batches SET status='ready',step='ready',payload=$2::jsonb WHERE run_id=$1", [run.id, JSON.stringify(payload)])
-  const postTargetData = { postKey: "p1", channel: "facebook", title: "პოსტი 1" }
-  const context: NoteContext = { brandId, section: "content", week: currentWeek(), postKey: "p1", channel: "facebook", runId: run.id, postVersion: (await readPlanningView(pool, "owner", brandId, currentWeek())).posts!.updatedAt, target: { type: "post", id: "p1:facebook", label: "პოსტი 1", version: (await readPlanningView(pool, "owner", brandId, currentWeek())).posts!.updatedAt, hash: targetHash(postTargetData), data: postTargetData } }
+  const postTargetData = { postKey: "p1", channel: "facebook", title: payload.outline!.posts[0]!.title }
+  const context: NoteContext = { brandId, section: "content", week: currentWeek(), postKey: "p1", channel: "facebook", runId: run.id, postVersion: (await readPlanningView(pool, "owner", brandId, currentWeek())).posts!.updatedAt, target: { type: "post", id: "p1:facebook", label: payload.outline!.posts[0]!.title, version: (await readPlanningView(pool, "owner", brandId, currentWeek())).posts!.updatedAt, hash: targetHash(postTargetData), data: postTargetData } }
   const interpretation: Interpretation = { statements: [{ quote: "მოკლე.", meaning: "მხოლოდ ამ პოსტის ტექსტის შემოკლება", kind: "draft_correction", scope: "post", actionable: true }], response: "არჩეულ ტექსტს განვიხილავ.", clarification: "", action: "revise_post", instruction: "შეამოკლე მხოლოდ არჩეული პოსტის Facebook-ის ტექსტი.", ambiguous: false }
   const newCopy = copyFixture(); newCopy.variants[0]!.caption = "გამოგვიგზავნეთ დაზიანების ფოტო შეფასებისთვის."
   let calls = 0
   const reason: BrandReasoner = async <T,>(call: { step: string }) => { calls++; return (call.step === "contextual_notes" ? interpretation : newCopy) as T }
   const input = { id: randomUUID(), text: "მოკლე.", source: "text" as const, context }
   await assert.rejects(() => submitNote(pool, "other", input, reason))
+  const forgedData = { ...postTargetData, title: "სერვერისგან განსხვავებული, თვითშეთანხმებული სათაური" }
+  const forgedContext: NoteContext = { ...context, target: { ...context.target!, data: forgedData, hash: targetHash(forgedData) } }
+  const forged = await submitNote(pool, "owner", { ...input, id: randomUUID(), context: forgedContext }, reason)
+  assert.equal(forged.status, "failed")
+  assert.match(forged.message, /არჩეული ობიექტი შეიცვალა/)
+  assert.equal(calls, 0, "canonical stale-target rejection happens before model execution")
   const applied = await submitNote(pool, "owner", input, reason)
   assert.equal(applied.status, "applied", applied.message)
   assert.equal(applied.canUndo, true)
@@ -105,10 +111,19 @@ test("notes persist with tenant isolation, idempotent execution, review, conflic
   const exceptionProposal = await submitNote(pool, "owner", { id: randomUUID(), text: exceptionMeaning.statements[0]!.quote, source: "text", context: weekContext }, async <T,>() => exceptionMeaning as T)
   const exception = await applyNote(pool, "owner", exceptionProposal.id, true)
   const effective = await listOperatingRules(pool, "owner", brandId)
-  assert.deepEqual(effective.map(rule => [rule.scope.channel, rule.effect]), [["instagram", "allow"], ["facebook", "forbid"]], "specific exception narrows the global rule without leaving overlap")
+  assert.deepEqual(effective.filter(rule => rule.effect === "allow")[0]!.scope.channels.include, ["instagram"])
+  assert.deepEqual(effective.filter(rule => rule.effect === "forbid")[0]!.scope.channels.exclude, ["instagram"], "specific exception narrows the global rule without leaving overlap")
   assert.equal((await listOperatingRules(pool, "owner", brandId, false)).length, 3, "superseded source and derived narrowed rule remain in history")
   await resolveNote(pool, "owner", exception.id, "undo")
   assert.equal((await listOperatingRules(pool, "owner", brandId))[0]!.effect, "forbid", "undo restores superseded rule")
+  const advertisingMeaning: Interpretation = { ...ruleMeaning, instruction: "სარეკლამო კონტენტში ერთი ემოჯი შეიძლება გამოვიყენოთ.", statements: [{ quote: "სარეკლამო კონტენტში ერთი ემოჯი შეიძლება გამოვიყენოთ.", meaning: "სარეკლამო კონტენტში ერთი ემოჯის დაშვება", kind: "standing_rule", scope: "ongoing", actionable: true }] }
+  const advertisingProposal = await submitNote(pool, "owner", { id: randomUUID(), text: advertisingMeaning.statements[0]!.quote, source: "text", context: weekContext }, async <T,>() => advertisingMeaning as T)
+  const advertising = await applyNote(pool, "owner", advertisingProposal.id, true)
+  const narrowed = await listOperatingRules(pool, "owner", brandId)
+  assert.deepEqual(narrowed.find(rule => rule.effect === "allow")!.scope.contentTypes.include, ["advertising"])
+  assert.deepEqual(narrowed.find(rule => rule.effect === "forbid")!.scope.contentTypes.exclude, ["advertising"])
+  await resolveNote(pool, "owner", advertising.id, "undo")
+  assert.equal((await listOperatingRules(pool, "owner", brandId))[0]!.scope.contentTypes.include, "all", "undo restores the prior broader content-type rule")
   await resolveNote(pool, "owner", activeRule.id, "undo")
   assert.equal((await listOperatingRules(pool, "owner", brandId)).length, 0)
 

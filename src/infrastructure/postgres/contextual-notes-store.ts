@@ -8,15 +8,15 @@ import { beginWeeklyPlanning, readPlanningView, revertContextualPlanningRevision
 import { readStrategyView } from "./social-strategy-store"
 import { hasSubscription } from "./subscription-store"
 import { POST_COPY_SCHEMA, validatePostCopy, type PostCopy, type PostsPayload } from "../../blueprints/social/weekly-planning/posts"
-import { compilePostGenerationContext } from "../../blueprints/social/weekly-planning/post-context"
-import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
+import { applicablePostOperatingRules, compilePostGenerationContext, validateVariantOperatingRules } from "../../blueprints/social/weekly-planning/post-context"
+import type { PlanningRun, PlanningView } from "../../blueprints/social/weekly-planning/model"
 import type { BrandDossier } from "../../blueprints/social/brand-discovery/model"
 import { PostgresSocialAnalyticsStore } from "./social-analytics-store"
 import { readConnectionAccounts } from "../../application/social-connections/view"
 import { PostgresSocialConnectionsStore } from "./social-connections-store"
 import { readWeekEvidence } from "./social-strategy-store"
 import { activateOperatingRule, listChannelPolicies, listOperatingRules, revertChannelPolicy, revertOperatingRule, setChannelPolicy } from "./operating-policy-store"
-import { operatingRuleViolations, ruleApplies, type OperatingRuleDraft, type SocialChannel } from "../../core/domain/operating-policy"
+import { operatingRuleEnforcement, type OperatingRuleDraft, type SocialChannel } from "../../core/domain/operating-policy"
 
 type Snapshot = {
   // Legacy fields remain readable for notes created before migration 0019.
@@ -32,6 +32,7 @@ type Row = { id: string; owner_user_id: string; brand_id: string; context: NoteC
 const owned = "n.owner_user_id=$1 AND EXISTS(SELECT 1 FROM brands b JOIN workspaces w ON w.id=b.workspace_id WHERE b.id=n.brand_id AND w.owner_user_id=$1)"
 // PostgreSQL jsonb canonicalizes key order; equality must not depend on insertion order.
 const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v, (_key, value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : value) ?? "undefined").digest("hex")
+const requestContextIdentity = (context: NoteContext) => ({ ...context, target: context.target ? { type: context.target.type, id: context.target.id, version: context.target.version } : null })
 const publicNote = (r: Row): NoteEntry => {
   const expired = r.status === "processing" && Date.now() - r.created_at.getTime() > 300_000
   return { id: r.id, text: r.raw_text, source: r.input_source, context: r.context, status: expired ? "failed" : r.status, message: expired ? "დამუშავების დრო ამოიწურა. შენიშვნა შენახულია; ხელახლა სცადეთ." : r.message, createdAt: r.created_at.toISOString(), canUndo: r.status === "applied" && !!r.result?.canUndo, targetUrl: r.result?.targetUrl ?? null, meanings: r.interpretation?.statements.map(s => s.meaning) ?? [] }
@@ -96,13 +97,64 @@ export async function reserveVoiceRequest(pool: Pool, ownerId: string) {
   })
 }
 
+type CanonicalTarget = { version: string; label: string; data: Record<string, unknown> }
+function resolveCanonicalTarget(context: NoteContext, planning: PlanningView, dossier: BrandDossier | null): CanonicalTarget {
+  const target = context.target
+  if (!target) throw Error("არჩეული ობიექტი ვერ მოიძებნა.")
+  if (target.type === "post") {
+    const post = context.postKey ? planning.posts?.payload.outline?.posts[Number(context.postKey.slice(1)) - 1] : null
+    if (!post || !context.postKey || !context.channel || !planning.posts || target.id !== `${context.postKey}:${context.channel}` || !post.channels.some(item => item.channel === context.channel)) throw Error("არჩეული პოსტი შეიცვალა. განაახლეთ გვერდი და ხელახლა აირჩიეთ.")
+    return { version: planning.posts.updatedAt, label: post.title, data: { postKey: context.postKey, channel: context.channel, title: post.title } }
+  }
+  if (["weekly_objective", "audience_focus", "content_direction", "progress_signal"].includes(target.type)) {
+    const run = planning.run, plan = run?.payload.plan
+    if (!run || !plan) throw Error("არჩეული გეგმის ნაწილი აღარ არსებობს. განაახლეთ გვერდი.")
+    if (target.type === "weekly_objective" && target.id === "objective") return { version: run.updatedAt, label: "კვირის მთავარი ამოცანა", data: { objective: plan.objective.objective, rationale: plan.objective.rationale } }
+    if (target.type === "audience_focus") {
+      const primary = plan.audienceFocus.primary
+      if (target.id !== `${primary.source}:${primary.id}`) throw Error("არჩეული აუდიტორიული ფოკუსი შეიცვალა. განაახლეთ გვერდი.")
+      const audience = run.payload.basis.payload.landscape?.entries.find(entry => entry.source === primary.source && entry.audience.id === primary.id)?.audience
+      return { version: run.updatedAt, label: "კვირის აუდიტორიული ფოკუსი", data: { primary, name: audience?.name ?? null, rationale: plan.audienceFocus.rationale } }
+    }
+    if (target.type === "content_direction") {
+      const direction = plan.contentDirections.find(item => item.id === target.id)
+      if (!direction) throw Error("არჩეული კონტენტის მიმართულება შეიცვალა. განაახლეთ გვერდი.")
+      return { version: run.updatedAt, label: `კონტენტის მიმართულება: ${direction.direction}`, data: { direction: direction.direction, purpose: direction.purpose, rationale: direction.rationale, order: direction.order } }
+    }
+    const index = Number(target.id.match(/^signal-(\d+)$/u)?.[1]) - 1
+    const signal = run.payload.review?.progressSignals[index]
+    if (!signal || index < 0) throw Error("არჩეული პროგრესის ნიშანი შეიცვალა. განაახლეთ გვერდი.")
+    return { version: run.updatedAt, label: `პროგრესის ნიშანი ${index + 1}`, data: { signal } }
+  }
+  const payload = dossier?.payload, understanding = payload?.understanding
+  if (!dossier || !payload || !understanding) throw Error("არჩეული ბრენდის ნაწილი აღარ არსებობს. განაახლეთ გვერდი.")
+  const version = `${dossier.sessionId}:${dossier.revision}`
+  if (target.type === "business_summary" && target.id === "business-summary") return { version, label: "ბიზნესის მოკლე აღწერა", data: { summary: understanding.summary } }
+  if (target.type === "positioning" && target.id === "positioning") return { version, label: "პოზიციონირება", data: { positioning: understanding.positioning } }
+  if (target.type === "audience_hypothesis") {
+    const hypothesis = payload.hypotheses.find(item => item.id === target.id)
+    if (hypothesis) return { version, label: `აუდიტორია: ${hypothesis.name}`, data: { hypothesis } }
+  }
+  if (target.type === "offer") {
+    const index = Number(target.id.match(/^offer-(\d+)$/u)?.[1]) - 1
+    const offer = understanding.offers[index]
+    if (offer && index >= 0) return { version, label: `შეთავაზება: ${offer.name}`, data: { name: offer.name, description: offer.description } }
+  }
+  if (target.type === "communication_rule") {
+    const index = Number(target.id.match(/^framing-(\d+)$/u)?.[1]) - 1
+    const rule = payload.envelope?.framingRules[index]
+    if (rule && index >= 0) return { version, label: `საკომუნიკაციო წესი ${index + 1}`, data: { rule, kind: "framing" } }
+  }
+  throw Error("არჩეული ობიექტი შეიცვალა. განაახლეთ გვერდი და მიმდინარე ვერსია ხელახლა აირჩიეთ.")
+}
+
 export async function submitNote(pool: Pool, ownerId: string, input: { id: string; text: string; source: NoteEntry["source"]; context: NoteContext }, injectedReasoner?: BrandReasoner): Promise<NoteEntry> {
   const reserved = await transaction(pool, async c => {
     await requireNoteBrand(c, ownerId, input.context.brandId)
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`contextual-note:${ownerId}`])
     const existing = (await c.query<Row>(`SELECT n.* FROM contextual_notes n WHERE ${owned} AND n.id=$2 FOR UPDATE`, [ownerId, input.id])).rows[0]
     if (existing) {
-      if (existing.raw_text !== input.text || hash(existing.context) !== hash(input.context)) throw Error("ეს შენიშვნა უკვე სხვა ტექსტით შეინახა. გაგზავნეთ ახალი შენიშვნა.")
+      if (existing.raw_text !== input.text || hash(requestContextIdentity(existing.context)) !== hash(requestContextIdentity(input.context))) throw Error("ეს შენიშვნა უკვე სხვა ტექსტით შეინახა. გაგზავნეთ ახალი შენიშვნა.")
       return { existing }
     }
     const count = await c.query<{ n: number }>("SELECT count(*)::int n FROM contextual_notes WHERE owner_user_id=$1 AND created_at>now()-interval '1 hour'", [ownerId])
@@ -112,7 +164,7 @@ export async function submitNote(pool: Pool, ownerId: string, input: { id: strin
   })
   if (reserved.existing) return publicNote(reserved.existing)
   try {
-    const { context } = input
+    let context = input.context
     const [planning, dossier, strategy, history, screenData, activeRules] = await Promise.all([
       readPlanningView(pool, ownerId, context.brandId, context.week), readBrandDossier(pool, ownerId, context.brandId), readStrategyView(pool, ownerId, context.brandId), listNotes(pool, ownerId, context),
       context.section === "results" ? Promise.all([new PostgresSocialAnalyticsStore(pool).listResults({ ownerId, brandId: context.brandId }), readWeekEvidence(pool, ownerId, context.brandId)]).then(([analytics, evidence]) => ({ analytics, evidence })) : context.section === "connections" || context.section === "overview" ? readConnectionAccounts(new PostgresSocialConnectionsStore(pool), { ownerId, brandId: context.brandId }) : Promise.resolve(null),
@@ -124,12 +176,11 @@ export async function submitNote(pool: Pool, ownerId: string, input: { id: strin
     const copy = context.postKey ? planning.posts?.payload.copies[context.postKey] : null
     if (context.postKey && (!post || !copy || !context.channel || !post.channels.some(c => c.channel === context.channel))) throw Error("არჩეული პოსტის ტექსტი ჯერ არ არის მზად ან შეიცვალა.")
     if (context.target) {
-      if (targetHash(context.target.data) !== context.target.hash) throw Error("არჩეული ობიექტის მონაცემები შეიცვალა. განაახლეთ გვერდი და ხელახლა აირჩიეთ.")
-      if (context.target.type !== "post") {
-        const planTarget = ["weekly_objective", "audience_focus", "content_direction", "progress_signal"].includes(context.target.type)
-        const currentVersion = planTarget ? planning.run?.updatedAt : `${dossier?.sessionId ?? ""}:${dossier?.revision ?? ""}`
-        if (context.target.version !== currentVersion) throw Error("არჩეული ობიექტი შეიცვალა. განაახლეთ გვერდი და მიმდინარე ვერსია ხელახლა აირჩიეთ.")
-      }
+      const canonical = resolveCanonicalTarget(context, planning, dossier)
+      const canonicalHash = targetHash(canonical.data)
+      if (context.target.version !== canonical.version || context.target.hash !== canonicalHash || hash(context.target.data) !== hash(canonical.data)) throw Error("არჩეული ობიექტი შეიცვალა. განაახლეთ გვერდი და მიმდინარე ვერსია ხელახლა აირჩიეთ.")
+      context = { ...context, target: { ...context.target, version: canonical.version, label: canonical.label, hash: canonicalHash, data: canonical.data } }
+      await pool.query("UPDATE contextual_notes SET context=$2::jsonb,updated_at=now() WHERE id=$1 AND status='processing'", [input.id, JSON.stringify(context)])
     }
     const reason = injectedReasoner ?? createBrandReasoner(async run => { await pool.query("INSERT INTO contextual_note_model_runs(id,note_id,payload) VALUES($1,$2,$3::jsonb)", [run.id, input.id, JSON.stringify(run)]) }, { requestTimeoutMs: 40_000, ...(process.env.OPENAI_CONTEXTUAL_NOTES_MODEL ? { model: process.env.OPENAI_CONTEXTUAL_NOTES_MODEL } : {}) })
     const interpretation = await reason<Interpretation>({ step: "contextual_notes", version: "contextual-notes-v1", prompt: INTERPRETER_PROMPT, schema: INTERPRETATION_SCHEMA,
@@ -160,10 +211,11 @@ export async function submitNote(pool: Pool, ownerId: string, input: { id: strin
     if (decision.action === "revise_post") {
       if (!planning.run || planning.stale || planning.posts?.status !== "ready" || planning.posts.approvedAt || planning.run.status !== "ready" || context.week !== currentWeek()) decision = { mode: "explain", action: "none", message: "პირდაპირი შესწორება მხოლოდ მიმდინარე, ჯერ დაუდასტურებელი პოსტისთვის არის შესაძლებელი. დადასტურებული კონტენტისთვის კვირის გეგმის ახალი ვერსია მოამზადეთ. შენიშვნა შენახულია." }
       else {
+        const postRules = applicablePostOperatingRules(activeRules, post!.channels)
         const revised = await reason<PostCopy>({ step: "contextual_post_revision", version: "contextual-post-v1", schema: POST_COPY_SCHEMA,
-          prompt: "Revise ONLY the selected channel of this draft according to the current user instruction. Preserve the post's objective, factual boundaries, format and every unselected channel exactly. Do not invent facts. Do not store a brand preference. Return full copy including unchanged variants.",
-          input: { instruction: interpretation.instruction, channel: context.channel, current: copy, context: { ...compilePostGenerationContext(planning.run, post!), operatingRules: activeRules.filter(rule => ruleApplies(rule, { channel: context.channel! })).map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: rule.scope })) } },
-          validate: v => [...validatePostCopy(v as PostCopy, post!), ...(v as PostCopy).variants.filter(variant => variant.channel === context.channel).flatMap(variant => operatingRuleViolations([variant.caption, variant.script, ...variant.onScreenText, ...variant.frames.flatMap(frame => [frame.heading, frame.body])].join("\n"), activeRules.filter(rule => ruleApplies(rule, { channel: variant.channel })))), ...((v as PostCopy).variants.filter(p => p.channel !== context.channel).some(p => hash(p) !== hash(copy!.variants.find(old => old.channel === p.channel))) ? ["Unselected channel must remain byte-for-byte unchanged"] : [])],
+          prompt: "Revise ONLY the selected channel of this draft according to the current user instruction. Preserve the post's objective, factual boundaries, format and every unselected channel exactly. Obey every context.operatingRules entry only in its exact scope and communication element; address_form requires semantic Georgian phrasing judgment. Do not invent facts. Do not store a brand preference. Return full copy including unchanged variants.",
+          input: { instruction: interpretation.instruction, channel: context.channel, current: copy, context: { ...compilePostGenerationContext(planning.run, post!), operatingRules: postRules.map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: rule.scope, enforcement: operatingRuleEnforcement(rule) })) } },
+          validate: v => [...validatePostCopy(v as PostCopy, post!), ...(v as PostCopy).variants.filter(variant => variant.channel === context.channel).flatMap(variant => validateVariantOperatingRules(variant, activeRules)), ...((v as PostCopy).variants.filter(p => p.channel !== context.channel).some(p => hash(p) !== hash(copy!.variants.find(old => old.channel === p.channel))) ? ["Unselected channel must remain byte-for-byte unchanged"] : [])],
         })
         snapshot = { post: { runId: planning.run.id, postKey: context.postKey!, channel: context.channel!, batchUpdatedAt: planning.posts!.updatedAt, before: copy!, after: revised } }
       }
@@ -206,6 +258,7 @@ async function lockCurrentPost(c: PoolClient, note: Row) {
 async function writePostRevision(c: PoolClient, note: Row, payload: PostsPayload, copy: PostCopy, kind: string) {
   const postKey = note.context.postKey!
   payload.copies[postKey] = copy
+  payload.operatingRules = await listOperatingRules(c, note.owner_user_id, note.brand_id)
   // Reuse the existing quality review worker; edited content cannot inherit approval.
   payload.review = null
   const runId = note.snapshot!.post?.runId ?? note.snapshot!.run!.id
