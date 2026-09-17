@@ -45,10 +45,12 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
     if (typeof account.profileUrl === "string") {
       try { const url = new URL(account.profileUrl); if (url.protocol === "https:" && !url.username && !url.password) profileUrl = url.href } catch { /* Optional display metadata. */ }
     }
-    return { channel, providerAccountRef: accountRef, nativeAccountRef, username: typeof account.username === "string" ? account.username.slice(0, 200) : null,
+    return {
+      channel, providerAccountRef: accountRef, nativeAccountRef, username: typeof account.username === "string" ? account.username.slice(0, 200) : null,
       displayName: typeof account.displayName === "string" ? account.displayName.slice(0, 200) : null, profileUrl,
       connectionStatus: "connected", canPublish: permissions.canPost, canFetchAnalytics: permissions.canFetchAnalytics,
-      capabilities: { publish: permissions.canPost, analytics: permissions.canFetchAnalytics } }
+      capabilities: { publish: permissions.canPost, analytics: permissions.canFetchAnalytics }
+    }
   }
   return {
     async ensureProfile(brandId) {
@@ -74,8 +76,12 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
       }
     },
     async connectUrl(channel, profileRef, callbackUrl) {
-      const data = await request({ method: "GET", path: `connect/${channel}`, query: { profileId: profileRef, redirect_url: callbackUrl,
-        ...(channel === "facebook" ? { headless: "true" } : { loginMethod: "instagram_login" }) } })
+      const data = await request({
+        method: "GET", path: `connect/${channel}`, query: {
+          profileId: profileRef, redirect_url: callbackUrl,
+          ...(channel === "facebook" ? { headless: "true" } : { loginMethod: "instagram_login" })
+        }
+      })
       let url: URL
       try { url = new URL(text(data.authUrl)) } catch { throw new ConnectionFlowError("providerRejected") }
       if (url.protocol !== "https:" || url.username || url.password
@@ -91,8 +97,18 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
       }
       if (query.get("platform") !== "facebook" || query.get("step") !== "select_page") throw new ConnectionFlowError("accountMismatch")
       let userProfile: Record<string, unknown>
-      // URLSearchParams already decodes the callback once. Do not double-decode.
-      try { userProfile = record(JSON.parse(text(query.get("userProfile")))) } catch { throw new ConnectionFlowError("providerRejected") }
+
+      const rawUserProfile = text(query.get("userProfile"))
+
+      try {
+        userProfile = record(JSON.parse(rawUserProfile))
+      } catch {
+        try {
+          userProfile = record(JSON.parse(decodeURIComponent(rawUserProfile)))
+        } catch {
+          throw new ConnectionFlowError("providerRejected")
+        }
+      }
       ref(userProfile.id)
       const context: FacebookContext = { userProfile, tempToken: text(query.get("tempToken")), connectToken: text(query.get("connect_token")) }
       const data = await request({ method: "GET", path: "connect/facebook/select-page", query: { profileId: profileRef, tempToken: context.tempToken }, connectToken: context.connectToken })
@@ -103,8 +119,10 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
     },
     async selectPage(profileRef, sealedContext, pageId) {
       const context = record(JSON.parse(sealedContext))
-      const data = await request({ method: "POST", path: "connect/facebook/select-page", connectToken: text(context.connectToken),
-        body: { profileId: profileRef, pageId, tempToken: text(context.tempToken), userProfile: record(context.userProfile), redirect_url: finalRedirectUrl } })
+      const data = await request({
+        method: "POST", path: "connect/facebook/select-page", connectToken: text(context.connectToken),
+        body: { profileId: profileRef, pageId, tempToken: text(context.tempToken), userProfile: record(context.userProfile), redirect_url: finalRedirectUrl }
+      })
       const selected = record(data.account)
       if (selected.platform !== "facebook") throw new ConnectionFlowError("accountMismatch")
       return verify("facebook", profileRef, ref(selected.accountId), pageId)
