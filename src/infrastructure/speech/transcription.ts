@@ -15,12 +15,22 @@ export function speechConfig(env: Environment = process.env): SpeechConfig {
   return { provider, model, apiKey, endpoint }
 }
 export const MAX_AUDIO_BYTES = 8 * 1024 * 1024
+
 export const AUDIO_TYPES = new Set(["audio/webm", "video/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg"])
 export function createTranscriber(config: SpeechConfig, request: typeof fetch = fetch): Transcriber {
   return async file => {
     if (!file.size || file.size > MAX_AUDIO_BYTES || !AUDIO_TYPES.has(file.type.split(";")[0]!)) throw Error("ჩანაწერი უნდა იყოს აუდიო და არ აღემატებოდეს 8 MB-ს.")
     const body = new FormData()
-    body.set("file", file); body.set("model", config.model); body.set("response_format", "json")
+    body.set("file", file)
+    body.set("model", config.model)
+    body.set("response_format", "json")
+    body.set("language", "ka")
+    body.set(
+      "prompt",
+      "ეს არის ქართული საუბარი სოციალური მედიის მართვაზე. " +
+      "ზუსტად შეინარჩუნე რიცხვები, უარყოფა, თვითკორექცია და მომხმარებლის ნათქვამი. " +
+      "არ შეცვალო მნიშვნელობა. ხშირად გვხვდება ტერმინები: Facebook, Instagram, GA4, პოსტი, ვიდეო, კონტენტი."
+    )
     const response = await request(config.endpoint, { method: "POST", headers: { authorization: `Bearer ${config.apiKey}` }, body, signal: AbortSignal.timeout(60_000) })
     if (!response.ok) throw Error("ხმის ამოცნობა ვერ დასრულდა. სცადეთ ხელახლა ან დაწერეთ ტექსტი.")
     const data: unknown = await response.json()
