@@ -1,7 +1,9 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto"
 import type { SocialPublishingAccountId } from "../../blueprints/social/content-publish-eligibility"
-import { ConnectionFlowError, type ConnectionContextCipher, type ConnectionFlowSession, type ConnectionIntent,
-  type SocialConnectionFlowStore, type SocialConnectionProvider, type VerifiedConnection } from "./connection-flow"
+import {
+  ConnectionFlowError, type ConnectionContextCipher, type ConnectionFlowSession, type ConnectionIntent,
+  type SocialConnectionFlowStore, type SocialConnectionProvider, type VerifiedConnection
+} from "./connection-flow"
 import type { SocialConnectionChannel } from "./connection-store"
 import type { SocialProviderRegistry } from "./provider-registry"
 
@@ -12,7 +14,7 @@ type ContextEnvelope = { targetAccountId: string | null; providerContext: string
 export class SocialConnectionService {
   constructor(private readonly store: SocialConnectionFlowStore,
     private readonly providers: SocialProviderRegistry<SocialConnectionProvider>,
-    private readonly cipher: ConnectionContextCipher, private readonly origin: string) {}
+    private readonly cipher: ConnectionContextCipher, private readonly origin: string) { }
 
   async begin(ownerId: string, brandId: string, channel: SocialConnectionChannel, targetAccountId: string | null = null) {
     if (!["facebook", "instagram"].includes(channel) || !brandId || brandId.length > 160) throw new ConnectionFlowError("invalidFlow")
@@ -22,13 +24,17 @@ export class SocialConnectionService {
       }
       const provider = this.providers.resolve("zernio")
       let profile = await session.profile("zernio")
-      if (!profile) profile = await session.accounts.saveProfile(session.scope, { id: `profile:${randomUUID()}`, provider: "zernio",
-        providerProfileRef: await provider.ensureProfile(brandId) })
+      if (!profile) profile = await session.accounts.saveProfile(session.scope, {
+        id: `profile:${randomUUID()}`, provider: "zernio",
+        providerProfileRef: await provider.ensureProfile(brandId)
+      })
       if (profile.status !== "active") throw new ConnectionFlowError("unavailable")
       const id = randomUUID()
       const flow = `${id}.${randomBytes(32).toString("base64url")}`
-      await session.createIntent({ id, provider: "zernio", profileRef: profile.providerProfileRef, channel, digest: digest(flow),
-        expiresAt: new Date(Date.now() + 10 * 60_000), context: this.cipher.seal(JSON.stringify({ targetAccountId, providerContext: null }), id) })
+      await session.createIntent({
+        id, provider: "zernio", profileRef: profile.providerProfileRef, channel, digest: digest(flow),
+        expiresAt: new Date(Date.now() + 10 * 60_000), context: this.cipher.seal(JSON.stringify({ targetAccountId, providerContext: null }), id)
+      })
       const callback = new URL("/api/social/connections/zernio/callback", this.origin)
       callback.searchParams.set("flow", flow)
       return { id, provider, profileRef: profile.providerProfileRef, callback: callback.href }
@@ -72,18 +78,22 @@ export class SocialConnectionService {
     if (targetAccountId && match?.id !== targetAccountId) throw new ConnectionFlowError("accountMismatch")
     if (match?.nativeAccountRef && verified.nativeAccountRef && match.nativeAccountRef !== verified.nativeAccountRef) throw new ConnectionFlowError("accountMismatch")
     const id = match?.id ?? `social-account:${randomUUID()}` as SocialPublishingAccountId
-    const saved = await session.accounts.saveAccount(session.scope, { id, channel: verified.channel,
+    const saved = await session.accounts.saveAccount(session.scope, {
+      id, channel: verified.channel,
       nativeAccountRef: verified.nativeAccountRef ?? match?.nativeAccountRef ?? null, username: verified.username,
-      displayName: verified.displayName, profileUrl: verified.profileUrl })
+      displayName: verified.displayName, profileUrl: verified.profileUrl
+    })
     const bindings = await session.accounts.listBindings(session.scope, id)
     const active = bindings.find((b) => b.bindingStatus === "active")
     if (active?.provider === intent.provider && active.providerAccountRef === verified.providerAccountRef) {
       if (active.providerProfileRef !== intent.profileRef) throw new ConnectionFlowError("accountMismatch")
       await session.accounts.updateBindingHealth(session.scope, active.id, verified)
     } else {
-      await session.accounts.activateBinding(session.scope, { ...verified, id: `social-binding:${randomUUID()}`, publishingAccountId: id,
+      await session.accounts.activateBinding(session.scope, {
+        ...verified, id: `social-binding:${randomUUID()}`, publishingAccountId: id,
         provider: intent.provider, providerProfileRef: intent.profileRef, expectedActiveBindingId: active?.id ?? null,
-        verifiedNativeAccountRef: verified.nativeAccountRef })
+        verifiedNativeAccountRef: verified.nativeAccountRef
+      })
     }
     await session.consume("completed")
     return { type: "connected" as const, brandId: saved.brandId }
@@ -108,6 +118,13 @@ export class SocialConnectionService {
         return { type: "selection" as const, intentId: id, brandId: session.scope.brandId }
       })
     } catch (error) {
+      console.error("[social-connect] callback service failed", {
+        intentId: id || null,
+        verifiedState,
+        code: error instanceof ConnectionFlowError ? error.code : "unknown",
+        name: error instanceof Error ? error.name : typeof error,
+      })
+
       if (verifiedState) await this.fail(ownerId, id)
       throw error
     }

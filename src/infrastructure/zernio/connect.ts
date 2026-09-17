@@ -89,33 +89,116 @@ export function createZernioConnectionProvider(client: ReturnType<typeof createZ
       return url.href
     },
     async callback(channel, profileRef, query) {
-      if (query.has("error")) throw new ConnectionFlowError("providerRejected")
-      if (query.get("profileId") !== profileRef) throw new ConnectionFlowError("accountMismatch")
-      if (channel === "instagram") {
-        if (query.get("connected") !== "instagram" || query.has("step") || (query.has("platform") && query.get("platform") !== "instagram")) throw new ConnectionFlowError("accountMismatch")
-        return { type: "connected", account: await verify(channel, profileRef, ref(query.get("accountId"))) }
-      }
-      if (query.get("platform") !== "facebook" || query.get("step") !== "select_page") throw new ConnectionFlowError("accountMismatch")
-      let userProfile: Record<string, unknown>
-
-      const rawUserProfile = text(query.get("userProfile"))
+      let stage = "start"
 
       try {
-        userProfile = record(JSON.parse(rawUserProfile))
-      } catch {
+        stage = "provider-error-check"
+        if (query.has("error")) throw new ConnectionFlowError("providerRejected")
+
+        stage = "profile-id-check"
+        if (query.get("profileId") !== profileRef) {
+          throw new ConnectionFlowError("accountMismatch")
+        }
+
+        if (channel === "instagram") {
+          stage = "instagram-shape-check"
+
+          if (
+            query.get("connected") !== "instagram" ||
+            query.has("step") ||
+            (query.has("platform") && query.get("platform") !== "instagram")
+          ) {
+            throw new ConnectionFlowError("accountMismatch")
+          }
+
+          stage = "instagram-verify"
+          return {
+            type: "connected",
+            account: await verify(channel, profileRef, ref(query.get("accountId"))),
+          }
+        }
+
+        stage = "facebook-shape-check"
+        if (
+          query.get("platform") !== "facebook" ||
+          query.get("step") !== "select_page"
+        ) {
+          throw new ConnectionFlowError("accountMismatch")
+        }
+
+        let userProfile: Record<string, unknown>
+        const rawUserProfile = text(query.get("userProfile"))
+
+        stage = "user-profile-parse"
+
         try {
-          userProfile = record(JSON.parse(decodeURIComponent(rawUserProfile)))
+          userProfile = record(JSON.parse(rawUserProfile))
         } catch {
+          try {
+            userProfile = record(
+              JSON.parse(decodeURIComponent(rawUserProfile))
+            )
+          } catch {
+            throw new ConnectionFlowError("providerRejected")
+          }
+        }
+
+        stage = "user-profile-id"
+        ref(userProfile.id)
+
+        stage = "callback-token-shape"
+
+        const context: FacebookContext = {
+          userProfile,
+          tempToken: text(query.get("tempToken")),
+          connectToken: text(query.get("connect_token")),
+        }
+
+        stage = "select-page-list-request"
+
+        const data = await request({
+          method: "GET",
+          path: "connect/facebook/select-page",
+          query: {
+            profileId: profileRef,
+            tempToken: context.tempToken,
+          },
+          connectToken: context.connectToken,
+        })
+
+        stage = "select-page-list-parse"
+
+        if (!Array.isArray(data.pages) || data.pages.length > 1000) {
           throw new ConnectionFlowError("providerRejected")
         }
+
+        const pages: PageChoice[] = data.pages.map((value) => {
+          const p = record(value)
+          return {
+            id: ref(p.id),
+            name: text(p.name, 300),
+          }
+        })
+
+        if (new Set(pages.map((p) => p.id)).size !== pages.length) {
+          throw new ConnectionFlowError("providerRejected")
+        }
+
+        return {
+          type: "selection",
+          pages,
+          context: JSON.stringify(context),
+        }
+      } catch (error) {
+        console.error("[zernio-connect] callback failed", {
+          channel,
+          stage,
+          code: error instanceof ConnectionFlowError ? error.code : "unknown",
+          name: error instanceof Error ? error.name : typeof error,
+        })
+
+        throw error
       }
-      ref(userProfile.id)
-      const context: FacebookContext = { userProfile, tempToken: text(query.get("tempToken")), connectToken: text(query.get("connect_token")) }
-      const data = await request({ method: "GET", path: "connect/facebook/select-page", query: { profileId: profileRef, tempToken: context.tempToken }, connectToken: context.connectToken })
-      if (!Array.isArray(data.pages) || data.pages.length > 1000) throw new ConnectionFlowError("providerRejected")
-      const pages: PageChoice[] = data.pages.map((value) => { const p = record(value); return { id: ref(p.id), name: text(p.name, 300) } })
-      if (new Set(pages.map((p) => p.id)).size !== pages.length) throw new ConnectionFlowError("providerRejected")
-      return { type: "selection", pages, context: JSON.stringify(context) }
     },
     async selectPage(profileRef, sealedContext, pageId) {
       const context = record(JSON.parse(sealedContext))
