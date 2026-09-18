@@ -41,6 +41,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
   const [channels, setChannels] = useState<ChannelOperatingPolicy[]>([])
   const [busy, setBusy] = useState(false)
   const [voiceBusy, setVoiceBusy] = useState(false)
+  const [hasVoiceDraft, setHasVoiceDraft] = useState(false)
   const [error, setError] = useState("")
   const [historyError, setHistoryError] = useState("")
   const [loading, setLoading] = useState(true)
@@ -92,7 +93,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
       if (!response.ok || !data.note) throw Error(data.message ?? "შენიშვნა ვერ დამუშავდა.")
       const next = data.note
       setNotes(previous => [next, ...previous.filter(n => n.id !== next.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
-      if (kind === "submit") { setText(""); setSource("text"); requestId.current = null }
+      if (kind === "submit") { setText(""); setSource("text"); setHasVoiceDraft(false); requestId.current = null }
       if (next.status === "applied" || next.status === "reverted") { setReload(value => value + 1); router.refresh(); window.dispatchEvent(new Event("unda:notes-changed")) }
     } catch (e) { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "მოქმედება ვერ დასრულდა. ტექსტი შენარჩუნებულია.") }
     finally { busyRef.current = false; if (!controller.signal.aborted) setBusy(false) }
@@ -101,7 +102,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
     if (busy || voiceBusy) return
     requestId.current = null
     setSelection(note.context.target ? { title: note.context.target.label, target: note.context.target, postKey: note.context.postKey, channel: note.context.channel, runId: note.context.runId, postVersion: note.context.postVersion ?? null } : note.context.postKey && note.context.channel && note.context.runId ? { postKey: note.context.postKey, channel: note.context.channel, runId: note.context.runId, title: `პოსტი ${note.context.postKey.slice(1)}`, postVersion: note.context.postVersion ?? "", target: { type: "post", id: `${note.context.postKey}:${note.context.channel}`, label: `პოსტი ${note.context.postKey.slice(1)}`, version: note.context.postVersion ?? "legacy", hash: targetHash({ postKey: note.context.postKey, channel: note.context.channel }), data: { postKey: note.context.postKey, channel: note.context.channel } } } : null)
-    setText(note.text); setSource(note.source); reveal()
+    setText(note.text); setSource(note.source); setHasVoiceDraft(note.source === "voice"); reveal()
   }
   const shown = historyOpen ? notes : notes.slice(0, 2)
   return <NotesContext.Provider value={selectPost}>
@@ -111,8 +112,8 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
         <div className="cn-context"><span>{brandName}</span><span aria-hidden="true">/</span><strong>{sectionLabel}</strong>{section === "week" || section === "content" ? <span>· {week}</span> : null}</div>
         {selection ? <div className="cn-selection"><span><strong>{selection.title}</strong>{selection.channel ? ` · ${selection.channel === "facebook" ? "Facebook" : "Instagram"}` : ""}</span><button type="button" disabled={busy || voiceBusy || !!text.trim()} onClick={() => { setSelection(null); requestId.current = null }} aria-label="არჩეული ნაწილის გაუქმება">×</button></div> : null}
         <form onSubmit={e => { e.preventDefault(); void action("submit") }}>
-          <div className="cn-input-heading"><label className="cn-input-label" htmlFor="cn-input">რა გსურთ დავაზუსტოთ?</label><VoiceNoteInput available={voiceAvailable} disabled={busy} onBusy={setVoiceBusy} onError={setError} onTranscript={(transcript, sameSession) => { setText(old => `${old}${old ? sameSession ? " " : "\n" : ""}${transcript}`.slice(0, 8000)); setSource("voice"); requestId.current = null; inputRef.current?.focus() }} /></div>
-          <textarea id="cn-input" ref={inputRef} rows={3} maxLength={8000} value={text} disabled={busy} placeholder={selection ? "ან დაწერეთ, მაგალითად: ძალიან ოფიციალურია, უფრო ბუნებრივად ვთქვათ…" : "ან დაწერეთ კითხვა, შესწორება ან იდეა — როგორც თქვენს გუნდს ეტყოდით…"} onChange={e => { setText(e.target.value); requestId.current = null }} />
+          <div className="cn-input-heading"><label className="cn-input-label" htmlFor="cn-input">რა გსურთ დავაზუსტოთ?</label><VoiceNoteInput available={voiceAvailable} disabled={busy} hasVoiceDraft={hasVoiceDraft} onBusy={setVoiceBusy} onError={setError} onTranscript={transcript => { setText(old => `${old}${old ? "\n" : ""}${transcript}`.slice(0, 8000)); setSource("voice"); setHasVoiceDraft(true); requestId.current = null; inputRef.current?.focus() }} /></div>
+          <textarea id="cn-input" ref={inputRef} rows={3} maxLength={8000} value={text} disabled={busy} placeholder={selection ? "ან დაწერეთ, მაგალითად: ძალიან ოფიციალურია, უფრო ბუნებრივად ვთქვათ…" : "ან დაწერეთ კითხვა, შესწორება ან იდეა — როგორც თქვენს გუნდს ეტყოდით…"} onChange={e => { setText(e.target.value); if (!e.target.value) setHasVoiceDraft(false); requestId.current = null }} />
           <div className="cn-composer-actions"><span className="cn-count">{text.length ? `${text.length} / 8000` : "ტექსტით ან ხმით"}</span><button className="cn-send" type="submit" disabled={busy || voiceBusy || !text.trim()}>{busy ? "ვამუშავებთ…" : "გაგზავნა ↑"}</button></div>
         </form>
         {!text && !selection ? <div className="cn-examples" aria-label="შენიშვნის მაგალითები">{examples[section].map(example => <button key={example} disabled={busy || voiceBusy} type="button" onClick={() => { setText(example); requestId.current = null; inputRef.current?.focus() }}>{example}</button>)}</div> : null}

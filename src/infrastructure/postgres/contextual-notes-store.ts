@@ -88,14 +88,12 @@ export async function listNotes(pool: Pool, ownerId: string, context: NoteContex
   const rows = await pool.query<Row>(`SELECT n.* FROM contextual_notes n WHERE ${owned} AND n.brand_id=$2 AND n.context->>'section'=$3 AND (n.context->>'week'=$4 OR $3 NOT IN ('week','content')) ORDER BY n.created_at DESC LIMIT 40`, [ownerId, context.brandId, context.section, context.week])
   return rows.rows.map(publicNote)
 }
-export async function reserveVoiceRequest(pool: Pool, ownerId: string, voiceSessionId: string) {
+export async function reserveVoiceRequest(pool: Pool, ownerId: string) {
   await transaction(pool, async c => {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`contextual-voice:${ownerId}`])
-    const existing = await c.query("SELECT 1 FROM contextual_voice_requests WHERE owner_user_id=$1 AND voice_session_id=$2", [ownerId, voiceSessionId])
-    if (existing.rowCount) return
     const count = await c.query<{ n: number }>("SELECT count(*)::int n FROM contextual_voice_requests WHERE owner_user_id=$1 AND created_at>now()-interval '1 hour'", [ownerId])
     if (count.rows[0]!.n >= 30) throw Error("ამ საათში ხმის შეყვანის ლიმიტი ამოიწურა. შეგიძლიათ ტექსტი დაწეროთ.")
-    await c.query("INSERT INTO contextual_voice_requests(owner_user_id,voice_session_id) VALUES($1,$2)", [ownerId, voiceSessionId])
+    await c.query("INSERT INTO contextual_voice_requests(owner_user_id) VALUES($1)", [ownerId])
   })
 }
 
