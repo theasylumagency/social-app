@@ -42,6 +42,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
   const [busy, setBusy] = useState(false)
   const [voiceBusy, setVoiceBusy] = useState(false)
   const [error, setError] = useState("")
+  const [historyError, setHistoryError] = useState("")
   const [loading, setLoading] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -62,7 +63,7 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
         const data = await response.json()
         if (!response.ok) throw Error(data.message)
         if (!controller.signal.aborted) { setNotes(data.notes); setRules(data.rules ?? []); setChannels(data.channels ?? []); setLoading(false) }
-      } catch { if (!controller.signal.aborted) { setError("შენიშვნების ისტორია ვერ ჩაიტვირთა. ხელახლა სცადეთ."); setLoading(false) } }
+      } catch { if (!controller.signal.aborted) { setHistoryError("შენიშვნების ისტორია ვერ ჩაიტვირთა. ხელახლა სცადეთ."); setLoading(false) } }
       if (!controller.signal.aborted && pending) timer = setTimeout(load, 4000)
     }
     void load()
@@ -110,16 +111,17 @@ export function ContextualNotes({ brandId, brandName, section, sectionLabel, wee
         <div className="cn-context"><span>{brandName}</span><span aria-hidden="true">/</span><strong>{sectionLabel}</strong>{section === "week" || section === "content" ? <span>· {week}</span> : null}</div>
         {selection ? <div className="cn-selection"><span><strong>{selection.title}</strong>{selection.channel ? ` · ${selection.channel === "facebook" ? "Facebook" : "Instagram"}` : ""}</span><button type="button" disabled={busy || voiceBusy || !!text.trim()} onClick={() => { setSelection(null); requestId.current = null }} aria-label="არჩეული ნაწილის გაუქმება">×</button></div> : null}
         <form onSubmit={e => { e.preventDefault(); void action("submit") }}>
-          <label className="cn-input-label" htmlFor="cn-input">რა გსურთ დავაზუსტოთ?</label>
-          <textarea id="cn-input" ref={inputRef} rows={3} maxLength={8000} value={text} disabled={busy || voiceBusy} placeholder={selection ? "მაგალითად: ძალიან ოფიციალურია, უფრო ბუნებრივად ვთქვათ…" : "დაწერეთ კითხვა, შესწორება ან იდეა — როგორც თქვენს გუნდს ეტყოდით…"} onChange={e => { setText(e.target.value); requestId.current = null }} />
-          <div className="cn-composer-actions"><VoiceNoteInput available={voiceAvailable} disabled={busy} onBusy={setVoiceBusy} onError={setError} onTranscript={transcript => { setText(old => `${old}${old ? "\n" : ""}${transcript}`.slice(0, 8000)); setSource("voice"); requestId.current = null; inputRef.current?.focus() }} /><span className="cn-count">{text.length ? `${text.length} / 8000` : "ტექსტით ან ხმით"}</span><button className="cn-send" type="submit" disabled={busy || voiceBusy || !text.trim()}>{busy ? "ვამუშავებთ…" : "გაგზავნა ↑"}</button></div>
+          <div className="cn-input-heading"><label className="cn-input-label" htmlFor="cn-input">რა გსურთ დავაზუსტოთ?</label><VoiceNoteInput available={voiceAvailable} disabled={busy} onBusy={setVoiceBusy} onError={setError} onTranscript={(transcript, sameSession) => { setText(old => `${old}${old ? sameSession ? " " : "\n" : ""}${transcript}`.slice(0, 8000)); setSource("voice"); requestId.current = null; inputRef.current?.focus() }} /></div>
+          <textarea id="cn-input" ref={inputRef} rows={3} maxLength={8000} value={text} disabled={busy} placeholder={selection ? "ან დაწერეთ, მაგალითად: ძალიან ოფიციალურია, უფრო ბუნებრივად ვთქვათ…" : "ან დაწერეთ კითხვა, შესწორება ან იდეა — როგორც თქვენს გუნდს ეტყოდით…"} onChange={e => { setText(e.target.value); requestId.current = null }} />
+          <div className="cn-composer-actions"><span className="cn-count">{text.length ? `${text.length} / 8000` : "ტექსტით ან ხმით"}</span><button className="cn-send" type="submit" disabled={busy || voiceBusy || !text.trim()}>{busy ? "ვამუშავებთ…" : "გაგზავნა ↑"}</button></div>
         </form>
         {!text && !selection ? <div className="cn-examples" aria-label="შენიშვნის მაგალითები">{examples[section].map(example => <button key={example} disabled={busy || voiceBusy} type="button" onClick={() => { setText(example); requestId.current = null; inputRef.current?.focus() }}>{example}</button>)}</div> : null}
         {section === "content" && !selection ? <p className="cn-hint">კონკრეტული ტექსტის შესაცვლელად პოსტთან აირჩიეთ „ამ პოსტზე შენიშვნა“.</p> : null}
         <p className="cn-hint">შენიშვნა ამ გვერდის კონტექსტს უკავშირდება. ფართო ცვლილებამდე შედეგს გაჩვენებთ.</p>
         {(rules.length || channels.some(channel => !channel.active)) ? <details className="cn-policies"><summary>მოქმედი წესები და არხები</summary>{rules.length ? <ul>{rules.map(rule => <li key={rule.id}>{rule.directive} <small>{operatingRuleScopeLabel(rule.scope)}</small></li>)}</ul> : <p>მუდმივი წესი ჯერ არ არის.</p>}<p>{channels.map(channel => `${channel.channel === "instagram" ? "Instagram" : "Facebook"}: ${channel.active ? "აქტიური" : "შეჩერებული"}`).join(" · ")}</p></details> : null}
         {busy ? <p className="cn-working" role="status">ვკითხულობთ შენიშვნას და ამ გვერდის კონტექსტს…</p> : null}
-        {error ? <div className="cn-error" role="alert">{error} <button type="button" onClick={() => { setError(""); setReload(n => n + 1) }}>ისტორიის განახლება</button></div> : null}
+        {error ? <div className="cn-error" role="alert">{error}</div> : null}
+        {historyError ? <div className="cn-error" role="alert">{historyError} <button type="button" onClick={() => { setHistoryError(""); setReload(n => n + 1) }}>ისტორიის განახლება</button></div> : null}
         <div className="cn-history" aria-live="polite" aria-busy={loading}>
           {loading ? <p className="cn-hint">ისტორია იტვირთება…</p> : shown.map(note => <article key={note.id} className={`cn-entry cn-${note.status}`}>
             <div className="cn-entry-meta"><strong>{statusLabels[note.status]}</strong><time dateTime={note.createdAt}>{new Date(note.createdAt).toLocaleString("ka-GE", { timeZone: "Asia/Tbilisi", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time>{note.source === "voice" ? <span>ხმით</span> : null}{note.context.postKey ? <span>პოსტი {note.context.postKey.slice(1)} · {note.context.channel}</span> : null}</div>
