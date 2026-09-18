@@ -103,19 +103,52 @@ test("STT configuration selects explicit provider and model, rejects unknown or 
   assert.equal(speechConfig(compatible).apiKey, "other-key")
   assert.throws(() => speechConfig({ ...compatible, SPEECH_TO_TEXT_ENDPOINT: "http://speech.example.test" }))
   assert.throws(() => speechConfig({ ...compatible, SPEECH_TO_TEXT_ENDPOINT: "https://user:secret@speech.example.test" }))
+  const elevenlabs = { SPEECH_TO_TEXT_PROVIDER: "elevenlabs", SPEECH_TO_TEXT_MODEL: "scribe_v2", ELEVENLABS_API_KEY: "eleven-key" }
+  assert.deepEqual(speechConfig(elevenlabs), { provider: "elevenlabs", model: "scribe_v2", apiKey: "eleven-key", endpoint: "https://api.elevenlabs.io/v1/speech-to-text" })
+  assert.throws(() => speechConfig({ ...elevenlabs, ELEVENLABS_API_KEY: "" }))
 })
-test("voice adapter sends configured model and returns text only; no persistence or semantic action", async () => {
+test("OpenAI voice adapter retains its existing request shape and returns text only", async () => {
   const config = speechConfig({ SPEECH_TO_TEXT_PROVIDER: "openai", SPEECH_TO_TEXT_MODEL: "configured-model", OPENAI_API_KEY: "test-key" })
   const adapter = createTranscriber(config, async (url, init) => {
     assert.equal(url, config.endpoint)
+    assert.deepEqual(init!.headers, { authorization: "Bearer test-key" })
     const form = init!.body as FormData
     assert.equal(form.get("model"), "configured-model")
     assert.equal(form.get("response_format"), "json")
+    assert.equal(form.get("language"), "ka")
+    assert.equal(typeof form.get("prompt"), "string")
     return Response.json({ text: "  ამ კვირაში ვიდეოს ვერ გადავიღებთ.  " })
   })
   assert.equal(await adapter(new File(["audio"], "note.webm", { type: "audio/webm" })), "ამ კვირაში ვიდეოს ვერ გადავიღებთ.")
   await assert.rejects(() => adapter(new File(["not audio"], "note.txt", { type: "text/plain" })))
   await assert.rejects(() => createTranscriber(config, async () => Response.json({ text: "" }))(new File(["audio"], "note.webm", { type: "audio/webm" })))
+})
+test("ElevenLabs voice adapter sends Scribe v2 fields, xi-api-key auth, and response text", async () => {
+  const config = speechConfig({ SPEECH_TO_TEXT_PROVIDER: "elevenlabs", SPEECH_TO_TEXT_MODEL: "scribe_v2", ELEVENLABS_API_KEY: "eleven-key" })
+  const adapter = createTranscriber(config, async (url, init) => {
+    assert.equal(url, "https://api.elevenlabs.io/v1/speech-to-text")
+    assert.equal(init!.method, "POST")
+    assert.deepEqual(init!.headers, { "xi-api-key": "eleven-key" })
+    const form = init!.body as FormData
+    assert.equal((form.get("file") as File).name, "note.webm")
+    assert.equal(form.get("model_id"), "scribe_v2")
+    assert.equal(form.get("language_code"), "kat")
+    assert.equal(form.get("no_verbatim"), "false")
+    assert.equal(form.get("tag_audio_events"), "false")
+    assert.equal(form.get("num_speakers"), "1")
+    assert.equal(form.get("model"), null)
+    assert.equal(form.get("response_format"), null)
+    assert.equal(form.get("language"), null)
+    assert.equal(form.get("prompt"), null)
+    return Response.json({ text: "  ნედლი ტექსტი  " })
+  })
+  assert.equal(await adapter(new File(["audio"], "note.webm", { type: "audio/webm" })), "ნედლი ტექსტი")
+})
+test("ElevenLabs provider errors and invalid responses use the existing transcriber errors", async () => {
+  const config = speechConfig({ SPEECH_TO_TEXT_PROVIDER: "elevenlabs", SPEECH_TO_TEXT_MODEL: "scribe_v2", ELEVENLABS_API_KEY: "eleven-key" })
+  const file = new File(["audio"], "note.webm", { type: "audio/webm" })
+  await assert.rejects(() => createTranscriber(config, async () => new Response("unavailable", { status: 503 }))(file), /ხმის ამოცნობა ვერ დასრულდა/)
+  await assert.rejects(() => createTranscriber(config, async () => Response.json({ text: "" }))(file), /ჩანაწერში ტექსტი ვერ ამოვიცანით/)
 })
 test("streaming body limit rejects oversized uploads without trusting Content-Length", async () => {
   await assert.rejects(() => limitedBody(new Request("https://example.test", { method: "POST", body: "1234567" }), 5))

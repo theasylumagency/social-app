@@ -1,14 +1,18 @@
 export type Transcriber = (file: File) => Promise<string>
-export type SpeechConfig = { provider: "openai" | "openai-compatible"; model: string; apiKey: string; endpoint: string }
+export type SpeechConfig = { provider: "openai" | "openai-compatible" | "elevenlabs"; model: string; apiKey: string; endpoint: string }
 type Environment = Record<string, string | undefined>
 export function speechConfig(env: Environment = process.env): SpeechConfig {
   const provider = env.SPEECH_TO_TEXT_PROVIDER?.trim()
   const model = env.SPEECH_TO_TEXT_MODEL?.trim()
-  if (provider !== "openai" && provider !== "openai-compatible") throw Error("ხმის შეყვანის პროვაიდერი არ არის გამართული.")
+  if (provider !== "openai" && provider !== "openai-compatible" && provider !== "elevenlabs") throw Error("ხმის შეყვანის პროვაიდერი არ არის გამართული.")
   if (!model || model.length > 160) throw Error("ხმის ამოცნობის მოდელი არ არის გამართული.")
-  const apiKey = (provider === "openai" ? env.OPENAI_API_KEY : env.SPEECH_TO_TEXT_API_KEY)?.trim()
+  const apiKey = (provider === "openai" ? env.OPENAI_API_KEY : provider === "elevenlabs" ? env.ELEVENLABS_API_KEY : env.SPEECH_TO_TEXT_API_KEY)?.trim()
   if (!apiKey) throw Error("ხმის შეყვანის სერვისის გასაღები არ არის გამართული.")
-  const endpoint = provider === "openai" ? "https://api.openai.com/v1/audio/transcriptions" : env.SPEECH_TO_TEXT_ENDPOINT?.trim()
+  const endpoint = provider === "openai"
+    ? "https://api.openai.com/v1/audio/transcriptions"
+    : provider === "elevenlabs"
+      ? env.SPEECH_TO_TEXT_ENDPOINT?.trim() || "https://api.elevenlabs.io/v1/speech-to-text"
+      : env.SPEECH_TO_TEXT_ENDPOINT?.trim()
   if (!endpoint) throw Error("ხმის შეყვანის სერვისის მისამართი არ არის გამართული.")
   const url = new URL(endpoint)
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw Error("ხმის შეყვანის სერვისს სჭირდება უსაფრთხო HTTPS მისამართი.")
@@ -22,16 +26,25 @@ export function createTranscriber(config: SpeechConfig, request: typeof fetch = 
     if (!file.size || file.size > MAX_AUDIO_BYTES || !AUDIO_TYPES.has(file.type.split(";")[0]!)) throw Error("ჩანაწერი უნდა იყოს აუდიო და არ აღემატებოდეს 8 MB-ს.")
     const body = new FormData()
     body.set("file", file)
-    body.set("model", config.model)
-    body.set("response_format", "json")
-    body.set("language", "ka")
-    body.set(
-      "prompt",
-      "ეს არის ქართული საუბარი სოციალური მედიის მართვაზე. " +
-      "ზუსტად შეინარჩუნე რიცხვები, უარყოფა, თვითკორექცია და მომხმარებლის ნათქვამი. " +
-      "არ შეცვალო მნიშვნელობა. ხშირად გვხვდება ტერმინები: Facebook, Instagram, GA4, პოსტი, ვიდეო, კონტენტი."
-    )
-    const response = await request(config.endpoint, { method: "POST", headers: { authorization: `Bearer ${config.apiKey}` }, body, signal: AbortSignal.timeout(60_000) })
+    if (config.provider === "elevenlabs") {
+      body.set("model_id", config.model)
+      body.set("language_code", "kat")
+      body.set("no_verbatim", "false")
+      body.set("tag_audio_events", "false")
+      body.set("num_speakers", "1")
+    } else {
+      body.set("model", config.model)
+      body.set("response_format", "json")
+      body.set("language", "ka")
+      body.set(
+        "prompt",
+        "ეს არის ქართული საუბარი სოციალური მედიის მართვაზე. " +
+        "ზუსტად შეინარჩუნე რიცხვები, უარყოფა, თვითკორექცია და მომხმარებლის ნათქვამი. " +
+        "არ შეცვალო მნიშვნელობა. ხშირად გვხვდება ტერმინები: Facebook, Instagram, GA4, პოსტი, ვიდეო, კონტენტი."
+      )
+    }
+    const headers = config.provider === "elevenlabs" ? { "xi-api-key": config.apiKey } : { authorization: `Bearer ${config.apiKey}` }
+    const response = await request(config.endpoint, { method: "POST", headers, body, signal: AbortSignal.timeout(60_000) })
     if (!response.ok) throw Error("ხმის ამოცნობა ვერ დასრულდა. სცადეთ ხელახლა ან დაწერეთ ტექსტი.")
     const data: unknown = await response.json()
     const text = data && typeof data === "object" && "text" in data ? data.text : null
