@@ -16,17 +16,20 @@ export function countPostChannels(posts: PostOutline[]): PostCadence {
 }
 export type PostFormat = "text" | "image" | "carousel" | "story" | "reel"
 export type PostOutline = {
+  contentMode?: import("../tokens").SocialContentMode
+  factKeys?: string[]
   directionKey: string; dayOffset: number; title: string; why: string; format: PostFormat
   channels: { channel: PostChannel; reason: string }[]
   brief: { job: string; takeaway: string; points: string[]; mustNotSay: string[] }
   visual: { kind: "none" | "graphic" | "photo" | "slides" | "video"; description: string; aspectRatio: "none" | "1:1" | "4:5" | "9:16"; frames: string[] }
 }
 export type PostVariant = { channel: PostChannel; caption: string; frames: { heading: string; body: string }[]; script: string; onScreenText: string[] }
-export type PostCopy = { variants: PostVariant[] }
+export type PostCopy = { variants: PostVariant[]; factualReferences?: import("../public-knowledge").FactualReferences }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
 export type PostRepairFeedback = { issues: PostsReview["issues"]; instructions: string[] }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  reviewEvidence?: import("./review-evidence").WeeklyPostReviewEvidence
   /** Current rules captured whenever an existing batch is directly revised. */
   operatingRules?: OperatingRule[]
   /** Decision evidence paired with repairDrafts; final review replaces review. */
@@ -36,7 +39,7 @@ export type PostsPayload = { outline: PostSchedule | null; copies: Record<string
   sequenceRetainedCount?: number
   sequenceFeedback?: { rejectedPosts: PostOutline[]; review: SequenceReview }
 }
-export type PostsBatch = { runId: string; status: "queued" | "running" | "ready" | "failed"; step: "outline" | "writing" | "review" | "ready"; payload: PostsPayload; error: string | null; leaseUntil: string | null; approvedAt: string | null; approvedByUserId?: string | null; updatedAt: string }
+export type PostsBatch = { runId: string; status: "queued" | "running" | "ready" | "failed"; step: "outline" | "writing" | "review" | "ready"; payload: PostsPayload; error: string | null; leaseUntil: string | null; approvedAt: string | null; approvedByUserId?: string | null; updatedAt: string; approvalEvidence?: import("./review-evidence").WeeklyApprovalEvidence | null }
 export type PostAsset = { id: string; postKey: string; slot: number; width: number; height: number; name: string }
 export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, review: null, repairs: 0 })
 
@@ -77,6 +80,11 @@ export const POST_SCHEDULE_SCHEMA = obj({ summary: str(250), cadenceReason: str(
   visual: obj({ kind: enumeration("none", "graphic", "photo", "slides", "video"), description: str(900), aspectRatio: enumeration("none", "1:1", "4:5", "9:16"), frames: list(str(400), 0, 6) }),
 }), 1, 10) })
 export const POST_COPY_SCHEMA = obj({ variants: list(obj({ channel: enumeration("facebook", "instagram"), caption: str(3000, 0), frames: list(obj({ heading: str(160, 0), body: str(500) }), 0, 6), script: str(1800, 0), onScreenText: list(str(180), 0, 6) }), 1, 2) })
+const scheduleProperties = POST_SCHEDULE_SCHEMA.properties as Record<string, JsonSchema>
+const schedulePost = scheduleProperties.posts!.items as JsonSchema
+export const POST_SCHEDULE_V2_SCHEMA = obj({ ...scheduleProperties, posts: list(obj({ ...schedulePost.properties as Record<string, JsonSchema>, factKeys: list(str(160), 0, 12) }), 1, 10) })
+export const POST_COPY_V2_SCHEMA = obj({ ...POST_COPY_SCHEMA.properties as Record<string, JsonSchema>, factualReferences: obj({ factKeys: list(str(160), 0, 12), proofKeys: list(str(200), 0, 12) }) })
+export const POST_SCHEDULE_V3_SCHEMA = obj({ ...scheduleProperties, posts: list(obj({ ...schedulePost.properties as Record<string, JsonSchema>, factKeys: list(str(160), 0, 12), contentMode: enumeration("social.brandStory", "social.educational", "social.serviceExplainer", "social.trustBuilder", "social.proofLed", "social.directOffer") }), 1, 10) })
 export const POSTS_REVIEW_SCHEMA = obj({ summary: str(600), issues: list(obj({ postKey: str(10), severity: enumeration("blocking", "advisory"), message: str(650) }), 0, 10) })
 
 export function validatePostSchedule(value: PostSchedule, directions: string[]): string[] {
@@ -99,6 +107,8 @@ export function validatePostSchedule(value: PostSchedule, directions: string[]):
 }
 export function validatePostCopy(value: PostCopy, post: PostOutline): string[] {
   const errors: string[] = []
+  const referenceKeys = [...(post.factKeys ?? []), ...(value.factualReferences?.factKeys ?? []), ...(value.factualReferences?.proofKeys ?? [])]
+  if (referenceKeys.some(k => k.length >= 3 && JSON.stringify(value.variants).includes(k))) errors.push("Opaque fact and proof keys must not appear in public copy")
   if (value.variants.length !== post.channels.length || new Set(value.variants.map((v) => v.channel)).size !== value.variants.length || value.variants.some((v) => !post.channels.some((c) => c.channel === v.channel))) errors.push("Return exactly one variant per selected channel")
   for (const v of value.variants) {
     if (v.channel === "instagram" && v.caption.length > 2200) errors.push("Instagram caption exceeds 2200 characters")

@@ -178,7 +178,7 @@ test("change summary compares captions, frames, scripts and screen text determin
 test("dialog dismissal and clipboard stay local across progressive repair updates", async (t) => {
   const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", { url: "http://localhost" })
   let networkCalls = 0
-  const globals = { window: dom.window, document: dom.window.document, navigator: dom.window.navigator, IS_REACT_ACT_ENVIRONMENT: true, fetch: async () => { networkCalls++; throw Error("Presentation must not make a network request") } }
+  const globals = { window: dom.window, document: dom.window.document, navigator: dom.window.navigator, IS_REACT_ACT_ENVIRONMENT: true, fetch: async (url: string, options?: RequestInit) => { networkCalls++; assert.ok(url.startsWith("/api/social/schedules?")); assert.equal(options?.method, undefined); return Response.json({ capturedAt: new Date().toISOString(), accounts: [], schedules: [] }) } }
   const originals = Object.keys(globals).map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const)
   for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { configurable: true, value })
   // jsdom does not implement the browser's native dialog top layer/focus behavior.
@@ -230,7 +230,7 @@ test("dialog dismissal and clipboard stay local across progressive repair update
   assert.match(history.querySelector(".fp-final-copy")!.textContent!, /გადამუშავებული ტექსტი p1/)
   await click("ტექსტი დაკოპირებულია ✓", post)
   assert.equal(clipboard, "გადამუშავებული ტექსტი p1")
-  assert.equal(networkCalls, 0)
+  assert.equal(networkCalls, 1, "one shared schedule read; presentation actions never mutate or re-fetch it")
   assert.equal(container.querySelector("dialog"), null)
   // A later explicit repair is a new active period and should offer progress again.
   batch.status = "queued"; batch.step = "writing"; delete batch.payload.copies.p1

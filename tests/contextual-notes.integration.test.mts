@@ -7,7 +7,7 @@ import { subscribeFixture, strategicBrandFixture } from "./strategic-integration
 import { ensurePersonalWorkspace } from "../src/infrastructure/postgres/workspace-store"
 import { beginWeeklyPlanning, claimPlanningRun, finishPlanningStep, readPlanningView } from "../src/infrastructure/postgres/weekly-planning-store"
 import { completePlanningFixture } from "./weekly-planning-fixture"
-import { copyFixture, scheduleFixture } from "./weekly-posts-fixture"
+import { copyFixture as historicalCopyFixture, currentScheduleFixture as scheduleFixture } from "./weekly-posts-fixture"
 import { currentWeek } from "../src/application/dashboard/model"
 import { applyNote, listNotes, resolveNote, submitNote } from "../src/infrastructure/postgres/contextual-notes-store"
 import { readBrandDossier } from "../src/infrastructure/postgres/brand-discovery-store"
@@ -15,6 +15,8 @@ import { targetHash, type Interpretation, type NoteContext } from "../src/applic
 import type { BrandReasoner } from "../src/infrastructure/models/brand-reasoning"
 import { emptyPosts } from "../src/blueprints/social/weekly-planning/posts"
 import { listChannelPolicies, listOperatingRules } from "../src/infrastructure/postgres/operating-policy-store"
+
+const copyFixture = () => ({ ...historicalCopyFixture(), factualReferences: { factKeys: [], proofKeys: [] } })
 
 test("notes persist with tenant isolation, idempotent execution, review, conflict checks and rollback", { skip: !process.env.DATABASE_URL }, async t => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })

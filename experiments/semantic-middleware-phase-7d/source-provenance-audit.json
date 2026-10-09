@@ -1,0 +1,360 @@
+{
+  "readOnly": true,
+  "columns": [
+    {
+      "table_name": "weekly_planning_events",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "weekly_planning_events",
+      "column_name": "run_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_planning_events",
+      "column_name": "kind",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_events",
+      "column_name": "payload",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "weekly_planning_events",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "run_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "step",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "prompt_version",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "model",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "input_hash",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "duration_ms",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "usage",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "validation_errors",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "weekly_planning_model_runs",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "owner_user_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "brand_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "week_start",
+      "data_type": "date"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "version",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "step",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "payload",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "error",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "lease_token",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "lease_until",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_planning_runs",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "run_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "step",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "payload",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "error",
+      "data_type": "text"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "lease_token",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "lease_until",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "approved_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "weekly_post_batches",
+      "column_name": "approved_by_user_id",
+      "data_type": "text"
+    }
+  ],
+  "copies": [
+    {
+      "id": "1588c602-4784-4927-87bc-54ea58189997",
+      "created_at": "2026-09-08T16:07:01.691Z",
+      "updated_at": "2026-09-08T16:07:52.090Z",
+      "version": 1,
+      "status": "failed",
+      "step": "writing",
+      "post_key": "p1",
+      "variant_count": 1,
+      "has_consolidated_review": true,
+      "writer_receipts": [
+        {
+          "step": "post_writer_p1",
+          "model": "gpt-5.6-sol",
+          "inputTokens": 2936,
+          "promptVersion": "founder-post-writer-v2"
+        }
+      ]
+    },
+    {
+      "id": "1588c602-4784-4927-87bc-54ea58189997",
+      "created_at": "2026-09-08T16:07:01.691Z",
+      "updated_at": "2026-09-08T16:07:52.090Z",
+      "version": 1,
+      "status": "failed",
+      "step": "writing",
+      "post_key": "p2",
+      "variant_count": 1,
+      "has_consolidated_review": true,
+      "writer_receipts": [
+        {
+          "step": "post_writer_p2",
+          "model": "gpt-5.6-sol",
+          "inputTokens": 2941,
+          "promptVersion": "founder-post-writer-v2"
+        }
+      ]
+    },
+    {
+      "id": "e368dfdc-b660-4778-b6a3-d1f770d804b3",
+      "created_at": "2026-09-15T17:23:22.972Z",
+      "updated_at": "2026-09-15T17:23:23.033Z",
+      "version": 1,
+      "status": "queued",
+      "step": "review",
+      "post_key": "p1",
+      "variant_count": 2,
+      "has_consolidated_review": true,
+      "writer_receipts": []
+    },
+    {
+      "id": "e368dfdc-b660-4778-b6a3-d1f770d804b3",
+      "created_at": "2026-09-15T17:23:22.972Z",
+      "updated_at": "2026-09-15T17:23:23.033Z",
+      "version": 1,
+      "status": "queued",
+      "step": "review",
+      "post_key": "p2",
+      "variant_count": 2,
+      "has_consolidated_review": true,
+      "writer_receipts": []
+    },
+    {
+      "id": "e368dfdc-b660-4778-b6a3-d1f770d804b3",
+      "created_at": "2026-09-15T17:23:22.972Z",
+      "updated_at": "2026-09-15T17:23:23.033Z",
+      "version": 1,
+      "status": "queued",
+      "step": "review",
+      "post_key": "p3",
+      "variant_count": 2,
+      "has_consolidated_review": true,
+      "writer_receipts": []
+    }
+  ],
+  "events": [
+    {
+      "kind": "contextual-post-revised",
+      "payload_key": "noteId"
+    },
+    {
+      "kind": "contextual-post-revised",
+      "payload_key": "channel"
+    },
+    {
+      "kind": "contextual-post-revised",
+      "payload_key": "ownerId"
+    },
+    {
+      "kind": "contextual-post-revised",
+      "payload_key": "postKey"
+    },
+    {
+      "kind": "contextual-post-reverted",
+      "payload_key": "noteId"
+    },
+    {
+      "kind": "contextual-post-reverted",
+      "payload_key": "channel"
+    },
+    {
+      "kind": "contextual-post-reverted",
+      "payload_key": "ownerId"
+    },
+    {
+      "kind": "contextual-post-reverted",
+      "payload_key": "postKey"
+    }
+  ],
+  "offline": [
+    {
+      "file": ".local/post-planner-terra.json",
+      "keys": [
+        "outline",
+        "records"
+      ],
+      "payloadKeys": [],
+      "copyCount": 0,
+      "hasCopyCaptions": false,
+      "writerSteps": []
+    },
+    {
+      "file": ".local/planning-qa.json",
+      "keys": [
+        "schema",
+        "secret",
+        "ownerId",
+        "brandId"
+      ],
+      "payloadKeys": [],
+      "copyCount": 0,
+      "hasCopyCaptions": false,
+      "writerSteps": []
+    },
+    {
+      "file": ".local/dashboard-preview.json",
+      "keys": [
+        "email",
+        "password",
+        "first",
+        "second"
+      ],
+      "payloadKeys": [],
+      "copyCount": 0,
+      "hasCopyCaptions": false,
+      "writerSteps": []
+    },
+    {
+      "file": "evals/results/weekly-sequence/ordinary-generation.json",
+      "keys": [
+        "evaluatedAt",
+        "passed",
+        "objective",
+        "directions",
+        "strategyReview",
+        "attempts",
+        "audit"
+      ],
+      "payloadKeys": [],
+      "copyCount": 0,
+      "hasCopyCaptions": false,
+      "writerSteps": []
+    }
+  ]
+}

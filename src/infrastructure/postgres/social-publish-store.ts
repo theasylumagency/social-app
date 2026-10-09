@@ -1,3 +1,6 @@
+import { decodeSocialPublicationBundle } from "../../application/publishing/publication-bundle-codec"
+import { publicationFactualBlocker, PublicFactHoldError } from "../../application/publishing/factual-authority"
+import { lockPublicKnowledge, readPublicKnowledge } from "./public-knowledge-store"
 import { createHash, randomUUID } from "node:crypto"
 import type { Pool } from "pg"
 import type { SocialContentPublishAttempt, SocialContentPublishResult } from "../../blueprints/social"
@@ -31,12 +34,23 @@ export class PostgresSocialPublishStore implements SocialContentPublishStore, Pr
       const located = await client.query<{ brand_id: string }>("SELECT brand_id FROM social_publishing_accounts WHERE id=$1 AND channel=$2", [attempt.publishingAccountId, attempt.channel])
       const brandId = located.rows[0]?.brand_id
       if (!brandId) throw new Error("Publishing account not found")
+      await lockPublicKnowledge(client, brandId)
       await client.query("SELECT id FROM brands WHERE id=$1 FOR UPDATE", [brandId])
       const binding = await client.query<{ id: string; provider: string }>(`SELECT b.id,b.provider FROM social_provider_account_bindings b
         JOIN social_provider_profiles p ON p.brand_id=b.brand_id AND p.provider=b.provider AND p.provider_profile_ref=b.provider_profile_ref
         WHERE b.publishing_account_id=$1 AND b.brand_id=$2 AND b.channel=$3 AND b.binding_status='active'
           AND b.connection_status='connected' AND b.can_publish=true AND p.status='active' FOR UPDATE OF b`, [attempt.publishingAccountId, brandId, attempt.channel])
       if (!binding.rows[0]) throw new Error("Publishing account has no active capable provider binding")
+      const recorded = await client.query("SELECT id FROM social_publish_attempts WHERE idempotency_key=$1 AND attempt_number=$2", [attempt.idempotencyKey, attempt.attemptNumber])
+      if (!recorded.rowCount) {
+        const current = await client.query(`SELECT s.id FROM social_content_schedules s JOIN social_publication_inputs i ON i.id=s.publication_input_id
+          LEFT JOIN LATERAL (SELECT event_type,publish_at,revision FROM social_content_schedule_events WHERE schedule_id=s.id ORDER BY revision DESC LIMIT 1) e ON true
+          WHERE s.id=$1 AND s.brand_id=$2 AND s.publishing_account_id=$3 AND s.channel=$4
+          AND s.content_id=$5 AND s.draft_id=$6 AND s.draft_version=$7 AND i.superseded_by_input_id IS NULL
+          AND coalesce(e.event_type,'rescheduled')<>'cancelled' AND coalesce(e.revision,0)=$8 AND coalesce(e.publish_at,s.publish_at)=$9::timestamptz`,
+          [attempt.scheduleId, brandId, attempt.publishingAccountId, attempt.channel, attempt.contentId, attempt.draftId, attempt.draftVersion, attempt.scheduleRevision, attempt.publishAt])
+        if (!current.rowCount) throw Error("Schedule changed before publication attempt")
+      }
       const inserted = await client.query(`INSERT INTO social_publish_attempts(id,idempotency_key,attempt_number,content_id,draft_id,draft_version,
         schedule_id,schedule_revision,publishing_account_id,channel,publish_at,attempted_at)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT(idempotency_key,attempt_number) DO NOTHING RETURNING id`,
@@ -84,14 +98,34 @@ export class PostgresSocialPublishStore implements SocialContentPublishStore, Pr
   }
 
   async transition(attemptId: string, expected: readonly ProviderRequestState[], next: ProviderRequestState, response: ProviderResponseRecord = { httpStatus: null }) {
-    const r = await this.pool.query(`UPDATE social_provider_publish_requests SET state=$3,
+    const c = await this.pool.connect()
+    let committed = false
+    try {
+      await c.query("BEGIN")
+      if (next === "dispatchStarted") {
+        const input = (await c.query<{ id: string; brand_id: string; bundle_schema: string; bundle_version: number; bundle: unknown }>(`SELECT i.id,i.brand_id,i.bundle_schema,i.bundle_version,i.bundle FROM social_publish_attempts a
+          JOIN social_content_schedules s ON s.id=a.schedule_id JOIN social_publication_inputs i ON i.id=s.publication_input_id WHERE a.id=$1`, [attemptId])).rows[0]
+        if (input) {
+          await lockPublicKnowledge(c, input.brand_id)
+          const now = new Date().toISOString()
+          const reason = publicationFactualBlocker(decodeSocialPublicationBundle(input.bundle_schema, input.bundle_version, input.bundle), await readPublicKnowledge(c, input.brand_id, now), now)
+          if (reason) {
+            await c.query("INSERT INTO social_publication_fact_holds(publication_input_id,reason) VALUES($1,$2) ON CONFLICT(publication_input_id) DO UPDATE SET reason=excluded.reason,checked_at=now()", [input.id, reason])
+            await c.query("COMMIT"); committed = true
+            throw new PublicFactHoldError(reason)
+          }
+        }
+      }
+      const r = await c.query(`UPDATE social_provider_publish_requests SET state=$3,
       dispatch_started_at=CASE WHEN $3='dispatchStarted' THEN coalesce(dispatch_started_at,now()) ELSE dispatch_started_at END,
       response_received_at=CASE WHEN $3='responseReceived' THEN coalesce(response_received_at,now()) ELSE response_received_at END,
       http_status=coalesce($4,http_status),provider_publication_ref=coalesce($5,provider_publication_ref),
       duplicate_publication_ref=coalesce($6,duplicate_publication_ref),last_error_code=coalesce($7,last_error_code),updated_at=now()
       WHERE attempt_id=$1 AND (state=ANY($2::text[]) OR state=$3) RETURNING attempt_id`, [attemptId, [...expected], next, response.httpStatus,
       response.providerPublicationRef ?? null, response.duplicatePublicationRef ?? null, response.errorCode ?? null])
-    if (!r.rowCount) throw new Error("Provider request state transition rejected")
+      if (!r.rowCount) throw new Error("Provider request state transition rejected")
+      await c.query("COMMIT"); committed = true
+    } catch (error) { if (!committed) await c.query("ROLLBACK"); throw error } finally { c.release() }
     const loaded = await this.loadRequest(attemptId as SocialContentPublishAttempt["id"])
     if (!loaded) throw new Error("Provider request journal missing")
     return loaded

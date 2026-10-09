@@ -11,7 +11,7 @@ import { postsContext, writePost, reviewPosts } from "../src/application/weekly-
 import type { BrandModelCall, BrandReasoner } from "../src/infrastructure/models/brand-reasoning"
 import { completePlanningFixture, planningFixture } from "./weekly-planning-fixture"
 import { understanding } from "./brand-discovery-fixture"
-import { copyFixture, editorialFixture, scheduleFixture } from "./weekly-posts-fixture"
+import { copyFixture, editorialFixture, currentScheduleFixture as scheduleFixture } from "./weekly-posts-fixture"
 import { almostAnotherVoice, almostAnotherSources, almostAnotherPost, flattenedFragments } from "./fixtures/almost-another-voice"
 
 async function distinctiveRun() {
@@ -105,7 +105,7 @@ test("semantic flattening feedback needs actual draft text and a supplied brand 
 
 test("Writer receives the compiled voice and consolidated repair, while safety and editorial calls stay separate", async () => {
   const run = await distinctiveRun()
-  const payload: PostsPayload = { outline: { ...scheduleFixture(), posts: [almostAnotherPost] }, copies: { p1: flattenedFragments }, repairs: 0, review: null }
+  const payload: PostsPayload = { outline: { ...scheduleFixture(), posts: [{ ...almostAnotherPost, contentMode: "social.brandStory" as never }] }, copies: { p1: flattenedFragments }, repairs: 0, review: null }
   const calls: BrandModelCall[] = []
   // A semantic reviewer test double: tests orchestration/contracts, not live-model quality.
   const reason: BrandReasoner = async <T,>(call: BrandModelCall) => {

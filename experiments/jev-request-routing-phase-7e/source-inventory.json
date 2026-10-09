@@ -1,0 +1,25 @@
+{
+  "createdAt": "2026-10-06T06:12:14.168Z",
+  "readOnly": true,
+  "sourceLimit": 100,
+  "groups": [
+    {
+      "section": "content",
+      "input_source": "text",
+      "status": "failed",
+      "count": 1
+    },
+    {
+      "section": "content",
+      "input_source": "text",
+      "status": "reverted",
+      "count": 1
+    }
+  ],
+  "storedNotes": 2,
+  "modelRuns": 3,
+  "knownControlledTextMatches": 2,
+  "nativeProcessedNotes": 1,
+  "humanOriginVerified": 0,
+  "sourceStatus": "Historical stored notes are not automatically treated as verified human-authored production requests; provenance needs independent confirmation."
+}

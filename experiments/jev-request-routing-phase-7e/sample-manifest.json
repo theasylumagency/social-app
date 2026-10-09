@@ -1,0 +1,17 @@
+{
+  "sampleId": "unda-request-routing-controlled-v1",
+  "sampleHash": "409196f361be6fa6a03b105904c81d8e0dc9e7e537ec28964bb3a7c4288ac162",
+  "createdAt": "2026-10-06T06:23:07.457Z",
+  "cases": 32,
+  "model": "jev-1.13.0",
+  "protocol": "unda-request-routing-probe-v1",
+  "runs": 3,
+  "codeHashes": {
+    "experiments/jev-request-routing-phase-7e/router.mts": "62e52d8a08c65cdde32d66a3f19858ce3601473669ac3096f13245da7dc349c5",
+    "experiments/jev-request-routing-phase-7e/cases.mts": "abe67080f313982e0ca21b34a73ab7c0dec2457431dd4213a53ac0f34c50dc36",
+    "src/application/contextual-notes/model.ts": "3715b235e8a5cc28227e13bd801c52b91711137e6a2f031a179510cd68bd7d4f",
+    "src/infrastructure/postgres/contextual-notes-store.ts": "08b63155994f864224d72135f5df42b5db8f1032e7f864ab7d3ec8eabb78f40d"
+  },
+  "referenceStatus": "Controlled engineering expectations from existing application semantics; not human gold or real-request performance",
+  "naturalRealRequests": 0
+}

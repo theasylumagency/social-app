@@ -1,0 +1,9 @@
+{
+  "completedAt": "2026-10-06T06:25:59.674Z",
+  "sampleHash": "5bbe28a420d14dd8168d02deb4d328ea85cfaf3b21d6dbe25859e035a4369adf",
+  "plannedPrimaryRequests": 96,
+  "plannedOrderAuditRequests": 5,
+  "actualRequests": 101,
+  "stoppedForProtocolFailure": false,
+  "productionStateChanged": false
+}

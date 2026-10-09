@@ -1,0 +1,8 @@
+{
+ "experimentTests":{"command":"node --import tsx --test experiments/jev-request-routing-phase-7e/router.test.mts experiments/jev-request-routing-phase-7e/weekly.test.mts experiments/jev-request-routing-phase-7e/weekly-v2.test.mts","passed":21,"failed":0,"status":"passed"},
+ "typeCheck":{"command":"npm run check -- --incremental false","status":"passed"},
+ "isolatedLint":{"command":"npx eslint experiments/jev-request-routing-phase-7e --max-warnings 0","status":"passed"},
+ "existingNotesTests":{"command":"npm run test:notes","passed":18,"failed":1,"status":"existingUnchangedFailure"},
+ "existingFailure":{"name":"short pauses do not stop a full recording, while speech resets silence","file":"tests/voice-silence.test.mts","line":13,"actual":"stop","expected":"continue","confirmedByIndependentRerun":true,"source":"src/app/workspace/voice-segmentation.ts","sourceTimeoutMs":3000,"testAssumptionMs":6000,"productionSourceAndTestEdited":false},
+ "providerCallsByTests":0
+}

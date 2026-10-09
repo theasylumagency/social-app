@@ -1,0 +1,138 @@
+[
+  {
+    "model": "jev-1.13.0",
+    "answers": {
+      "family_price": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "family_discount": {
+        "type": "noul",
+        "noul": 0.04
+      },
+      "family_availability": {
+        "type": "noul",
+        "noul": 0.04
+      },
+      "polarity_affirmed": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "polarity_negated": {
+        "type": "noul",
+        "noul": 0.05
+      },
+      "binding_0_0": {
+        "type": "noul",
+        "noul": 0.89
+      }
+    },
+    "usage": {
+      "input_tokens": 1484,
+      "output_tokens": 117
+    },
+    "httpStatus": 200
+  },
+  {
+    "model": "jev-1.13.0",
+    "answers": {
+      "family_price": {
+        "type": "noul",
+        "noul": 0.07
+      },
+      "family_discount": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "family_availability": {
+        "type": "noul",
+        "noul": 0.03
+      },
+      "polarity_affirmed": {
+        "type": "noul",
+        "noul": 0.65
+      },
+      "polarity_negated": {
+        "type": "noul",
+        "noul": 0.81
+      }
+    },
+    "usage": {
+      "input_tokens": 1312,
+      "output_tokens": 97
+    },
+    "httpStatus": 200
+  },
+  {
+    "model": "jev-1.13.0",
+    "answers": {
+      "family_price": {
+        "type": "noul",
+        "noul": 0.02
+      },
+      "family_discount": {
+        "type": "noul",
+        "noul": 0.03
+      },
+      "family_availability": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "polarity_affirmed": {
+        "type": "noul",
+        "noul": 0.8
+      },
+      "polarity_negated": {
+        "type": "noul",
+        "noul": 0.74
+      },
+      "binding_0_0": {
+        "type": "noul",
+        "noul": 0.92
+      }
+    },
+    "usage": {
+      "input_tokens": 1518,
+      "output_tokens": 117
+    },
+    "httpStatus": 200
+  },
+  {
+    "model": "jev-1.13.0",
+    "answers": {
+      "family_price": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "family_discount": {
+        "type": "noul",
+        "noul": 0.04
+      },
+      "family_availability": {
+        "type": "noul",
+        "noul": 0.03
+      },
+      "polarity_affirmed": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "polarity_negated": {
+        "type": "noul",
+        "noul": 0.06
+      },
+      "binding_0_0": {
+        "type": "noul",
+        "noul": 0.64
+      },
+      "binding_1_0": {
+        "type": "noul",
+        "noul": 0.9
+      }
+    },
+    "usage": {
+      "input_tokens": 1721,
+      "output_tokens": 137
+    },
+    "httpStatus": 200
+  }
+]

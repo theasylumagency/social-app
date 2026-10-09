@@ -1,3 +1,4 @@
+import { PublicFactHoldError } from "../../application/publishing/factual-authority"
 import type { SocialContentPublishProviderOutcome, SocialContentPublisher, SocialContentPublisherInput } from "../../blueprints/social"
 import { createIsoDateTime, type IsoDateTime } from "../../core/domain"
 import type { ProviderDeliveryStore, PublicationAssetSource, ProviderMediaUpload } from "../../application/publishing/delivery-store"
@@ -67,7 +68,8 @@ export function createZernioPublisher(deps: { client: ReturnType<typeof createZe
       publishNow: true,
       metadata: { undaAttemptId: input.attempt.id, undaScheduleId: input.attempt.scheduleId },
     }
-    await deps.journal.transition(input.attempt.id, ["readyToDispatch"], "dispatchStarted")
+    try { await deps.journal.transition(input.attempt.id, ["readyToDispatch"], "dispatchStarted") }
+    catch (error) { if (error instanceof PublicFactHoldError) return { status: "permanentFailure", errorCode: "publicFactsChanged" }; throw error }
     try {
       const response = await deps.client.request({ method: "POST", path: "posts", body, requestId: request.requestId,
         acceptedStatuses: [400, 401, 402, 403, 409, 429, 500, 502, 503, 504] })

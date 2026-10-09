@@ -1,9 +1,14 @@
-import { duplicateCopyIssues } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
+import { WEEKLY_EXECUTION_CAPABILITIES, validateExecutionCapabilities } from "../../blueprints/social/weekly-planning/execution-capabilities"
+import { validateDirectiveSchedule } from "./instruction-contract"
+import { validateFactualReferences } from "../../blueprints/social/public-knowledge"
+import { POST_SCHEDULE_V3_SCHEMA, POST_COPY_V2_SCHEMA } from "../../blueprints/social/weekly-planning/posts"
+import { deterministicPostReviewIssues } from "./review-policy"
+import { validatePostContentMode } from "../../blueprints/social/weekly-planning/post-mode"
 import { operatingChannels } from "../../blueprints/social/strategy/model"
 import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { compilePlanningContext } from "./advance"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
-import { POST_SCHEDULE_SCHEMA, POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview } from "../../blueprints/social/weekly-planning/posts"
+import { POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview } from "../../blueprints/social/weekly-planning/posts"
 import { POST_SCHEDULE_PROMPT, POST_WRITER_PROMPT, POSTS_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/posts"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
@@ -18,7 +23,7 @@ export function postsContext(run: PlanningRun) {
     selectedBrandGoals: context.selectedBrandGoals.filter((g) => !run.payload.review || run.payload.review.brandGoalKeys.includes(g.goalKey)),
     audiences: context.audiences.filter((a) => audienceKeys.includes(a.audienceKey)),
     communicationProfiles: context.communicationProfiles.filter((p) => audienceKeys.includes(p.audienceKey)),
-    requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: { channelsAreRecommendations: true, publishingEnabled: false, imageGenerationEnabled: false, founderUploadAvailable: true, billingMode: "simulated" } }
+    requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: WEEKLY_EXECUTION_CAPABILITIES }
 }
 function keys(run: PlanningRun) {
   const c = compilePlanningContext(run)
@@ -29,30 +34,35 @@ export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner
   if (!allowed.length) throw Error("რეკომენდებული არხებისთვის კონტენტის შესრულება ჯერ ცალკე გამართვას საჭიროებს.")
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
-  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v5", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_SCHEMA, validate: (v) => {
+  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v7", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_V3_SCHEMA, validate: (v) => {
     const value = combine(v as PostSchedule)
-    return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(value.posts.some((p) => p.channels.some((c) => !allowed.includes(c.channel))) ? ["Use only channels permitted by the approved social strategy"] : []), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
+    return [...value.posts.flatMap(p => validatePostContentMode(p, run.payload.publicKnowledge)), ...value.posts.flatMap(p => validateFactualReferences(run.payload.publicKnowledge, p.factKeys ?? [], { factKeys: [], proofKeys: [] })), ...validateExecutionCapabilities(value), ...validateDirectiveSchedule(value, run.payload.weeklyDirectives), ...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(value.posts.some((p) => p.channels.some((c) => !allowed.includes(c.channel))) ? ["Use only channels permitted by the approved social strategy"] : []), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
   } })
   return combine(result)
 }
 export async function writePost(run: PlanningRun, payload: PostsPayload, key: string, reason: BrandReasoner) {
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
   const executionRun = payload.operatingRules ? { ...run, payload: { ...run.payload, operatingRules: payload.operatingRules } } : run
-  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v3", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(executionRun, post), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...(v as PostCopy).variants.flatMap(variant => validateVariantOperatingRules(variant, executionRun.payload.operatingRules ?? [])), ...validatePlanningProse(v, keys(run))] })
+  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v6", outputLanguage: run.payload.basis.payload.input.language, prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(executionRun, post), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [] }, schema: run.payload.publicKnowledge ? POST_COPY_V2_SCHEMA : POST_COPY_SCHEMA, validate: (v) => [...validatePostContentMode(post, run.payload.publicKnowledge, v as PostCopy), ...validateFactualReferences(run.payload.publicKnowledge, post.factKeys ?? [], (v as PostCopy).factualReferences), ...validatePostCopy(v as PostCopy, post), ...(v as PostCopy).variants.flatMap(variant => validateVariantOperatingRules(variant, executionRun.payload.operatingRules ?? [])), ...validatePlanningProse(v, keys(run))] })
 }
-export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner) {
+export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner, observeSafety?: (review: PostsReview) => void) {
   const executionRun = payload.operatingRules ? { ...run, payload: { ...run.payload, operatingRules: payload.operatingRules } } : run
   const postKeys = payload.outline!.posts.map((_, i) => `p${i + 1}`)
   const editorialPosts = payload.outline!.posts.map((post, i) => ({ postKey: postKeys[i]!, ...compilePostEditorialContext(executionRun, post), draft: payload.copies[postKeys[i]!]! }))
   if (editorialPosts.some((p) => !p.draft)) throw Error("Cannot review incomplete post copies")
   // Independent calls share the existing worker stage/lease budget and one repair pass.
   const results = await Promise.allSettled([
-    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v2", prompt: POSTS_REVIEW_PROMPT, input: { postContexts: payload.outline!.posts.map((p, i) => ({ postKey: postKeys[i], ...compilePostGenerationContext(executionRun, p) })), weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
-    reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v1", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v4", prompt: POSTS_REVIEW_PROMPT, input: { postContexts: payload.outline!.posts.map((p, i) => ({ postKey: postKeys[i], ...compilePostGenerationContext(executionRun, p) })), weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v2", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
   ])
   const [safety, editorial] = results
   if (safety.status === "rejected") throw safety.reason
   if (editorial.status === "rejected") throw editorial.reason
+  // A detached read-only shadow copy; never an input to either reviewer or consolidation.
+  if (observeSafety) {
+    try { void Promise.resolve(observeSafety(structuredClone(safety.value))).catch(() => {}) }
+    catch { /* Observation cannot fail review, including an accidentally asynchronous observer. */ }
+  }
   const combined = consolidatePostReviews(safety.value, editorial.value)
-  return { ...combined, issues: [...combined.issues, ...duplicateCopyIssues(payload, run.payload.priorCopy)] }
+  return { ...combined, issues: [...combined.issues, ...deterministicPostReviewIssues(run, payload)] }
 }

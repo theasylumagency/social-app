@@ -51,8 +51,11 @@ test("subscription, persistent strategy, disagreement, evidence and weekly admis
   const next = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID() })
   assert.equal(next.payload.socialStrategy?.id, active.id)
   assert.equal((await pool.query("SELECT count(*)::int n FROM social_strategies WHERE brand_id=$1", [brandId])).rows[0].n, 1, "week rollover creates no strategy")
-  assert.equal(next.payload.evidence?.[0]?.availability, "available")
-  assert.notEqual(next.payload.evidence?.[0]?.reviewedAt, "forged")
+  const manualEvidence = next.payload.evidence!.find(e => e.week === previousWeek)!
+  assert.equal(manualEvidence.availability, "unavailable", "manual observations are not automatic performance evidence")
+  assert.equal(manualEvidence.observations[0]!.provenance, "manual")
+  assert.equal(manualEvidence.results!.publicationCount, 0, "owner's publication claim is not confirmed exposure")
+  assert.notEqual(manualEvidence.reviewedAt, "forged")
   assert.equal(next.payload.priorWeeks.length, 1)
 
   // One actual worker call per proposed/revised strategy, with an entirely fake provider.

@@ -17,6 +17,25 @@ test("post stages have independent model routing and safe absent/blank fallbacks
   assert.equal(postStageModel("writing", { OPENAI_PLANNING_MODEL: "strategy" }), "gpt-5.6-sol")
 })
 
+test("content language survives validation repair while interface prose defaults to Georgian", async () => {
+  const requests: { instructions: string; prompt_cache_key: string }[] = []
+  const records: BrandModelRun[] = []
+  const reason = createBrandReasoner(async row => { records.push(row) }, { apiKey: "test-only", fetch: async (_url, init) => {
+    requests.push(JSON.parse(String(init?.body)))
+    return answer(requests.length === 1 ? { wrong: true } : { ok: true })
+  } })
+  await reason({ ...call, outputLanguage: "en" })
+  assert.equal(requests.length, 2)
+  for (const request of requests) {
+    assert.match(request.instructions, /requested prose in English/)
+    assert.doesNotMatch(request.instructions, /requested prose in Georgian/)
+    assert.match(request.prompt_cache_key, /-en$/)
+  }
+  assert.ok(records.every(row => row.outputLanguage === "en"))
+  await reason(call)
+  assert.match(requests.at(-1)!.instructions, /requested prose in Georgian/)
+})
+
 test("timeouts, temporary network failures and specified HTTP statuses retry once with identical input", async () => {
   for (const failure of [new DOMException("sensitive timeout detail", "TimeoutError"), new TypeError("fetch failed", { cause: { code: "ECONNRESET" } }), ...[429, 500, 502, 503, 504].map((status) => new Response("private-provider-body", { status }))]) {
     const records: BrandModelRun[] = [], requests: string[] = [], delays: number[] = []

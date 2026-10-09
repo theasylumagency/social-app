@@ -1,0 +1,10 @@
+{
+ "status":"notRunAutomaticApprovalRejection",
+ "requestedAction":"Five fresh calls to the unchanged contextual-notes interpreter using the five exact human requests for the agreed isolated timing and quality comparison.",
+ "reason":"Automatic approval review rejected exporting the user-provided payloads to the external OpenAI baseline service because authorization for that destination was not explicit.",
+ "actualFreshBaselineRequests":0,
+ "workaroundAttempted":false,
+ "readyArtifacts":["weekly-sample.json","run-weekly.mts baseline"],
+ "requiredNextAuthorization":"Explicit human permission to send these five messages to the existing OpenAI interpreter for this isolated comparison.",
+ "scope":"No production execution; no database writes; all resulting artifacts remain under this experiment."
+}

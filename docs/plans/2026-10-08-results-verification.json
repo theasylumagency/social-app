@@ -1,0 +1,186 @@
+{
+  "stage": "T06",
+  "verifiedAt": "2026-10-08T04:04:30.880Z",
+  "status": "passed",
+  "weekResultVersion": 1,
+  "checks": {
+    "fullVerify": {
+      "command": "npm run verify",
+      "exitCode": 0,
+      "typeCheck": "passed",
+      "domainTests": {
+        "pass": 311,
+        "fail": 0,
+        "skipped": 0
+      },
+      "offlineApplicationTests": {
+        "pass": 184,
+        "fail": 0,
+        "skipped": 0,
+        "files": 31
+      },
+      "productionBuild": "passed",
+      "lint": {
+        "errors": 0,
+        "warnings": 6,
+        "preexisting": true
+      }
+    },
+    "integration": {
+      "command": "npm run test:app:integration",
+      "exitCode": 0,
+      "pass": 92,
+      "fail": 0,
+      "skipped": 0,
+      "files": 21,
+      "database": "Docker PostgreSQL 18.4",
+      "isolation": "random temporary schemas, dropped by test cleanup"
+    },
+    "finalFollowups": {
+      "analyticsLineage": {
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0
+      },
+      "manualLimitationsAndResultsUI": {
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0
+      },
+      "productionBuild": {
+        "command": "npm run build",
+        "exitCode": 0,
+        "typeCheck": "passed",
+        "status": "passed"
+      }
+    },
+    "visual": {
+      "status": "passed",
+      "method": "Chrome browser: static render with fictional fixture data",
+      "desktop": true,
+      "mobile": {
+        "requestedWidth": 390,
+        "reportedContentWidth": 375,
+        "reportedViewportWidth": 375,
+        "horizontalOverflow": false
+      },
+      "productionAuthentication": false,
+      "hydrationAndWeekSwitchNotCovered": true
+    },
+    "uniqueTestCases": 587,
+    "diffWhitespace": "passed"
+  },
+  "bounds": {
+    "weeks": 4,
+    "postsPerWeek": 12,
+    "publicationRows": 400,
+    "overflowMarked": true,
+    "extraModelCalls": 0
+  },
+  "preservation": {
+    "previousStageFilesPreserved": 43,
+    "expectedPreviousStageUpdates": [
+      "src/infrastructure/postgres/weekly-planning-store.ts"
+    ],
+    "voiceSegmentationPreserved": true
+  },
+  "rollout": {
+    "productionDeployed": false,
+    "sharedDatabaseChanged": false,
+    "localPendingMigrations": [
+      "0020_public_knowledge.sql",
+      "0021_weekly_approval_binding.sql",
+      "0022_result_evidence.sql"
+    ],
+    "livePublishingPerformed": false,
+    "paidModelCallsPerformed": false,
+    "liveModelQualityOrLatencyBenchmarkPerformed": false,
+    "jevRoutingEnabled": false
+  },
+  "sourceFiles": [
+    {
+      "path": "db/migrations/0022_result_evidence.sql",
+      "sha256": "fffa5975f0436073bae74365148c9ca55d8f56b5c26583b469005463a0c60d07"
+    },
+    {
+      "path": "src/application/analytics/social-analytics-store.ts",
+      "sha256": "ba76ced168d5bab949f6face15b77c38e95ba42e7ec54818943dd235ac941f79"
+    },
+    {
+      "path": "src/application/analytics/week-evidence.ts",
+      "sha256": "2fc37dfffb3e81c894f76e9b52e8dc3678fefb4fa736d7b1e8c6d7b62a8dd539"
+    },
+    {
+      "path": "src/application/analytics/planning-evidence-context.ts",
+      "sha256": "a9e058c9a5ea87bb1f58060dbadbe83f9116250fd83e31f24ffbf2910599ea22"
+    },
+    {
+      "path": "src/application/weekly-planning/advance.ts",
+      "sha256": "20d7c011480414f8a1aacc0ecbeb05f4d5441bee50fd7dca509fc85ffd7db922"
+    },
+    {
+      "path": "src/blueprints/social/strategy/model.ts",
+      "sha256": "ea92115e1f89edcdce8b5267df1bade163909776bd2ca86ef3ee09586926fa0f"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/compact-strategy.ts",
+      "sha256": "1d761d1f407fd49ade87658ec7416be0f32b0dc71ed6b5e8e2d2bbd3e34274ab"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-analytics-store.ts",
+      "sha256": "8098ea3cfae39d747e464a20d7affeac9b4a074c498c40b0058a7659f1ea68f6"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-strategy-store.ts",
+      "sha256": "0e2dfcfa3258811856c8d02b70105fbc3c24318f448189d2f55fc3f71bb41cfc"
+    },
+    {
+      "path": "src/infrastructure/postgres/week-result-evidence-store.ts",
+      "sha256": "e6207249fe58fc691e93b7c053767f8b95431cd621b6813687e848f6c9f4240d"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-store.ts",
+      "sha256": "a03fef43af1831b67eb3aaf0b10d58519c4a9db12551cda4d5446eb66f283dd9"
+    },
+    {
+      "path": "src/infrastructure/zernio/analytics.ts",
+      "sha256": "9b92203f4faa758da60e8b66d639d27544ee9db7fb99655560dce47d2b344baf"
+    },
+    {
+      "path": "src/app/workspace/[[...section]]/page.tsx",
+      "sha256": "de6ab6809d2bfe6b5eefc7b5ce36e1733d717c2a01c2a22969e495a1e96e4016"
+    },
+    {
+      "path": "src/app/workspace/results-client.tsx",
+      "sha256": "555bc9bc63ac699a6d701ba42fad7a45768efe449e6b5f96998ee6e17cc398b9"
+    },
+    {
+      "path": "src/app/workspace/evidence-client.tsx",
+      "sha256": "77cb1d901be4b123cdb81b747c5d53fd6fe28e1097c7466db92ac57e2ccab173"
+    },
+    {
+      "path": "tests/social-analytics.integration.test.mts",
+      "sha256": "c7edb9d67d9c914d6e9b1acf48f5da20f80d2e9c567333106108f4709779e69a"
+    },
+    {
+      "path": "tests/strategic-operation.integration.test.mts",
+      "sha256": "18768d922b94fa718e8b30ceee7622c40cb3c268a6f4b8978fc47fad631aa2f3"
+    },
+    {
+      "path": "tests/social-results-ui.test.mts",
+      "sha256": "622577359b4a0a0cf0b961ceffb81408d89ab8325d316bfd67d5e4ebe694621a"
+    },
+    {
+      "path": "tests/week-result-fixture.ts",
+      "sha256": "2005191f0bc26ba0af94e84dc767bd4feec0cb32a1d83c36c166f481f8e817ef"
+    },
+    {
+      "path": "tests/week-result-evidence.test.mts",
+      "sha256": "7e7b0eebd2bf547a5d2f73a33223a7ededfe465e594630afbf88c7bb85667a5a"
+    },
+    {
+      "path": "tests/week-result-evidence.integration.test.mts",
+      "sha256": "16947aa8044fed4471fb55012d630c48dca071f5031baa1425992b5164903674"
+    }
+  ]
+}

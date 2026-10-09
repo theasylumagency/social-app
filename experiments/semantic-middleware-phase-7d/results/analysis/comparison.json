@@ -1,0 +1,79 @@
+[
+  {
+    "itemId": "A001",
+    "cohort": "A",
+    "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/savedCopy/p1",
+    "runId": "1588c602-4784-4927-87bc-54ea58189997",
+    "postKey": "p1",
+    "originalSafety": {
+      "available": false,
+      "reason": "Original independent Safety result is not persisted separately; consolidated review is not Safety gold."
+    },
+    "consolidatedReview": {
+      "summary": "სამივე პოსტი შეესაბამება ამოცანას, ფორმატსა და შეზღუდვებს; საჯარო ფაქტების ან დაუდასტურებელი შედეგების მტკიცება არ იკვეთება.",
+      "issues": []
+    },
+    "middleware": {
+      "invoked": false,
+      "observations": 0
+    },
+    "humanPropositions": [],
+    "comparisonStatus": "originalSafetyComparisonUnavailable",
+    "categories": null
+  },
+  {
+    "itemId": "A002",
+    "cohort": "A",
+    "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/savedCopy/p2",
+    "runId": "1588c602-4784-4927-87bc-54ea58189997",
+    "postKey": "p2",
+    "originalSafety": {
+      "available": false,
+      "reason": "Original independent Safety result is not persisted separately; consolidated review is not Safety gold."
+    },
+    "consolidatedReview": {
+      "summary": "სამივე პოსტი შეესაბამება ამოცანას, ფორმატსა და შეზღუდვებს; საჯარო ფაქტების ან დაუდასტურებელი შედეგების მტკიცება არ იკვეთება.",
+      "issues": []
+    },
+    "middleware": {
+      "invoked": false,
+      "observations": 0
+    },
+    "humanPropositions": [],
+    "comparisonStatus": "originalSafetyComparisonUnavailable",
+    "categories": null
+  },
+  {
+    "itemId": "B001",
+    "cohort": "B",
+    "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/repairDraft/p3",
+    "runId": "1588c602-4784-4927-87bc-54ea58189997",
+    "postKey": "p3",
+    "originalSafety": {
+      "available": false,
+      "reason": "Original independent Safety result is not persisted separately; consolidated review is not Safety gold."
+    },
+    "consolidatedReview": {
+      "summary": "სამივე პოსტი შეესაბამება ამოცანას, ფორმატსა და შეზღუდვებს; საჯარო ფაქტების ან დაუდასტურებელი შედეგების მტკიცება არ იკვეთება.",
+      "issues": [
+        {
+          "message": "ავტომატიზაციის შეფასება ტექნოლოგიის არჩევით არ იწყება. — Instagram-ის ერთადერთ კადრში დაამატეთ დასრულებული ვიზუალური ტექსტი და სქემა: სათაური, პროცესი–მონაცემი–კონტროლის სამკუთხედი და დიაგნოზზე გადასვლის დასკვნა. Caption დატოვეთ დამხმარე განმარტებად და არა კადრის შემცვლელად.",
+          "postKey": "p3",
+          "severity": "blocking"
+        },
+        {
+          "message": "თუ ეს სამი ნაწილი გაურკვეველია, AI პროცესს ვერ დააზუსტებს — მხოლოდ არსებულ გაურკვევლობას გადაიტანს ახალ სისტემაში. — Instagram-ის ერთ კადრში მკაფიო იერარქიით დაალაგეთ სამი წინაპირობა — პროცესი, მონაცემი, კონტროლი — და მათ ქვემოთ მოათავსეთ დიაგნოზის დასკვნა, რათა გრაფიკამ დამოუკიდებლად შეასრულოს მითითებული framePlan.",
+          "postKey": "p3",
+          "severity": "blocking"
+        }
+      ]
+    },
+    "middleware": {
+      "invoked": false,
+      "observations": 0
+    },
+    "humanPropositions": [],
+    "comparisonStatus": "originalSafetyComparisonUnavailable",
+    "categories": null
+  }
+]

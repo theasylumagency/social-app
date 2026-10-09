@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-07",
+  "phase": "first implementation package",
+  "domain": {
+    "passed": 311,
+    "failed": 0
+  },
+  "applicationOffline": {
+    "passed": 164,
+    "failed": 0,
+    "skipped": 0
+  },
+  "isolatedPostgres": {
+    "passed": 76,
+    "failed": 0,
+    "skipped": 0,
+    "files": 18
+  },
+  "fullVerification": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "lintErrors": 0,
+    "preExistingLintWarnings": 6,
+    "typecheck": "passed",
+    "productionBuild": "passed"
+  },
+  "finalGuards": {
+    "typecheck": "passed",
+    "targetedTests": 24,
+    "passed": 24,
+    "postgresApprovalPrecision": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "diffCheck": "passed",
+  "deployment": "not performed",
+  "liveModelComparison": "not performed",
+  "jev": "disabled",
+  "remainingScopeDocument": "2026-10-07-implementation-progress.md"
+}

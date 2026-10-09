@@ -1,0 +1,9 @@
+{
+ "status":"explicitHumanAuthorizationGranted",
+ "humanReply":"კი გააგზავნე",
+ "authorizationContext":"The preceding question explicitly requested permission to send these five exact texts to the existing external OpenAI interpreter for comparison with Jev.",
+ "destination":"Existing OpenAI Responses API interpreter",
+ "purpose":"Isolated comparison of interpretation-stage latency and preservation of the human-confirmed requirements",
+ "scope":{"sample":"weekly-sample.json","sampleHash":"2d9b497311517fca0ef68a707f963c0e6f5e637c7f2971a0c9de35b7c27ab830","cases":["U01","U02","U03","U04","U05"],"logicalTasks":5,"context":"Frozen minimal context; no actual brand/plan data","productionExecution":false,"databaseWrites":false},
+ "previousRejectionRetained":"blocked-baseline.json is a historical receipt; this direct human authorization resolves that specific destination/export concern."
+}

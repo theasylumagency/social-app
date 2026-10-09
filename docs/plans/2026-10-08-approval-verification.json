@@ -1,0 +1,278 @@
+{
+  "stage": "T05",
+  "verifiedAt": "2026-10-08T03:23:24.695Z",
+  "status": "passed",
+  "publicationBundleVersion": 3,
+  "weeklyReviewVersion": 2,
+  "checks": {
+    "fullVerify": {
+      "command": "npm run verify",
+      "exitCode": 0,
+      "typeCheck": "passed",
+      "domainTests": {
+        "pass": 311,
+        "fail": 0,
+        "skipped": 0
+      },
+      "offlineApplicationTests": {
+        "pass": 177,
+        "fail": 0,
+        "skipped": 0,
+        "files": 30
+      },
+      "productionBuild": "passed",
+      "lint": {
+        "errors": 0,
+        "warnings": 6,
+        "preexisting": true
+      }
+    },
+    "fullIntegration": {
+      "command": "npm run test:app:integration",
+      "exitCode": 0,
+      "pass": 88,
+      "fail": 0,
+      "skipped": 0,
+      "files": 20,
+      "backend": "task-only PostgreSQL 18.4, Windows, loopback:16433",
+      "schemas": "all removed",
+      "server": "stopped"
+    },
+    "afterFinalBriefIntegrityChange": {
+      "integrationTests": {
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      "offlineContractTests": {
+        "pass": 10,
+        "fail": 0,
+        "skipped": 0
+      },
+      "note": "Full verify was rerun after the final brief guard. All database consumers of V3 were rechecked; the remaining integration paths had passed the full 88-test run."
+    },
+    "uniqueTests": 576
+  },
+  "coverage": [
+    "immutable post modes",
+    "selected and declared proofLed authority",
+    "full-batch human approval",
+    "review/context/rules/repair and brief/execution tampering",
+    "frozen V1 and V2 readability",
+    "owned historical upgrade",
+    "explicit and stale replacement confirmations",
+    "idempotent replacement",
+    "transaction rollback for failed destination",
+    "preselected stale queue item rejected without provider dispatch",
+    "replacement and claim race serialized",
+    "any started attempt prohibits replacement"
+  ],
+  "deployment": {
+    "performed": false,
+    "migrations": [
+      "0020_public_knowledge.sql",
+      "0021_weekly_approval_binding.sql"
+    ],
+    "appliedToExistingDatabase": false
+  },
+  "externalActivity": {
+    "liveModels": false,
+    "paidExperiments": false,
+    "providerPublishing": false,
+    "jevActivated": false
+  },
+  "limitations": [
+    "No live logged-in UI acceptance run or content-quality/speed benchmark",
+    "Supersession is scoped to the same weekly run/postKey/channel; cross-run identity remains T11",
+    "General reschedule/cancel protection and shared weekly schedule remain T08"
+  ],
+  "localVerificationFallback": {
+    "reason": "Docker Desktop startup failed on its AF_UNIX IPC endpoint (error 1920)",
+    "source": "https://www.postgresql.org/download/windows/",
+    "archiveSource": "https://get.enterprisedb.com/postgresql/postgresql-18.4-1-windows-x64-binaries.zip",
+    "version": "18.4",
+    "existingEnvironmentChanged": false
+  },
+  "preservedOriginalVoiceChange": {
+    "path": "src/app/workspace/voice-segmentation.ts",
+    "sha256": "8a5657a22235bc46df2a75b9e7c4883565a49c9a73eff49a10416a6d73e07588"
+  },
+  "sourceFiles": [
+    {
+      "path": "db/migrations/0021_weekly_approval_binding.sql",
+      "sha256": "f8de3196d50ea801e4feb80d958cb21ae383c3f85fcabc40bc97560bac550e80"
+    },
+    {
+      "path": "src/app/api/social/schedules/route.ts",
+      "sha256": "17b6c2d4e174aa5c8c5db8261e2b7e0feb09154c67578fb1c1513855c09cbb9b"
+    },
+    {
+      "path": "src/app/api/weekly-planning/route.ts",
+      "sha256": "374b66f22b40f4d70fa77800a0fada1aaeef7ad2a8f3ddb623be38acea4dad8f"
+    },
+    {
+      "path": "src/app/workspace/post-review-upgrade.tsx",
+      "sha256": "103cbd6539b6e942e6ef03e72644df4a2e6ef994bf97e00c6040b14541fd85ee"
+    },
+    {
+      "path": "src/app/workspace/social-schedule-controls.tsx",
+      "sha256": "5ed9ed8deaaf24d87968c4db33876a3137e0c3caa73166cd2a0a33de1b43f4d3"
+    },
+    {
+      "path": "src/app/workspace/weekly-cadence-client.tsx",
+      "sha256": "da9da87da99055b52da8309388c6caba3cf8a2e03d912e50617bcf7e9f5dc62a"
+    },
+    {
+      "path": "src/app/workspace/weekly-planning-client.tsx",
+      "sha256": "14fda19f8e4f03d1db477d4b0db0b4a7ee8bb7d71e2c6dddbde342f639857485"
+    },
+    {
+      "path": "src/app/workspace/weekly-posts-client.tsx",
+      "sha256": "a344714b00ce982d001eb47dc47fe0e219c3126118ca8b8b8dd142cc677395a6"
+    },
+    {
+      "path": "src/application/publishing/factual-authority.ts",
+      "sha256": "acc5cdaeb5168b4440d2fc641a6895aa75cf2e9cdb8924e6db3a06cc78da3da7"
+    },
+    {
+      "path": "src/application/publishing/materialize-approved-post.ts",
+      "sha256": "d0dcd3273886a9c7a754528dba47d302bd121e6f7bda282e0495b710a3a91862"
+    },
+    {
+      "path": "src/application/publishing/publication-bundle-codec.ts",
+      "sha256": "addcbf39947c5a211d3aa42a033e0fcc9d1020691abbd6b15df988832b23de8f"
+    },
+    {
+      "path": "src/application/publishing/publication-store.ts",
+      "sha256": "35087ccd33a6f5520866b8089f2b82f46c68edba0db4c24a336590773aa09648"
+    },
+    {
+      "path": "src/application/publishing/schedule-approved-post.ts",
+      "sha256": "5df1dd7f4383a8088982dea9e33c00867ad1aa84e592fbc7fa49f221f2650efb"
+    },
+    {
+      "path": "src/application/publishing/weekly-publication-bundle.ts",
+      "sha256": "6d94d06ed58f02ed47f976e37a74da63da5290d9ba2198e67a54ec2115742574"
+    },
+    {
+      "path": "src/application/weekly-planning/approval-evidence.ts",
+      "sha256": "5005222b42b4c978ed1452acc287a9afc052efc636b66566ab2f4735b397c4c7"
+    },
+    {
+      "path": "src/application/weekly-planning/posts.ts",
+      "sha256": "c13e7e1c5857d52701682b160f609ffbcc539321d6e575389536059f303f0430"
+    },
+    {
+      "path": "src/application/weekly-planning/review-evidence.ts",
+      "sha256": "ea474a3e79c970c4ff2bc12b9dd662d8e41ba94b1c3bfd656261ec3536da6ddb"
+    },
+    {
+      "path": "src/application/weekly-planning/review-policy.ts",
+      "sha256": "63419ddd53321900fc7b98a29dbea4a03eb514b6aa03de50b8d2d1b606f3d4c9"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/post-mode.ts",
+      "sha256": "25a650d191a10eebd8f5a8a05519f491f7287cd5f638072ebe4f64b2a94cbd98"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/post-context.ts",
+      "sha256": "c3e611f9f7b2ca766ea36789355f0daeeecab7ad43994838b4421b2b5486d215"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/post-editorial.ts",
+      "sha256": "1a6af9015a81ffe98978ed1c257a6e3bf7d56d8520818ad20cbdee8a34452203"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/posts.ts",
+      "sha256": "80a30633d85fefa32b352e36792bf449b67f1512af77c7ed977448f999f0e87a"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/review-evidence.ts",
+      "sha256": "282d0e6ca5100a17eccdc931168d700d6cca1e60c7a10ab3215fd0d2ac8c75e4"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/prompts/posts.ts",
+      "sha256": "9844ae7b7d45cad60b839e4b700cbc2bd89348ab1a8f9e8d9394c51a3891898b"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "sha256": "1ec566942f0429798fb61294c49808a2c9c5e9c7cb7d19c25d4fe3b2fddb4dce"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publish-store.ts",
+      "sha256": "d79e79df5a865c26d78b1386edeb8189a5ec25cecd985396c412e76fac1238da"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-store.ts",
+      "sha256": "b7483fae797df461f3ac5c7fc1c2744adf5e46e2a805020af4b525cb21f94bd1"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-posts-repair.ts",
+      "sha256": "90bd0499f197bf1368ebca0c60130d2ebb41bb7aabbb3943d1e0ce59f61b6b33"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-posts-store.ts",
+      "sha256": "0d3e88974fabac3f6eba5f1a83703da13c7bdc0b6f9078c5fca14a5c0b776819"
+    },
+    {
+      "path": "tests/brand-voice-fidelity.test.mts",
+      "sha256": "850958ad12eeb2c84fe6f8e2db6dcd093c0bf22b04eb8af1538325de57dfa499"
+    },
+    {
+      "path": "tests/contextual-notes.integration.test.mts",
+      "sha256": "95436f524ea5ee086f73c782aee1ec06f17ea6d8d5870498d38c5cb7710a186d"
+    },
+    {
+      "path": "tests/post-language.test.mts",
+      "sha256": "f6a96ce83d73fcc009b52f2ca08f5b8d1eea1e5f9b4199b1b5dc7f56acb41830"
+    },
+    {
+      "path": "tests/publication-bundle-codec.test.mts",
+      "sha256": "50f5ef2cf408523652e2e4d4c64a46b9e0dfbfd3e8b250607e6dca1358f32e99"
+    },
+    {
+      "path": "tests/public-knowledge.test.mts",
+      "sha256": "4569adb9ab57eda86255381322f3f350798da61bb8e53d033961b31bf74d49fb"
+    },
+    {
+      "path": "tests/public-knowledge.integration.test.mts",
+      "sha256": "e42f4d21e5634a605f126b54a23395064245d8934c0b2934b7457cc5a9881a1f"
+    },
+    {
+      "path": "tests/social-scheduling.integration.test.mts",
+      "sha256": "c4ec60c296f2d05b9dd28d08f9f37d949c6f028dd86d2a4eb98f86940acc2869"
+    },
+    {
+      "path": "tests/weekly-planning.integration.test.mts",
+      "sha256": "eedd2f9bb4db74be6f5a7f82afc562dd993da54708586f74fde0cce89120d4bf"
+    },
+    {
+      "path": "tests/weekly-posts-fixture.ts",
+      "sha256": "ebda62ceb0665cae1acb4e50fc9150ab91ba9c43676aea22016c859120cc281a"
+    },
+    {
+      "path": "tests/weekly-posts.test.mts",
+      "sha256": "96163a1c4503daca59ca24cf016be7fb996ea802886e569fff895024254a1898"
+    },
+    {
+      "path": "tests/weekly-publication-bundle.test.mts",
+      "sha256": "a110d6c9117573e4a8784c881379a3ea262a3d5e56064ad7520d6a497729b55d"
+    },
+    {
+      "path": "tests/weekly-approval-fixture.ts",
+      "sha256": "34a8396a3330fea1de95b23b0b704929cab4520b40b53ec81bf1a25ff10a305f"
+    },
+    {
+      "path": "tests/weekly-approval.test.mts",
+      "sha256": "913b23a954fc2b160fbbbceb2742858b89e170971329bee6e3266f3e3dc5e0d9"
+    },
+    {
+      "path": "tests/weekly-approval.integration.test.mts",
+      "sha256": "d982fa0743ecfd0ca103c5829d2c0fa8610f04839b849fd8bd33ead80a17e0ef"
+    },
+    {
+      "path": "tests/fixtures/publication-v2-facebook.json",
+      "sha256": "42446c8feb816ea93b95011315de2c41d8f38c841f5a2a66db4e15b2f4dfc2b0"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "sampleHash": "2d9b497311517fca0ef68a707f963c0e6f5e637c7f2971a0c9de35b7c27ab830",
+  "mode": "baseline",
+  "logicalRequests": 5,
+  "stoppedForProtocolFailure": false,
+  "completedAt": "2026-10-06T07:02:14.389Z",
+  "productionStateChanged": false
+}

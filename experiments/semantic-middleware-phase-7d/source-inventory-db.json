@@ -1,0 +1,85 @@
+{
+  "createdAt": "2026-10-06T02:59:45.098Z",
+  "queriesReadOnly": true,
+  "tables": [
+    "weekly_briefs",
+    "weekly_planning_events",
+    "weekly_planning_model_runs",
+    "weekly_planning_runs",
+    "weekly_post_assets",
+    "weekly_post_batches"
+  ],
+  "counts": {
+    "weekly_briefs": 1,
+    "weekly_planning_events": 6,
+    "weekly_planning_model_runs": 11,
+    "weekly_planning_runs": 2,
+    "weekly_post_assets": 0,
+    "weekly_post_batches": 2
+  },
+  "weeklyPostAvailability": [
+    {
+      "status": "failed",
+      "batches": 1,
+      "saved_post_copies": 2,
+      "repair_drafts": 1
+    },
+    {
+      "status": "queued",
+      "batches": 1,
+      "saved_post_copies": 3,
+      "repair_drafts": 0
+    }
+  ],
+  "eventKinds": [
+    {
+      "kind": "contextual-post-reverted",
+      "n": 1
+    },
+    {
+      "kind": "contextual-post-revised",
+      "n": 1
+    }
+  ],
+  "modelRunSteps": [
+    {
+      "step": "post_editorial",
+      "n": 2
+    },
+    {
+      "step": "post_review",
+      "n": 1
+    },
+    {
+      "step": "post_schedule",
+      "n": 1
+    },
+    {
+      "step": "post_writer_p1",
+      "n": 1
+    },
+    {
+      "step": "post_writer_p2",
+      "n": 1
+    },
+    {
+      "step": "post_writer_p3",
+      "n": 4
+    }
+  ],
+  "savedDevelopmentOutputs": [
+    "evals/results/total-charm-dent/audience-hypothesis-v1.json",
+    "evals/results/total-charm-dent/communication-envelope-v1.json",
+    "evals/results/total-charm-dent/communication-profile-v1.json",
+    "evals/results/total-charm-dent/content-audience-direction-v1.json",
+    "evals/results/total-charm-dent/content-brief-v1.json",
+    "evals/results/total-charm-dent/content-direction-v1.json",
+    "evals/results/total-charm-dent/experiment-decision-v1.json",
+    "evals/results/total-charm-dent/weekly-audience-focus-v1.json",
+    "evals/results/total-charm-dent/weekly-objective-v1.json",
+    "evals/results/weekly-sequence/initial-v1.json",
+    "evals/results/weekly-sequence/latest.json",
+    "evals/results/weekly-sequence/ordinary-generation.json",
+    "evals/results/weekly-sequence/ordinary-requested-repeat.json"
+  ]
+}

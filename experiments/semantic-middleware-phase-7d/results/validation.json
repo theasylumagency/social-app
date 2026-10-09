@@ -1,0 +1,10 @@
+{
+  "scope": "Offline validation; no provider calls or database mutations",
+  "typeCheck": { "command": "npm run check -- --incremental false", "exitCode": 0 },
+  "existingSuite": { "command": "npm test", "exitCode": 0, "runtimeTests": 311, "contractTests": 17, "shadowTests": 20, "totalPassed": 348, "failed": 0, "domainBuildPassed": true },
+  "evaluationSuite": { "command": "node --import tsx --test experiments/semantic-middleware-phase-7d/phase7d.test.mts", "exitCode": 0, "passed": 13, "failed": 0 },
+  "isolatedLint": { "command": "npx eslint experiments/semantic-middleware-phase-7d --no-warn-ignored --max-warnings 0", "exitCode": 0, "warnings": 0, "errors": 0 },
+  "initialTestFailures": "Two synthetic test-harness expectations were corrected: no-task is null, and the mock distinguished GET draft from POST draft. The complete evaluation suite then passed.",
+  "nextProductionBuildRun": false,
+  "productionCodeModified": false
+}

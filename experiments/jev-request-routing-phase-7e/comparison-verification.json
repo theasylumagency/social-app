@@ -1,0 +1,10 @@
+{
+ "status":"passed",
+ "typeCheck":{"command":"npm run check -- --incremental false","exitCode":0},
+ "isolatedLint":{"command":"npx eslint experiments/jev-request-routing-phase-7e --max-warnings 0","exitCode":0},
+ "baseline":{"logicalTasks":5,"actualNetworkRequests":5,"completeRuns":1,"technicalFailures":0,"validationRepairs":0,"transportRetries":0},
+ "assessment":{"allResponseEvidenceQuotesGrounded":true,"rawResponseHashMatchesComparison":true,"engineeringAssessmentHashMatchesComparison":true,"independentBlindHumanQualityGold":false},
+ "preservedTests":{"priorExperimentTestsPassed":21,"rerunNeeded":false,"reason":"Frozen provider protocols, reference fixtures and application code are unchanged; new work is source-grounded offline comparison.","existingUnchangedVoiceTestFailure":"Retained in verification-tests.json; not altered or hidden."},
+ "integrityReceipt":"integrity/verification.json",
+ "providerCallsDuringVerification":0
+}

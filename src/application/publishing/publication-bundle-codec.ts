@@ -1,3 +1,4 @@
+import { validateWeeklyPublicationBundle, validateCurrentWeeklyPublicationBundle, validatePostRevisionPublicationBundle, type SocialPublicationBundleV4, type SocialPublicationBundleV2, type SocialPublicationBundleV3 } from "./weekly-publication-bundle"
 import type {
   ContentBrief, ContentExecutionSpec, SocialContentDraft, SocialContentDraftEvaluationAudit,
   SocialContentReviewDecision, SocialContentReviewRequest,
@@ -6,7 +7,7 @@ import { projectSocialContentDraftText, resolveSocialContentSchedulingEligibilit
 import { SOCIAL_CONTENT_MODES } from "../../blueprints/social/tokens"
 
 export const SOCIAL_PUBLICATION_BUNDLE_SCHEMA = "unda.social-publication-input" as const
-export const SOCIAL_PUBLICATION_BUNDLE_VERSION = 1 as const
+export const SOCIAL_PUBLICATION_BUNDLE_VERSION = 4 as const
 
 export type SocialPublicationBundleV1 = {
   readonly contentBrief: ContentBrief
@@ -50,14 +51,20 @@ function validateV1(value: unknown): SocialPublicationBundleV1 {
   return structuredClone({ contentBrief: brief, contentExecutionSpec: spec, draft, evaluationAudit: audit, reviewRequest, reviewDecision })
 }
 
-export function encodeSocialPublicationBundle(bundle: SocialPublicationBundleV1) {
-  const validated = validateV1(bundle)
-  return { schema: SOCIAL_PUBLICATION_BUNDLE_SCHEMA, version: SOCIAL_PUBLICATION_BUNDLE_VERSION, bundle: validated }
+export type SocialPublicationBundle = SocialPublicationBundleV1 | SocialPublicationBundleV2 | SocialPublicationBundleV3 | SocialPublicationBundleV4
+
+export function encodeSocialPublicationBundle(bundle: SocialPublicationBundleV4): { schema: typeof SOCIAL_PUBLICATION_BUNDLE_SCHEMA; version: 4; bundle: SocialPublicationBundleV4 }
+export function encodeSocialPublicationBundle(bundle: SocialPublicationBundleV3): { schema: typeof SOCIAL_PUBLICATION_BUNDLE_SCHEMA; version: 3; bundle: SocialPublicationBundleV3 }
+export function encodeSocialPublicationBundle(bundle: SocialPublicationBundleV2): { schema: typeof SOCIAL_PUBLICATION_BUNDLE_SCHEMA; version: 2; bundle: SocialPublicationBundleV2 }
+export function encodeSocialPublicationBundle(bundle: SocialPublicationBundleV1): { schema: typeof SOCIAL_PUBLICATION_BUNDLE_SCHEMA; version: 1; bundle: SocialPublicationBundleV1 }
+export function encodeSocialPublicationBundle(bundle: SocialPublicationBundle) {
+  if ("postRevision" in bundle) return {schema:SOCIAL_PUBLICATION_BUNDLE_SCHEMA,version:4 as const,bundle:validatePostRevisionPublicationBundle(bundle)}
+  if ("weeklyReview" in bundle && bundle.weeklyReview.version === 2) return { schema: SOCIAL_PUBLICATION_BUNDLE_SCHEMA, version: 3 as const, bundle: validateCurrentWeeklyPublicationBundle(bundle) }
+  if ("weeklyReview" in bundle) return { schema: SOCIAL_PUBLICATION_BUNDLE_SCHEMA, version: 2 as const, bundle: validateWeeklyPublicationBundle(bundle) }
+  return { schema: SOCIAL_PUBLICATION_BUNDLE_SCHEMA, version: 1 as const, bundle: validateV1(bundle) }
 }
 
-export function decodeSocialPublicationBundle(schema: string, version: number, value: unknown): SocialPublicationBundleV1 {
-  if (schema !== SOCIAL_PUBLICATION_BUNDLE_SCHEMA || version !== SOCIAL_PUBLICATION_BUNDLE_VERSION) {
-    throw new Error("publicationBundleUnsupportedVersion")
-  }
-  return validateV1(value)
+export function decodeSocialPublicationBundle(schema: string, version: number, value: unknown): SocialPublicationBundle {
+  if (schema !== SOCIAL_PUBLICATION_BUNDLE_SCHEMA || ![1, 2, 3, 4].includes(version)) throw new Error("publicationBundleUnsupportedVersion")
+  return version === 4 ? validatePostRevisionPublicationBundle(value) : version === 3 ? validateCurrentWeeklyPublicationBundle(value) : version === 2 ? validateWeeklyPublicationBundle(value) : validateV1(value)
 }

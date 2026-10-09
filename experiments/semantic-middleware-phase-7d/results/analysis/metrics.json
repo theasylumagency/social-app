@@ -1,0 +1,426 @@
+{
+  "sampleId": "unda-semantic-phase7d-real-v1",
+  "sampleHash": "bdcfebc7344672996da6eb7dd44d2bcbed20f3d19c88d59f37585ec067173560",
+  "generatedAt": "2026-10-06T03:22:49.125Z",
+  "evaluationStatus": "completedWithSeverelyLimitedRealContentEvidence",
+  "reference": {
+    "status": "completedBlindHumanEngineeringReferenceNotBenchmarkGold",
+    "reviewedItems": 3,
+    "requiredItems": 3,
+    "hash": "e3e2273f57a1e2216298d8854933638a232e3fe7b5c4888e05fd878043e8d60a"
+  },
+  "cohorts": {
+    "A": {
+      "contentItems": 2,
+      "eligibleItems": 0,
+      "invokedItems": 0,
+      "noCallItems": 2,
+      "noPreparedTaskItems": 2,
+      "textSurfaces": 20,
+      "traceRecords": 20,
+      "providerMetrics": {
+        "shadowEligibleTexts": 0,
+        "shadowIneligibleTexts": 20,
+        "providerRequests": 0,
+        "semanticDecisions": 0,
+        "familyDecisions": 0,
+        "polarityDecisions": 0,
+        "candidateBindingDecisions": 0,
+        "temporalDecisions": 0,
+        "amountDecisions": 0,
+        "applicationDeadZoneEvents": 0,
+        "contractInvalidObservations": 0,
+        "providerInvalidResponses": 0,
+        "unresolvedSemanticFields": 0,
+        "knownEllipsisLimitCases": 0,
+        "knownAmbiguousBindingCases": 0,
+        "providerFailures": 0,
+        "timeouts": 0,
+        "timeoutRate": null,
+        "latencyMs": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "requestsWithUnknownUsage": 0,
+        "knownCostUsd": 0,
+        "requestsWithUnknownCost": 0
+      },
+      "technicalFailureRate": null,
+      "decisionsPerRequest": null,
+      "totalCostUsd": 0,
+      "costPerContentItem": 0,
+      "costPerEligibleItem": null,
+      "costPerUsefulObservation": null,
+      "usefulObservationMetricStatus": "notDemonstratedNoRealObservations",
+      "qualityMetricStatus": "humanEligibilityReviewedNoRealInterpretations",
+      "humanEvaluation": {
+        "status": "completedBlindHumanEngineeringReference",
+        "reviewedItems": 2,
+        "requiredReviewItems": 2,
+        "eligibility": {
+          "humanMaterialItems": 0,
+          "humanMaterialPropositions": 0,
+          "preparedEligibleItems": 0,
+          "invokedItems": 0,
+          "correctlyIneligibleItems": 2,
+          "missedMaterialItems": 0,
+          "missedImplicitItems": 0,
+          "candidateOrAnchorFailureItems": 0,
+          "materialItemRecall": null,
+          "materialPropositionRecall": null,
+          "unnecessaryInvocations": 0,
+          "unnecessaryInvocationRatePerInvocation": null,
+          "unnecessaryInvocationRatePerReviewedItem": 0
+        },
+        "interpretation": {
+          "scoredObservations": 0,
+          "perField": {
+            "family": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "polarity": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "service": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "branch": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "time": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "amount": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "unresolved": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            }
+          },
+          "completeObservation": {
+            "correct": 0,
+            "evaluated": 0,
+            "accuracy": null
+          },
+          "reason": "No real proposition was invoked; no semantic interpretation or adaptation accuracy is demonstrated."
+        },
+        "actions": {
+          "status": "humanAnalyticalSimulationOnly",
+          "counts": {
+            "noActionDifference": 0,
+            "reviewerFocusOnly": 0,
+            "unnecessaryReviewOrRepair": 0,
+            "missedNecessaryReviewOrRepair": 0,
+            "wrongFactEntityBinding": 0,
+            "potentiallyWrongPublicationHandling": 0
+          },
+          "falseInterventionObserved": 0,
+          "falseInterventionRatePerObservation": null,
+          "missedMaterialActionPropositions": 0,
+          "missedMaterialActionRatePerHumanMaterialProposition": null,
+          "missedMaterialActionItems": 0
+        },
+        "usefulness": {
+          "observations": 0,
+          "usefulObservations": 0,
+          "usefulObservationRate": null,
+          "costPerUsefulObservation": null,
+          "unservedHumanConsumerOpportunities": 0,
+          "reason": "Human potential usefulness of missed propositions is separate from actual observation usefulness."
+        },
+        "ellipsis": {
+          "humanCases": 0,
+          "invokedCases": 0,
+          "demonstratedBindingSafety": false
+        }
+      }
+    },
+    "B": {
+      "contentItems": 1,
+      "eligibleItems": 0,
+      "invokedItems": 0,
+      "noCallItems": 1,
+      "noPreparedTaskItems": 1,
+      "textSurfaces": 1,
+      "traceRecords": 1,
+      "providerMetrics": {
+        "shadowEligibleTexts": 0,
+        "shadowIneligibleTexts": 1,
+        "providerRequests": 0,
+        "semanticDecisions": 0,
+        "familyDecisions": 0,
+        "polarityDecisions": 0,
+        "candidateBindingDecisions": 0,
+        "temporalDecisions": 0,
+        "amountDecisions": 0,
+        "applicationDeadZoneEvents": 0,
+        "contractInvalidObservations": 0,
+        "providerInvalidResponses": 0,
+        "unresolvedSemanticFields": 0,
+        "knownEllipsisLimitCases": 0,
+        "knownAmbiguousBindingCases": 0,
+        "providerFailures": 0,
+        "timeouts": 0,
+        "timeoutRate": null,
+        "latencyMs": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "requestsWithUnknownUsage": 0,
+        "knownCostUsd": 0,
+        "requestsWithUnknownCost": 0
+      },
+      "technicalFailureRate": null,
+      "decisionsPerRequest": null,
+      "totalCostUsd": 0,
+      "costPerContentItem": 0,
+      "costPerEligibleItem": null,
+      "costPerUsefulObservation": null,
+      "usefulObservationMetricStatus": "notDemonstratedNoRealObservations",
+      "qualityMetricStatus": "humanEligibilityReviewedNoRealInterpretations",
+      "humanEvaluation": {
+        "status": "completedBlindHumanEngineeringReference",
+        "reviewedItems": 1,
+        "requiredReviewItems": 1,
+        "eligibility": {
+          "humanMaterialItems": 0,
+          "humanMaterialPropositions": 0,
+          "preparedEligibleItems": 0,
+          "invokedItems": 0,
+          "correctlyIneligibleItems": 1,
+          "missedMaterialItems": 0,
+          "missedImplicitItems": 0,
+          "candidateOrAnchorFailureItems": 0,
+          "materialItemRecall": null,
+          "materialPropositionRecall": null,
+          "unnecessaryInvocations": 0,
+          "unnecessaryInvocationRatePerInvocation": null,
+          "unnecessaryInvocationRatePerReviewedItem": 0
+        },
+        "interpretation": {
+          "scoredObservations": 0,
+          "perField": {
+            "family": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "polarity": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "service": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "branch": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "time": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "amount": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            },
+            "unresolved": {
+              "correct": 0,
+              "evaluated": 0,
+              "accuracy": null
+            }
+          },
+          "completeObservation": {
+            "correct": 0,
+            "evaluated": 0,
+            "accuracy": null
+          },
+          "reason": "No real proposition was invoked; no semantic interpretation or adaptation accuracy is demonstrated."
+        },
+        "actions": {
+          "status": "humanAnalyticalSimulationOnly",
+          "counts": {
+            "noActionDifference": 0,
+            "reviewerFocusOnly": 0,
+            "unnecessaryReviewOrRepair": 0,
+            "missedNecessaryReviewOrRepair": 0,
+            "wrongFactEntityBinding": 0,
+            "potentiallyWrongPublicationHandling": 0
+          },
+          "falseInterventionObserved": 0,
+          "falseInterventionRatePerObservation": null,
+          "missedMaterialActionPropositions": 0,
+          "missedMaterialActionRatePerHumanMaterialProposition": null,
+          "missedMaterialActionItems": 0
+        },
+        "usefulness": {
+          "observations": 0,
+          "usefulObservations": 0,
+          "usefulObservationRate": null,
+          "costPerUsefulObservation": null,
+          "unservedHumanConsumerOpportunities": 0,
+          "reason": "Human potential usefulness of missed propositions is separate from actual observation usefulness."
+        },
+        "ellipsis": {
+          "humanCases": 0,
+          "invokedCases": 0,
+          "demonstratedBindingSafety": false
+        }
+      }
+    }
+  },
+  "errors": [],
+  "comparisonStatus": "originalSafetyUnavailableConsolidatedLinksOnly",
+  "probabilityAnalysis": {
+    "realDecisions": 0,
+    "distributions": null,
+    "wrongHighConfidence": null,
+    "selectiveBehavior": null,
+    "policy": "rawOnly",
+    "nativeAbstention": false,
+    "applicationDeadZoneUsed": false,
+    "productionThresholdSelected": false
+  },
+  "repeatability": {
+    "sampleHash": "bdcfebc7344672996da6eb7dd44d2bcbed20f3d19c88d59f37585ec067173560",
+    "plannedPasses": 3,
+    "subsetAnchors": 0,
+    "actualRequests": 0,
+    "status": "notDemonstratedNoEligibleRealAnchors",
+    "reason": "The fixed real sample contains no application-prepared anchors; controlled smoke cases were not substituted.",
+    "labelFlips": null,
+    "bindingFlips": null,
+    "probabilityVariance": null
+  },
+  "smoke": {
+    "passed": true,
+    "issue": null,
+    "completedLiveCases": 4,
+    "plannedLiveCases": 4,
+    "authenticationVerified": true,
+    "batchedKeyParsingVerified": true,
+    "rawProbabilitySerializationVerified": true,
+    "applicationIdentityVerified": true,
+    "isolationVerified": true,
+    "configuration": {
+      "provider": "jev",
+      "executionMode": "provider",
+      "protocolVersion": "unda-semantic-shadow-jev-bounded-v1",
+      "model": "jev-1.13.0",
+      "timeoutMs": 2000,
+      "budgetMs": 5000,
+      "maxTasks": 5,
+      "policy": {
+        "mode": "rawOnly"
+      },
+      "configurationRef": "semantic-shadow-config:631dd6e42d2bdc27acae"
+    },
+    "rateSource": {
+      "url": "https://docs.typesafe.ai/models",
+      "checkedAt": "2026-10-06",
+      "kind": "published-rate-estimate-not-invoice"
+    },
+    "metrics": {
+      "shadowEligibleTexts": 4,
+      "shadowIneligibleTexts": 0,
+      "providerRequests": 4,
+      "semanticDecisions": 24,
+      "familyDecisions": 12,
+      "polarityDecisions": 8,
+      "candidateBindingDecisions": 4,
+      "temporalDecisions": 0,
+      "amountDecisions": 0,
+      "applicationDeadZoneEvents": 0,
+      "contractInvalidObservations": 0,
+      "providerInvalidResponses": 0,
+      "unresolvedSemanticFields": 16,
+      "knownEllipsisLimitCases": 1,
+      "knownAmbiguousBindingCases": 0,
+      "providerFailures": 0,
+      "timeouts": 0,
+      "timeoutRate": 0,
+      "latencyMs": {
+        "count": 4,
+        "mean": 441.6149,
+        "p50": 308.9975999999999,
+        "p95": 726.0577000000001
+      },
+      "inputTokens": 6035,
+      "outputTokens": 468,
+      "requestsWithUnknownUsage": 0,
+      "knownCostUsd": 0.00025347,
+      "requestsWithUnknownCost": 0
+    },
+    "evaluationStopped": false,
+    "syntheticIsolationChecksAreNotQualityEvidence": true
+  },
+  "recommendation": {
+    "choice": "A",
+    "status": "humanReferenceAvailable",
+    "rationale": "Continue shadow collection with the same slice using a larger independently verified real-content pool that includes material positives. Three correctly ineligible posts cannot establish interpretation, binding safety or operational value; admit no fields into reviewer decisions."
+  },
+  "readiness": [
+    {
+      "capability": "Eligibility",
+      "status": "promising but insufficient evidence",
+      "evidence": "3 reviewed posts; 0 human slice propositions lacked a prepared anchor."
+    },
+    {
+      "capability": "Interpretation",
+      "status": "promising but insufficient evidence",
+      "evidence": "No real-content family or polarity decisions; controlled smoke is protocol evidence only."
+    },
+    {
+      "capability": "Binding",
+      "status": "promising but insufficient evidence",
+      "evidence": "No real service/branch/time/amount or ellipsis binding was invoked. Phase 7B ellipsis limitation remains."
+    },
+    {
+      "capability": "Contract",
+      "status": "ready for limited shadow continuation",
+      "evidence": "4/4 controlled live observations structurally valid; identities/spans preserved. Real-content observation validity has no denominator."
+    },
+    {
+      "capability": "Operational usefulness",
+      "status": "promising but insufficient evidence",
+      "evidence": "Zero real observations; useful/total and cost/useful are undefined."
+    },
+    {
+      "capability": "Failure isolation",
+      "status": "ready for limited shadow continuation",
+      "evidence": "Exception/timeout/schema/storage fault checks preserve collection isolation; production consumers remain disabled and unchanged."
+    }
+  ],
+  "productionDecisionChanged": false,
+  "errorAttribution": "No-call misses belong to candidate/anchor preparation. No Jev, adaptation or projection error is inferred without invocation.",
+  "extraction": "Unsupported by current bounded interface; application owns source spans, literal candidates and IDs.",
+  "discovery": "Unsupported by current adapter; curated anchors and lexical selection tags are not proposition discovery."
+}

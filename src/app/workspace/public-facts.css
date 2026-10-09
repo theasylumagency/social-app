@@ -1,0 +1,11 @@
+.public-facts form { max-width: 46rem; margin-top: 1.5rem; }
+.public-facts fieldset { display: grid; gap: .65rem; border: 0; padding: 0; }
+.public-facts input, .public-facts textarea, .public-facts select { width: 100%; padding: .7rem; border: 1px solid #cbd5ce; border-radius: .5rem; background: #fff; color: #182a20; font: inherit; }
+.public-facts input[type=checkbox] { width: 1.2rem; height: 1.2rem; flex: 0 0 auto; }
+.public-facts-check { display: flex; gap: .65rem; align-items: flex-start; margin: .5rem 0; }
+.public-facts button { padding: .65rem .9rem; border: 1px solid #63756a; border-radius: .5rem; color: #182a20; background: #fff; cursor: pointer; margin: .25rem .6rem .25rem 0; font: inherit; }
+.public-facts button:disabled { opacity: .55; cursor: wait; }
+.public-facts :is(button,input,select,textarea):focus-visible { outline: 3px solid #187654; outline-offset: 3px; }
+.public-facts-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.public-facts-list li { padding: 1rem; border: 1px solid #d5ddd7; border-radius: .6rem; overflow-wrap: anywhere; }
+.public-facts blockquote { border-left: 3px solid #b5c6bb; margin: .5rem 0; padding: .75rem; overflow-wrap: anywhere; }

@@ -7,8 +7,10 @@ import { assembleWeeklyPlan } from "../../blueprints/social/weekly-plan-assembly
 import { submitWeeklyPlanForReview } from "../../blueprints/social/weekly-plan-lifecycle"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { recentEditorialWork } from "../../blueprints/social/weekly-planning/sequence"
+import { internalKnowledgeContext, publicKnowledgeContext } from "../../blueprints/social/public-knowledge"
 import { compileLandscapeContext } from "../brand-discovery/advance"
 import { COMPACT_STRATEGY_PROMPT, COMPACT_STRATEGY_SCHEMA, validateCompactStrategy, type CompactStrategy } from "../../blueprints/social/weekly-planning/compact-strategy"
+import { planningEvidenceContext } from "../analytics/planning-evidence-context"
 
 export function planningAudienceRefs(p: PlanningPayload) {
   return p.basis.payload.landscape!.entries.filter((e) => e.influence !== "none").map((entry, i) => ({ key: `a${i + 1}`, ref: { source: entry.source, id: entry.audience.id } as AudienceRef }))
@@ -17,11 +19,15 @@ export function compilePlanningContext(run: PlanningRun) {
   const p = run.payload
   const basis = p.basis.payload
   const landscape = compileLandscapeContext(basis)
+  const publicKnowledge = publicKnowledgeContext(p.publicKnowledge)
   const refs = planningAudienceRefs(p)
+  const evidenceReview = planningEvidenceContext(p.evidence ?? [])
   const envelope = basis.envelope!
   const end = new Date(`${run.week}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + 6)
   return {
     ...landscape,
+    ...publicKnowledge,
+    internalBusinessFacts: internalKnowledgeContext(p.publicKnowledge),
     selectedBrandGoals: p.socialStrategy?.payload.proposal ? [{ goalKey: "g1", title: p.socialStrategy.payload.proposal.objective, desiredChange: p.socialStrategy.payload.proposal.plan.audienceChange, rationale: p.socialStrategy.payload.proposal.rationale, progressSignals: p.socialStrategy.payload.proposal.measurement.map((m) => m.signal) }] : basis.goals.filter((g) => basis.feedback.selectedGoalIds?.includes(g.id)).map((g, i) => ({ goalKey: `g${i + 1}`, title: g.title, desiredChange: g.desiredChange, rationale: g.rationale, progressSignals: g.progressSignals })),
     communicationProfiles: basis.profiles.map((profile) => ({
       audienceKey: refs.find((r) => r.ref.source === profile.audience.source && r.ref.id === profile.audience.id)!.key,
@@ -31,16 +37,19 @@ export function compilePlanningContext(run: PlanningRun) {
     })),
     communicationEnvelope: { complexity: envelope.complexity, assumedKnowledge: envelope.assumedKnowledge, explanationDepth: envelope.explanationDepth, toneRange: envelope.toneRange, framingRules: envelope.framingRules, preferredStructures: envelope.preferredStructures, terminologyRules: envelope.terminologyRules, proofStyle: envelope.proofStyle, ctaStyle: envelope.ctaStyle, salesPressure: envelope.salesPressure, inclusivityRules: envelope.inclusivityRules, trustMechanisms: envelope.trustMechanisms, avoid: envelope.avoid, rationale: envelope.rationale },
     week: { startsOn: run.week, endsOn: end.toISOString().slice(0, 10), plannedOn: p.plannedOn, timezone: "Asia/Tbilisi" },
-    userPriority: p.priority || null, revisionNote: p.revisionNote || null,
+    userPriority: p.priority || null, revisionNote: p.revisionNote || null, originalRevisionRequest: p.revisionSource?.text ?? null, requestedConditions: p.weeklyDirectives ?? null,
     previousVersion: p.previousVersion, priorPlans: p.priorWeeks,
     recentEditorialWork: recentEditorialWork(p, run.week),
     socialStrategy: p.socialStrategy?.payload.proposal ?? null,
     strategyVersion: p.socialStrategy ? { id: p.socialStrategy.id, revision: p.socialStrategy.revision, approvedAt: p.socialStrategy.payload.approvedAt } : null,
-    recentResults: (p.evidence ?? []).filter((e) => e.availability === "available"),
-    recentSignals: (p.evidence ?? []).flatMap((e) => e.observations),
-    evidenceReview: p.evidence ?? [],
+    recentResults: evidenceReview.filter(e => (e.results?.measuredPostCount ?? 0) > 0).map(e => ({ week: e.week, availability: e.availability })),
+    recentSignals: (p.evidence ?? []).flatMap((e) => e.observations.map(o => ({ ...o, week: e.week, provenance: "manual" as const }))),
+    evidenceReview,
     channelContext: { recommendations: p.socialStrategy?.payload.proposal?.channels ?? [], confirmedDestinations: [], publishingSchedule: null },
-    dataAvailability: { performance: p.evidence?.some((e) => e.availability === "available") ? "suppliedObservations" : "unavailable", proof: "notSupplied", priorPlansAreResults: false },
+    dataAvailability: { performance: p.evidence?.some(e => (e.results?.measuredPostCount ?? 0) > 0)
+      ? p.evidence.some(e => e.results && e.availability === "partial") ? "partial" : "available" : "unavailable",
+      manualObservations: p.evidence?.some(e => e.observations.length > 0) ?? false,
+      proof: publicKnowledge.eligibleProof.length ? "confirmedSourceProof" : "notSupplied", priorPlansAreResults: false },
     weeklyObjective: p.objective,
     weeklyAudienceFocus: p.focus,
     contentDirections: p.directions.map((d, i) => ({ contentDirectionKey: `d${i + 1}`, ...d })),

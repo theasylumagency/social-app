@@ -3,6 +3,7 @@ import { displayDate } from "../../application/dashboard/model"
 import type { DeliveryItem, DeliverySnapshot, DeliveryState } from "../../application/publishing/delivery-view"
 
 const states: Record<DeliveryState, { label: string; detail: string }> = {
+  factBlocked: { label: "ფაქტი შესამოწმებელია", detail: "პოსტში გამოყენებული ინფორმაცია შეიცვალა ან მისი მოქმედების ვადა ამოიწურა. საჭიროა ახალი შემოწმება და დამტკიცება." },
   published: { label: "გამოქვეყნებულია", detail: "გამოქვეყნება დადასტურებულია მიღებული შედეგით." },
   cancelled: { label: "გაუქმებულია", detail: "განრიგში გაუქმება დაფიქსირებულია." },
   scheduled: { label: "დაგეგმილია", detail: "გამოქვეყნების დრო ჯერ არ დამდგარა." },
@@ -21,7 +22,7 @@ const states: Record<DeliveryState, { label: string; detail: string }> = {
 function DeliveryRow({ item }: { item: DeliveryItem }) {
   return <article className={`delivery-row${item.attention ? " delivery-needs-attention" : ""}`}>
     <div className="delivery-row-heading"><h3>{item.channel === "facebook" ? "Facebook" : "Instagram"} · {item.accountName} · პოსტი {item.postKey.slice(1)}</h3><span className={`delivery-badge delivery-${item.state}`}>{states[item.state].label}</span></div>
-    <p>{states[item.state].detail}</p><p>განრიგით: <time dateTime={item.publishAt}>{displayDate(item.publishAt, { year: "numeric", hour: "2-digit" })}</time>{item.publishedAt ? <> · გამოქვეყნდა: <time dateTime={item.publishedAt}>{displayDate(item.publishedAt, { year: "numeric", hour: "2-digit" })}</time></> : null}</p>
+    <p>{item.state === "factBlocked" ? item.factualBlocker : states[item.state].detail}</p><p>განრიგით: <time dateTime={item.publishAt}>{displayDate(item.publishAt, { year: "numeric", hour: "2-digit" })}</time>{item.publishedAt ? <> · გამოქვეყნდა: <time dateTime={item.publishedAt}>{displayDate(item.publishedAt, { year: "numeric", hour: "2-digit" })}</time></> : null}</p>
     {item.cancelled && item.state !== "cancelled" ? <p className="brief-caution">გაუქმების ჩანაწერიც არსებობს. ის უკვე გაგზავნილი მოთხოვნის ან პუბლიკაციის გაუქმებას არ ადასტურებს.</p> : null}
     {item.state === "published" && item.unresolvedAttempt ? <p className="brief-caution">სხვა გაგზავნის მცდელობის შედეგი ჯერ გაურკვეველია. საჭიროა შესაძლო განმეორებითი გამოქვეყნების შემოწმება.</p> : null}
     <details><summary>მცდელობები და გეგმის წყარო</summary><p>{item.attempts} მცდელობა · გეგმის ვერსია {item.version} · კვირა {item.week}</p>{item.lastActivityAt ? <p>ბოლო ჩანაწერი: <time dateTime={item.lastActivityAt}>{displayDate(item.lastActivityAt, { year: "numeric", hour: "2-digit" })}</time></p> : null}<Link className="ws-text-link" href={`/workspace/content?week=${item.week}`}>ამ კვირის კონტენტი და ვერსიები ↗</Link></details>

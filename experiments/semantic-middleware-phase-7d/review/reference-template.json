@@ -1,0 +1,28 @@
+{
+  "sampleId": "unda-semantic-phase7d-real-v1",
+  "sampleHash": "bdcfebc7344672996da6eb7dd44d2bcbed20f3d19c88d59f37585ec067173560",
+  "referenceStatus": "Phase 7D engineering reference; not benchmark gold",
+  "reviewer": null,
+  "completedAt": null,
+  "blindAttestation": false,
+  "items": [
+    {
+      "itemId": "A001",
+      "reviewed": false,
+      "propositions": [],
+      "notes": ""
+    },
+    {
+      "itemId": "A002",
+      "reviewed": false,
+      "propositions": [],
+      "notes": ""
+    },
+    {
+      "itemId": "B001",
+      "reviewed": false,
+      "propositions": [],
+      "notes": ""
+    }
+  ]
+}

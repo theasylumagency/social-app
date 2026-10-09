@@ -1,3 +1,5 @@
+import { captureWeeklyApproval } from "../src/application/weekly-planning/approval-evidence"
+import { reviewFixture } from "./weekly-review-fixture"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import test from "node:test"
@@ -19,12 +21,12 @@ test("approved weekly post fans out to independent canonical-account schedules w
     provider_account_ref,connection_status,can_publish,can_fetch_analytics,capabilities,connected_at)
     VALUES('instagram-binding','instagram-account','brand','instagram','zernio','provider-profile','provider-instagram','connected',true,true,'{"publish":true,"analytics":true}',now())`)
   const fixture = approvedPublicationFixture()
-  const createdAt = "2026-09-09T10:00:00.000Z"
+  const createdAt = "2026-09-09T10:00:00.123Z"
   const planning = { id: fixture.sourceWeeklyRunId, ownerId: "owner", brandId: "brand", week: "2026-09-07", version: 1,
     status: "approved", step: "ready", error: null, leaseUntil: null, createdAt, updatedAt: createdAt,
-    payload: { basis: { payload: { input: { language: "ka" } } }, plan: { id: "weekly-plan", state: "approved",
+    payload: { basis: { sessionId: "basis", revision: 1, payload: { input: { language: "ka" } } }, plan: { id: "weekly-plan", state: "approved",
       contentDirections: [{ id: "direction", audienceDirection: { primaryAudience: { source: "brand", id: "audience" }, secondaryAudiences: [], bias: "balanced" } }] } } } as unknown as PlanningRun
-  const post = { directionKey: "d1", dayOffset: 1, title: "Post", why: "A useful reason", format: "image",
+  const post = { contentMode: SOCIAL_CONTENT_MODES.educational, directionKey: "d1", dayOffset: 1, title: "Post", why: "A useful reason", format: "image",
     channels: [{ channel: "facebook", reason: "Facebook fit" }, { channel: "instagram", reason: "Instagram fit" }],
     brief: { job: "Explain", takeaway: "A clear takeaway", points: ["First point", "Second point"], mustNotSay: ["Unsupported"] },
     visual: { kind: "photo", description: "Product image", aspectRatio: "1:1", frames: ["Product"] } }
@@ -32,11 +34,13 @@ test("approved weekly post fans out to independent canonical-account schedules w
     approvedByUserId: "owner", updatedAt: createdAt, payload: { outline: { summary: "Summary", cadenceReason: "Reason", channelReason: "Reason", posts: [post] },
       copies: { p1: { variants: [{ channel: "facebook", caption: "Facebook copy", frames: [], script: "", onScreenText: [] },
         { channel: "instagram", caption: "Instagram copy", frames: [], script: "", onScreenText: [] }] } }, review: { summary: "Approved", issues: [] }, repairs: 0 } } as unknown as PostsBatch
+  posts.payload.reviewEvidence = reviewFixture(planning, posts.payload, createdAt)
+  posts.approvalEvidence = captureWeeklyApproval(planning, posts.payload, "owner", createdAt)
   const approvedPosts = posts
   await pool.query(`INSERT INTO weekly_planning_runs(id,owner_user_id,brand_id,week_start,version,status,step,payload)
     VALUES($1,'owner','brand','2026-09-07',1,'approved','ready',$2::jsonb)`, [planning.id, JSON.stringify(planning.payload)])
-  await pool.query(`INSERT INTO weekly_post_batches(run_id,status,step,payload,approved_at,approved_by_user_id)
-    VALUES($1,'ready','ready',$2::jsonb,$3,'owner')`, [planning.id, JSON.stringify(posts.payload), createdAt])
+  await pool.query(`INSERT INTO weekly_post_batches(run_id,status,step,payload,approved_at,approved_by_user_id,approval_evidence)
+    VALUES($1,'ready','ready',$2::jsonb,$3::timestamptz+interval '456 microseconds','owner',$4::jsonb)`, [planning.id, JSON.stringify(posts.payload), createdAt, JSON.stringify(posts.approvalEvidence)])
   const assetId = randomUUID()
   await pool.query(`INSERT INTO weekly_post_assets(id,run_id,post_key,slot,name,width,height,content)
     VALUES($1,$2,'p1',0,'image.webp',10,10,$3)`, [assetId, planning.id, Buffer.from("image")])

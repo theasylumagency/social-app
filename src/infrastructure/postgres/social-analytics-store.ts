@@ -56,18 +56,24 @@ export class PostgresSocialAnalyticsStore implements SocialAnalyticsStore {
       FROM social_provider_account_bindings b WHERE b.provider=$1 AND b.provider_profile_ref=$2 AND b.provider_account_ref=$3 AND b.channel=$4
         AND b.can_fetch_analytics=true AND EXISTS(SELECT 1 FROM social_provider_publish_requests j JOIN social_publish_attempts a ON a.id=j.attempt_id
           WHERE j.provider_binding_id=b.id AND a.publishing_account_id=b.publishing_account_id
-            AND ($5=j.provider_publication_ref OR $5=j.duplicate_publication_ref))`,
+            AND ($5=j.provider_publication_ref OR $5=j.duplicate_publication_ref OR EXISTS(
+              SELECT 1 FROM social_publish_reconciliations r JOIN social_publish_results u ON u.id=r.unknown_result_id
+                AND u.attempt_id=a.id AND u.status='unknownOutcome'
+              WHERE r.attempt_id=a.id AND r.status='publicationFound' AND r.provider_publication_ref=$5
+                AND r.content_id=a.content_id AND r.draft_id=a.draft_id AND r.draft_version=a.draft_version
+                AND r.schedule_id=a.schedule_id AND r.schedule_revision=a.schedule_revision
+                AND r.publishing_account_id=a.publishing_account_id AND r.channel=a.channel)))`,
     [profile.provider, profile.providerProfileRef, observation.providerAccountRef, observation.channel, observation.providerPublicationRef])).rows[0]
     if (!binding) throw new Error("Analytics observation is not an UNDA publication for this binding")
     const m = observation.metrics
     await client.query(`INSERT INTO social_post_analytics(id,publishing_account_id,provider_binding_id,provider,provider_publication_ref,
       native_publication_ref,publication_url,provider_updated_at,observed_at,impressions,reach,likes,comments,shares,saves,clicks,views,follows,
-      engagement_rate,metric_availability,raw_metrics) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20::jsonb,$21::jsonb)
+      engagement_rate,metric_availability,raw_metrics,metric_contract) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20::jsonb,$21::jsonb,$22)
       ON CONFLICT(provider_binding_id,provider_publication_ref,provider_updated_at) DO NOTHING`,
     [stableId(binding.id, observation.providerPublicationRef, observation.providerUpdatedAt), binding.publishing_account_id, binding.id,
       observation.provider, observation.providerPublicationRef, observation.nativePublicationRef, observation.publicationUrl,
       observation.providerUpdatedAt, observation.observedAt, ...SOCIAL_METRIC_NAMES.map((name) => m[name]), m.engagementRate,
-      JSON.stringify(observation.availability), JSON.stringify(observation.rawMetrics)])
+      JSON.stringify(observation.availability), JSON.stringify(observation.rawMetrics), observation.metricContract ?? "legacy-unspecified"])
   }
   async listResults(scope: { ownerId: string; brandId: string }): Promise<readonly SocialAnalyticsResult[]> {
     const rows = await this.pool.query(`SELECT a.*,b.provider_profile_ref,b.provider_account_ref,b.channel FROM social_post_analytics a
@@ -80,7 +86,7 @@ export class PostgresSocialAnalyticsStore implements SocialAnalyticsStore {
       providerUpdatedAt: row.provider_updated_at.toISOString(), observedAt: row.observed_at.toISOString(),
       metrics: Object.fromEntries([...SOCIAL_METRIC_NAMES.map((name) => [name, row[name] === null ? null : Number(row[name])]),
         ["engagementRate", row.engagement_rate === null ? null : Number(row.engagement_rate)]]) as SocialAnalyticsResult["metrics"],
-      availability: row.metric_availability, rawMetrics: row.raw_metrics, publishingAccountId: row.publishing_account_id,
+      availability: row.metric_availability, rawMetrics: row.raw_metrics, metricContract: row.metric_contract, publishingAccountId: row.publishing_account_id,
       providerBindingId: row.provider_binding_id }))
   }
 }

@@ -8,10 +8,10 @@ import { planningFixture, completePlanningFixture } from "./weekly-planning-fixt
 import { postsContext } from "../src/application/weekly-planning/posts"
 import { displayDate } from "../src/application/dashboard/model"
 
-import { scheduleFixture, copyFixture } from "./weekly-posts-fixture"
+import { currentScheduleFixture as scheduleFixture, scheduleFixture as historicalScheduleFixture, copyFixture } from "./weekly-posts-fixture"
 
 test("post contracts enforce channel, format, frame and reference coherence", () => {
-  const schedule = scheduleFixture(); const copy = copyFixture()
+  const schedule = historicalScheduleFixture(); const copy = copyFixture()
   assert.deepEqual(validateSchema(schedule, POST_SCHEDULE_SCHEMA), [])
   assert.deepEqual(validateSchema(copy, POST_COPY_SCHEMA), [])
   assert.deepEqual(validatePostSchedule(schedule, ["d1", "d2", "d3"]), [])
@@ -32,7 +32,7 @@ test("compact weekly planning preserves canonical decisions in one model call", 
   assert.deepEqual(calls.map((c) => c.step), ["weekly_strategy"])
   assert.equal(ready.payload.plan!.contentDirections.length, 3)
   assert.equal(ready.payload.plan!.audienceFocus.primary.id, run.payload.basis.payload.hypotheses[0]!.id)
-  assert.equal(postsContext(ready).executionPolicy.publishingEnabled, false)
+  assert.equal(postsContext(ready).executionPolicy.publication, "requiresApprovalConnectedAccountAndMedia")
   assert.deepEqual(postsContext(ready).recentResults, [])
 })
 

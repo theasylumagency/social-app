@@ -1,14 +1,14 @@
 import { DASHBOARD_SECTIONS, isWeek, type DashboardSection } from "../../../application/dashboard/model"
 import type { NoteContext, NoteTarget } from "../../../application/contextual-notes/model"
 import { isDiscoveryId } from "../../../infrastructure/postgres/brand-discovery-store"
-import { applyNote, listNotes, resolveNote, submitNote } from "../../../infrastructure/postgres/contextual-notes-store"
+import { applyNote, listNotes, resolveNote, enqueueNote, retryNote } from "../../../infrastructure/postgres/contextual-notes-store"
 import { authenticateWorkRequest, currentSession, subscriptionRequired } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { limitedBody } from "../../_server/limited-body"
 import { listChannelPolicies, listOperatingRules } from "../../../infrastructure/postgres/operating-policy-store"
 
 export const runtime = "nodejs"
-export const maxDuration = 300
+export const maxDuration = 30
 function parseContext(value: unknown): NoteContext {
   if (!value || typeof value !== "object") throw Error("შენიშვნის კონტექსტი არასწორია.")
   const v = value as Record<string, unknown>
@@ -19,6 +19,7 @@ function parseContext(value: unknown): NoteContext {
   if (runId !== null && !isDiscoveryId(runId)) throw Error("გეგმის მისამართი არასწორია.")
   if (postKey && (v.section !== "content" || !channel || !runId)) throw Error("ჯერ აირჩიეთ პოსტი და არხი.")
   if (postKey && (typeof v.postVersion !== "string" || v.postVersion.length > 40 || !Number.isFinite(Date.parse(v.postVersion)))) throw Error("ხელახლა აირჩიეთ პოსტის მიმდინარე ვერსია.")
+  if (v.postRevisionId != null && (!postKey || !isDiscoveryId(v.postRevisionId))) throw Error("პოსტის ვერსია არასწორია.")
   let target: NoteTarget | null = null
   if (v.target !== undefined && v.target !== null) {
     if (typeof v.target !== "object") throw Error("არჩეული ობიექტი არასწორია.")
@@ -30,7 +31,7 @@ function parseContext(value: unknown): NoteContext {
       if (v.section !== "week" || !runId) throw Error("გეგმის არჩეული ნაწილი არასწორია.")
     } else if (target.type !== "post" && v.section !== "brand") throw Error("ბრენდის არჩეული ნაწილი არასწორია.")
   }
-  return { brandId: v.brandId, section: v.section as DashboardSection, week: v.week, postKey, channel, runId, postVersion: postKey ? v.postVersion as string : null, target }
+  return { brandId: v.brandId, section: v.section as DashboardSection, week: v.week, postKey, channel, runId, postVersion: postKey ? v.postVersion as string : null, postRevisionId: (v.postRevisionId ?? null) as string | null, target }
 }
 function failure(error: unknown) {
   return Response.json({ message: error instanceof Error && /[ა-ჰ]/u.test(error.message) ? error.message : "მოქმედება ვერ დასრულდა. სცადეთ ხელახლა." }, { status: 422 })
@@ -54,9 +55,10 @@ export async function POST(request: Request) {
     const body = JSON.parse(new TextDecoder().decode(await limitedBody(request, 40000))) as Record<string, unknown>
     if (!body || !isDiscoveryId(body.id)) throw Error("შენიშვნის მისამართი არასწორია.")
     const pool = getDatabasePool(), ownerId = access.session.user.id
+    if (body.action === "retry") return Response.json({ note: await retryNote(pool, ownerId, body.id) }, { status: 202 })
     if (body.action === "confirm") return Response.json({ note: await applyNote(pool, ownerId, body.id, true) })
     if (body.action === "dismiss" || body.action === "undo") return Response.json({ note: await resolveNote(pool, ownerId, body.id, body.action) })
     if (body.action !== "submit" || typeof body.text !== "string" || !body.text.trim() || body.text.length > 8000 || (body.source !== "text" && body.source !== "voice")) throw Error("დაწერეთ შენიშვნა, მაქსიმუმ 8000 სიმბოლო.")
-    return Response.json({ note: await submitNote(pool, ownerId, { id: body.id, text: body.text.trim(), source: body.source, context: parseContext(body.context) }) })
+    return Response.json({ note: await enqueueNote(pool, ownerId, { id: body.id, text: body.text, source: body.source, context: parseContext(body.context) }) }, { status: 202 })
   } catch (error) { return failure(error) }
 }

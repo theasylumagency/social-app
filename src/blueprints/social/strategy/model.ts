@@ -13,9 +13,11 @@ export type SocialStrategyProposal = {
   measurement: { level: "public" | "connected" | "downstream"; signal: string; interpretation: string }[]
 }
 export type WeekEvidence = {
-  week: string; reviewedAt: string; availability: "available" | "unavailable"
-  observations: { level: "public" | "connected" | "downstream"; observation: string; source: string }[]
+  week: string; reviewedAt: string; availability: "available" | "partial" | "unavailable"
+  observations: { level: "public" | "connected" | "downstream"; observation: string; source: string; provenance?: "manual" }[]
   execution: string[]; unknowns: string[]; businessContext: string
+  results?: import("../../../application/analytics/week-evidence").WeekResultSnapshot
+  manual?: { reviewedAt: string; execution: string[]; unknowns: string[] }
 }
 export type StrategyPayload = {
   basis: BrandDossier; sources: ReconSource[] | null; proposal: SocialStrategyProposal | null

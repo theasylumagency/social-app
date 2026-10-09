@@ -1,6 +1,7 @@
 import { compileBrandVoice } from "../brand-voice"
 import type { PlanningRun } from "./model"
 import type { PostOutline, PostVariant } from "./posts"
+import { publicKnowledgeContext } from "../public-knowledge"
 import { COMMUNICATION_ELEMENTS, normalizeRuleScope, operatingRuleEnforcement, operatingRuleViolations, ruleApplies, type OperatingRuleDraft } from "../../../core/domain/operating-policy"
 
 // The current weekly-post contract is organic and has no campaign identity. Campaign-scoped
@@ -48,7 +49,7 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
   if (audiences.length !== new Set(audienceKeys).size) throw Error("Unknown post audience")
   return {
     contentLanguage: basis.input.language,
-    task: { brief: post.brief, format: post.format, channels: post.channels.map((c) => c.channel), frameCount: post.visual.frames.length, framePlan: post.visual.frames },
+    task: { brief: post.brief, contentMode: post.contentMode ?? null, format: post.format, channels: post.channels.map((c) => c.channel), frameCount: post.visual.frames.length, framePlan: post.visual.frames },
     internalGuidance: { business: { name: u.name, description: u.summary }, positioning: u.positioning, socialObjective: p.socialStrategy?.payload.proposal?.objective ?? null, weeklyObjective: p.objective?.objective ?? null, contentDirection: direction, audiences, adaptationBias: adaptation?.bias ?? null },
     voice: compileBrandVoice(u.voice, basis.sources),
     // These are boundaries/defaults, never additional communication jobs.
@@ -56,11 +57,11 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
     operatingRules: applicablePostOperatingRules(p.operatingRules ?? [], post.channels).map(rule => ({ kind: rule.kind, effect: rule.effect, parameter: rule.parameter, directive: rule.directive, scope: normalizeRuleScope(rule.scope), enforcement: operatingRuleEnforcement(rule) })),
     constraints: [...u.constraints, ...envelope.avoid, ...post.brief.mustNotSay],
     // Discovery interpretations and style excerpts are not public-claim authorization.
-    publicFacts: [], eligibleProof: [],
+    ...publicKnowledgeContext(p.publicKnowledge, post.factKeys ?? []),
   }
 }
 
 export function compilePostEditorialContext(run: PlanningRun, post: PostOutline) {
-  const { task, internalGuidance, voice, communication, operatingRules } = compilePostGenerationContext(run, post)
-  return { task, voice, communication, operatingRules, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
+  const { task, internalGuidance, voice, communication, operatingRules, contentLanguage } = compilePostGenerationContext(run, post)
+  return { task, voice, communication, operatingRules, contentLanguage, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
 }

@@ -45,6 +45,7 @@ test("analytics bootstrap precedes cursor deltas and commits normalized snapshot
   const results = await store.listResults({ ownerId: "owner", brandId: "brand" })
   assert.equal(results.length, 2)
   assert.equal(results[0]!.metrics.likes, 0)
+  assert.equal(results[0]!.metricContract, "legacy-unspecified", "old/unversioned snapshots must not gain inferred metric semantics")
   assert.equal(results[1]!.metrics.likes, null)
   await store.commit({ provider: "zernio", providerProfileRef: "provider-profile" }, [observation("2026-09-09T12:45:00.000Z", 0)], "cursor-1")
   assert.equal((await store.listResults({ ownerId: "owner", brandId: "brand" })).length, 2)
@@ -111,4 +112,5 @@ test("Zernio normalization preserves measured zero and unavailable null", async 
     .bootstrap({ provider: "zernio", providerProfileRef: "profile" }, 1)
   assert.equal(page.observations[0]!.metrics.impressions, 0)
   assert.equal(page.observations[0]!.metrics.reach, null)
+  assert.equal(page.observations[0]!.metricContract, "zernio.reported-fields.v1")
 })

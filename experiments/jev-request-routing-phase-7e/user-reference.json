@@ -1,0 +1,14 @@
+{
+ "status": "humanConfirmedEngineeringExpectationsNotIndependentFinalContentGold",
+ "provenance": "Interpretations shown to the human before any weekly Jev or baseline output; human replied in this chat: დიახ, ხუთივე სწორია",
+ "confirmation": "დიახ, ხუთივე სწორია",
+ "context": {"section":"week","actualPlan":null,"baselineCounts":null,"calendarReference":null},
+ "restriction": "Only the specified required fields are directly scored against human-confirmed interpretations. Other closed-choice expectations are declared engineering negative controls. Neither is unrestricted performance gold.",
+ "items": [
+  {"id":"U01","confirmedMeaning":"This week Instagram 3 and Facebook 5; retain direction.","required":{"direction":"keep","facebookMode":"set","facebookQuantity":"n2","instagramMode":"set","instagramQuantity":"n1","horizon":"currentWeek"},"engineeringNegatives":{"action":"cadence","emphasis":"notSpecified","duration":"notSpecified","format":"notSpecified","futureVideo":"notSpecified"}},
+  {"id":"U02","confirmedMeaning":"Reconsider direction and strengthen Facebook; no concrete count.","required":{"action":"strategy","direction":"reconsider","emphasis":"facebook","facebookMode":"notSpecified","facebookQuantity":"notSpecified","instagramMode":"notSpecified","instagramQuantity":"notSpecified"},"engineeringNegatives":{"horizon":"notSpecified","duration":"notSpecified","format":"notSpecified","futureVideo":"notSpecified"}},
+  {"id":"U03","confirmedMeaning":"For upcoming 3–4 weeks, Instagram 2 per week; Facebook count delegated to planner.","required":{"instagramMode":"set","instagramQuantity":"n2","facebookMode":"delegate","facebookQuantity":"notSpecified","horizon":"upcomingWeeksRange","duration":"n1"},"engineeringNegatives":{"action":"cadence","direction":"notSpecified","emphasis":"notSpecified","format":"notSpecified","futureVideo":"notSpecified"}},
+  {"id":"U04","confirmedMeaning":"Increase both existing channel counts by 1; final counts require baselines.","required":{"facebookMode":"increase","facebookQuantity":"n1","instagramMode":"increase","instagramQuantity":"n1"},"engineeringNegatives":{"action":"cadence","direction":"keep","emphasis":"notSpecified","horizon":"notSpecified","duration":"notSpecified","format":"notSpecified","futureVideo":"notSpecified"}},
+  {"id":"U05","confirmedMeaning":"Now replace video with carousel, Facebook +1 and Instagram −2; future video only possible, no confirmed date.","required":{"action":"cadenceAndFormat","facebookMode":"increase","facebookQuantity":"n3","instagramMode":"decrease","instagramQuantity":"n4","horizon":"currentWeek","format":"videoToCarousel","futureVideo":"possibleUnresolved"},"engineeringNegatives":{"direction":"notSpecified","emphasis":"notSpecified","duration":"notSpecified"}}
+ ]
+}

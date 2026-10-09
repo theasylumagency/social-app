@@ -1,6 +1,13 @@
+import { assertCurrentWeeklyReview } from "../../application/weekly-planning/review-evidence"
+import { captureWeeklyApproval, assertCurrentWeeklyApproval } from "../../application/weekly-planning/approval-evidence"
+import type { WeeklyApprovalEvidence } from "../../blueprints/social/weekly-planning/review-evidence"
+import { postsFactualBlocker } from "../../application/weekly-planning/factual-authority"
+import { lockPublicKnowledge, readPublicKnowledge } from "./public-knowledge-store"
+import { bindWeeklyDirectives, type BoundWeeklyDirectives } from "../../application/weekly-planning/instruction-contract"
 import { currentWeeklyOperation } from "./weekly-operation-access"
 import { operatingChannels } from "../../blueprints/social/strategy/model"
-import { readStrategyView, readWeekEvidence } from "./social-strategy-store"
+import { readStrategyView } from "./social-strategy-store"
+import { readWeekResultEvidence } from "./week-result-evidence-store"
 import { hasSubscription } from "./subscription-store"
 import { copyTexts } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
 import { OPERATOR_LEASE_MS } from "../models/runtime-policy"
@@ -66,26 +73,29 @@ export async function readPlanningRun(pool: Pool, ownerId: string, id: string): 
   return r.rows[0] ? fromRow(r.rows[0]) : null
 }
 export async function readPlanningView(pool: Pool, ownerId: string, brandId: string, week: string): Promise<PlanningView> {
-  const [r, approved, history, foundation, strategy] = await Promise.all([
+  const [r, approved, history, foundation, strategy, publicKnowledge] = await Promise.all([
     pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date AND r.status NOT IN ('superseded','changesRequested') ORDER BY r.version DESC LIMIT 1`, [ownerId, brandId, week]),
     pool.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date AND r.status='approved' LIMIT 1`, [ownerId, brandId, week]),
     pool.query<{ id: string; version: number; status: PlanningRun["status"]; updated_at: Date; objective: string | null }>(`SELECT r.id,r.version,r.status,r.updated_at,r.payload->'objective'->>'objective' AS objective FROM weekly_planning_runs r WHERE ${owned} AND r.brand_id=$2 AND r.week_start=$3::date ORDER BY r.version DESC LIMIT 20`, [ownerId, brandId, week]),
     basis(pool, ownerId, brandId),
     readStrategyView(pool, ownerId, brandId),
+    readPublicKnowledge(pool, brandId),
   ])
   const run = r.rows[0] ? fromRow(r.rows[0]) : null
   const [posts, assets] = run ? await Promise.all([readWeeklyPosts(pool, ownerId, run.id), listPostAssets(pool, ownerId, run.id)]) : [null, []]
   const previousId = approved.rows[0]?.id
   const [approvedPosts, approvedAssets] = previousId && previousId !== run?.id ? await Promise.all([readWeeklyPosts(pool, ownerId, previousId), listPostAssets(pool, ownerId, previousId)]) : [null, []]
-  return { run, posts, assets, approvedPosts, approvedAssets, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!run && (run.payload.socialStrategy?.id !== strategy.active?.id || !run.payload.socialStrategy || run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
+  const factualBlocker = run ? postsFactualBlocker(run, posts?.payload, publicKnowledge, publicKnowledge.capturedAt) : null
+  return { run, posts, assets, approvedPosts, approvedAssets, factualBlocker, approved: approved.rows[0] ? fromRow(approved.rows[0]) : null, history: history.rows.map((r) => ({ id: r.id, version: r.version, status: r.status, updatedAt: r.updated_at.toISOString(), objective: r.objective })), basis: foundation, stale: !!factualBlocker || !!run && (run.payload.socialStrategy?.id !== strategy.active?.id || !run.payload.socialStrategy || run.payload.basis.sessionId !== foundation?.sessionId || run.payload.basis.revision !== foundation.revision) }
 }
 
-export type BeginPlanningInput = { id: string; brandId: string; week: string; priority: string; parentId?: string; parentVersion?: number; revisionNote?: string }
+export type BeginPlanningInput = { id: string; brandId: string; week: string; priority: string; parentId?: string; parentVersion?: number; revisionNote?: string; revisionSource?: { noteId: string; text: string }; weeklyDirectives?: BoundWeeklyDirectives }
 export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: BeginPlanningInput, client?: PoolClient): Promise<PlanningRun> {
   if (!isDiscoveryId(input.id) || !isWeek(input.week) || typeof input.priority !== "string" || input.priority.length > 1200 || typeof input.brandId !== "string" || input.brandId.length > 160) throw new Error("შეამოწმეთ ბრენდი, კვირა და პრიორიტეტი.")
   if (input.parentId && (!isDiscoveryId(input.parentId) || !Number.isSafeInteger(input.parentVersion) || typeof input.revisionNote !== "string" || input.revisionNote.trim().length < 10 || input.revisionNote.length > 2000)) throw new Error("გეგმის დაზუსტება უნდა შეიცავდეს 10–2000 სიმბოლოს.")
   return transaction(pool, async (c) => {
     await budget(c, ownerId)
+    await lockPublicKnowledge(c, input.brandId)
     await lockBrandWeek(c, ownerId, input.brandId, input.week)
     const duplicate = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.id=$1`, [input.id])
     if (duplicate.rows[0]) {
@@ -101,14 +111,30 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (!await hasSubscription(c, ownerId)) throw new Error("განაახლეთ გამოწერა.")
     const strategy = (await readStrategyView(c, ownerId, input.brandId)).active
     if (!strategy?.payload.proposal) throw new Error("ჯერ სოციალური სტრატეგიის მიზანი დაადასტურეთ.")
-    const evidence = (await readWeekEvidence(c, ownerId, input.brandId)).filter((e) => e.week <= input.week)
+    const evidence = await readWeekResultEvidence(c, ownerId, input.brandId, input.week)
     const foundation = await basis(c, ownerId, input.brandId)
-    const [operatingRules, channelPolicies] = await Promise.all([listOperatingRules(c, ownerId, input.brandId), listChannelPolicies(c, ownerId, input.brandId)])
+    const operatingRules = await listOperatingRules(c, ownerId, input.brandId)
+    const channelPolicies = await listChannelPolicies(c, ownerId, input.brandId)
+    const publicKnowledge = await readPublicKnowledge(c, input.brandId)
     assertBasis(foundation)
     // Execution history is not evidence of exposure or performance.
     // One current usable version per recent week; failed/rejected/superseded plans are not exposure.
     const prior = await c.query<Row & { posts_payload: PostsPayload | null }>(`SELECT DISTINCT ON (r.week_start) ${fields},p.payload AS posts_payload FROM weekly_planning_runs r LEFT JOIN weekly_post_batches p ON p.run_id=r.id WHERE r.brand_id=$1 AND r.owner_user_id=$3 AND r.week_start<$2::date AND r.week_start>=$2::date-28 AND r.status IN ('ready','approved') ORDER BY r.week_start DESC,r.version DESC LIMIT 3`, [input.brandId, input.week, ownerId])
-    const payload: PlanningPayload = { socialStrategy: strategy, evidence, priorCopy: prior.rows.flatMap((r) => r.posts_payload ? copyTexts(r.posts_payload).map((c) => c.text) : []), basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null, operatingRules, channelPolicies }
+    const payload: PlanningPayload = { publicKnowledge, socialStrategy: strategy, evidence, priorCopy: prior.rows.flatMap((r) => r.posts_payload ? copyTexts(r.posts_payload).map((c) => c.text) : []), basis: foundation, priority: input.priority.trim(), revisionNote: input.revisionNote?.trim() ?? "", previousVersion: previous?.payload.plan ? summarizePlan(previous.payload.plan) : null, priorWeeks: prior.rows.flatMap((r) => r.payload.plan ? [summarizePlan(r.payload.plan, r.posts_payload ?? undefined, r.status as "ready" | "approved")] : []), plannedOn: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" }), objective: null, focus: null, directions: [], adaptation: [], experiment: null, review: null, plan: null, operatingRules, channelPolicies }
+    if (input.revisionSource) {
+      if (!input.revisionSource.noteId || typeof input.revisionSource.text !== "string" || input.revisionSource.text.length > 8000) throw new PlanningConflict("მოთხოვნის წყარო არასწორია.")
+      payload.revisionSource = structuredClone(input.revisionSource)
+    }
+    if (input.weeklyDirectives) {
+      const directive = input.weeklyDirectives
+      if (!previous || directive.target.runId !== previous.id || directive.target.runVersion !== previous.version || directive.target.brandId !== input.brandId || directive.target.week !== input.week)
+        throw new PlanningConflict("მოთხოვნის სამიზნე შეიცვალა. განაახლეთ გეგმა.")
+      const previousPosts = (await c.query<{ payload: PostsPayload }>("SELECT payload FROM weekly_post_batches WHERE run_id=$1", [previous.id])).rows[0]?.payload
+      const bound = bindWeeklyDirectives({ proposal: directive.proposal, text: directive.source.text, noteId: directive.source.noteId, target: directive.target,
+        baselineCounts: previousPosts?.outline ? countPostChannels(previousPosts.outline.posts) : undefined })
+      if (bound.errors.length) throw new PlanningConflict("მოთხოვნის პირობები დაზუსტებას საჭიროებს; გეგმა არ შეცვლილა.")
+      payload.weeklyDirectives = bound.directives!
+    }
     const now = new Date().toISOString() as IsoDateTime
     // Reviewing no observations is an explicit unknown state, never fabricated progress.
     for (const row of prior.rows) {
@@ -117,6 +143,11 @@ export async function beginWeeklyPlanning(pool: Pool, ownerId: string, input: Be
     if (!evidence.length) evidence.push({ week: input.week, reviewedAt: now, availability: "unavailable", observations: [], execution: [], unknowns: ["ეს საწყისი გეგმაა; წინა შედეგები არ გვაქვს."], businessContext: "" })
     payload.founderPosts = true
     if (previous?.payload.cadence) payload.cadence = previous.payload.cadence
+    if (payload.weeklyDirectives) {
+      const required = payload.weeklyDirectives.requiredCadence
+      if (required.facebook !== undefined && required.instagram !== undefined) payload.cadence = { facebook: required.facebook, instagram: required.instagram }
+      else delete payload.cadence
+    }
     const allowed = operatingChannels(strategy.payload.proposal).filter(channel => channelPolicies.find(policy => policy.channel === channel)?.active !== false)
     if (!allowed.length) payload.cadence = { facebook: 0, instagram: 0 }
     else if (payload.cadence) for (const channel of ["facebook", "instagram"] as const) if (!allowed.includes(channel)) payload.cadence[channel] = 0
@@ -167,6 +198,7 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
   if (!preview) throw Error("გეგმა ვერ მოიძებნა.")
   return transaction(pool, async (c) => {
     await budget(c, ownerId)
+    await lockPublicKnowledge(c, preview.brandId)
     await lockBrandWeek(c, ownerId, preview.brandId, preview.week)
     const duplicate = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.id=$2`, [ownerId, id])
     if (duplicate.rows[0]) {
@@ -187,9 +219,12 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
     const batch = await c.query<{ payload: PostsPayload }>("SELECT payload FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [parentId])
     const source = batch.rows[0]?.payload
     if (!source?.outline) throw new PlanningConflict("ჯერ პოსტების რაოდენობის რეკომენდაციას დაელოდეთ.")
+    const factIssue = postsFactualBlocker(previous, source, await readPublicKnowledge(c, previous.brandId), new Date().toISOString())
+    if (factIssue) throw new PlanningConflict(factIssue)
     const current = source.cadence ?? countPostChannels(source.outline.posts)
     if (current.facebook === cadence.facebook && current.instagram === cadence.instagram) return previous
     const resized = resizePostSchedule(source, cadence)
+    if (resized.payload.outline?.posts.some(post => !post.contentMode)) throw new PlanningConflict("ჯერ შენახულ პოსტებს მიზანი განუსაზღვრეთ და კონტენტის გვერდზე შემოწმება განაახლეთ.")
     const now = new Date().toISOString() as IsoDateTime
     const note = `პოსტების რაოდენობა: Facebook ${cadence.facebook}, Instagram ${cadence.instagram}.`
     const payload = structuredClone(previous.payload)
@@ -261,13 +296,22 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
   const preview = await readPlanningRun(pool, ownerId, id)
   if (!preview) throw new Error("გეგმა ვერ მოიძებნა.")
   return transaction(pool, async (c) => {
+    await lockPublicKnowledge(c, preview.brandId)
     await lockBrandWeek(c, ownerId, preview.brandId, preview.week)
     const found = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE ${owned} AND r.id=$2 FOR UPDATE`, [ownerId, id])
     const run = found.rows[0] ? fromRow(found.rows[0]) : null
     if (!run || run.version !== version) throw new PlanningConflict("გეგმის ვერსია შეიცვალა. განაახლეთ გვერდი.")
     if ((await readStrategyView(c, ownerId, run.brandId)).active?.id !== run.payload.socialStrategy?.id || !run.payload.socialStrategy) throw new PlanningConflict("ჯერ კვირის გეგმა მოქმედ სოციალურ სტრატეგიას მოარგეთ.")
-    const posts = await c.query<{ status: string; payload: PostsPayload; approved_at: Date | null }>("SELECT status,payload,approved_at FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [id])
-    if (run.status === "approved" && (!posts.rowCount || posts.rows[0]?.approved_at)) return
+    const posts = await c.query<{ status: "ready"; payload: PostsPayload; approved_at: Date | null; approved_by_user_id: string | null; approval_evidence: WeeklyApprovalEvidence | null }>("SELECT status,payload,approved_at,approved_by_user_id,approval_evidence FROM weekly_post_batches WHERE run_id=$1 FOR UPDATE", [id])
+    const factIssue = postsFactualBlocker(run, posts.rows[0]?.payload, await readPublicKnowledge(c, run.brandId), new Date().toISOString())
+    if (factIssue) throw new PlanningConflict(factIssue)
+    if (posts.rows[0]?.payload.outline?.posts.length) {
+      try {
+        assertCurrentWeeklyReview(run, posts.rows[0].payload)
+        if (posts.rows[0].approved_at && posts.rows[0].approval_evidence) assertCurrentWeeklyApproval(run, { runId: run.id, status: posts.rows[0].status, step: "ready", payload: posts.rows[0].payload, error: null, leaseUntil: null, updatedAt: run.updatedAt, approvedAt: posts.rows[0].approved_at.toISOString(), approvedByUserId: posts.rows[0].approved_by_user_id, approvalEvidence: posts.rows[0].approval_evidence })
+      } catch { throw new PlanningConflict("პოსტების ზუსტ ტექსტსა და მიზნის რეჟიმს მიმდინარე შემოწმება და დამტკიცება სჭირდება.") }
+    }
+    if (run.status === "approved" && (!posts.rowCount || (posts.rows[0]?.approved_at && (!posts.rows[0].payload.outline?.posts.length || posts.rows[0].approval_evidence)))) return
     const latest = await c.query<{ id: string }>("SELECT id FROM weekly_planning_runs WHERE brand_id=$1 AND week_start=$2::date ORDER BY version DESC LIMIT 1", [run.brandId, run.week])
     if (latest.rows[0]?.id !== id || !["ready", "approved"].includes(run.status) || !run.payload.plan || !run.payload.review) throw new PlanningConflict("მხოლოდ დასრულებული მიმდინარე ვერსიის დადასტურებაა შესაძლებელი.")
     const current = await basis(c, ownerId, run.brandId)
@@ -276,8 +320,9 @@ export async function approvePlanningRun(pool: Pool, ownerId: string, id: string
     if ((run.payload.founderPosts || posts.rowCount) && (posts.rows[0]?.status !== "ready" || !posts.rows[0].payload.review || posts.rows[0].payload.review.issues.some((i) => i.severity === "blocking"))) throw new PlanningConflict("ჯერ პოსტების ტექსტების მომზადება და შემოწმება დაასრულეთ.")
     const now = new Date().toISOString() as IsoDateTime
     if (posts.rowCount) {
-      await c.query("UPDATE weekly_post_batches SET approved_at=now(),approved_by_user_id=$2,updated_at=now() WHERE run_id=$1", [id, ownerId])
-      await event(c, id, "posts-approved", { decidedBy: ownerId, posts: posts.rows[0]!.payload })
+      const binding = posts.rows[0]!.payload.outline?.posts.length ? captureWeeklyApproval(run, posts.rows[0]!.payload, ownerId, now) : null
+      await c.query("UPDATE weekly_post_batches SET approved_at=$3::timestamptz,approved_by_user_id=$2,approval_evidence=$4::jsonb,updated_at=now() WHERE run_id=$1", [id, ownerId, now, JSON.stringify(binding)])
+      await event(c, id, "posts-approved", { decidedBy: ownerId, approval: binding, posts: posts.rows[0]!.payload })
     }
     if (run.status === "approved") return
     const prior = await c.query<Row>(`SELECT ${fields} FROM weekly_planning_runs r WHERE r.brand_id=$1 AND r.week_start=$2::date AND r.id<>$3 AND r.status IN ('approved','changesRequested') FOR UPDATE`, [run.brandId, run.week, id])

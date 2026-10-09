@@ -4,6 +4,7 @@ import { readdir, readFile } from "node:fs/promises"
 import type { TestContext } from "node:test"
 import { Pool } from "pg"
 import type { SocialContentPublishAttempt, SocialContentPublishResult } from "../src/blueprints/social"
+import { approvedPublicationFixture } from "./publication-bundle-fixture"
 import { ensurePersonalWorkspace } from "../src/infrastructure/postgres/workspace-store"
 
 export async function socialDeliveryFixture(t: TestContext) {
@@ -52,8 +53,8 @@ export async function prepareSchedule(pool: Pool, a: SocialContentPublishAttempt
   await pool.query("INSERT INTO weekly_post_batches(run_id,status,step,payload,approved_at,approved_by_user_id) VALUES($1,'ready','ready','{}',now(),$2)", [runId, scope.ownerId])
   await pool.query(`INSERT INTO social_publication_inputs(id,brand_id,source_weekly_run_id,post_key,channel,content_id,content_brief_id,
     content_execution_spec_id,draft_id,draft_version,bundle_schema,bundle_version,bundle)
-    VALUES($1,$2,$3,'p1',$4,$5,$6,$7,$8,$9,'unda.social-publication-input',1,'{}')`,
-  [`input:${a.id}`, scope.brandId, runId, a.channel, a.contentId, `brief:${a.id}`, `spec:${a.id}`, a.draftId, a.draftVersion])
+    VALUES($1,$2,$3,'p1',$4,$5,$6,$7,$8,$9,'unda.social-publication-input',1,$10::jsonb)`,
+  [`input:${a.id}`, scope.brandId, runId, a.channel, a.contentId, `brief:${a.id}`, `spec:${a.id}`, a.draftId, a.draftVersion, JSON.stringify(approvedPublicationFixture(a.channel === "instagram" ? "instagram" : "facebook").bundle)])
   await pool.query(`INSERT INTO social_content_schedules(id,brand_id,publication_input_id,publishing_account_id,content_id,draft_id,
     draft_version,content_execution_spec_id,channel,"authorization",publish_at,scheduled_at)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'{"type":"humanApproved","reviewRequestId":"r","reviewDecisionId":"d"}',$10,$11)`,

@@ -8,6 +8,7 @@ import type { ExperimentDecisionStructuredProposal } from "./experiment-decision
 import type { PostsBatch, PostAsset, PostCadence, PostsPayload } from "./posts"
 import type { SocialStrategy, WeekEvidence } from "../strategy/model"
 import type { ChannelOperatingPolicy, OperatingRule } from "../../../core/domain/operating-policy"
+import type { BoundWeeklyDirectives } from "./instruction-contract"
 
 export const PLANNING_STEPS = ["objective", "focus", "directions", "adaptation", "experiment", "review", "ready"] as const
 export type PlanningStep = typeof PLANNING_STEPS[number]
@@ -25,6 +26,9 @@ export type PlanOutline = {
   posts?: { title: string; job: string; takeaway: string; points: string[] }[]
 }
 export type PlanningPayload = {
+  publicKnowledge?: import("../public-knowledge").PublicKnowledgeSnapshot
+  weeklyDirectives?: BoundWeeklyDirectives
+  revisionSource?: { noteId: string; text: string }
   socialStrategy?: SocialStrategy
   evidence?: WeekEvidence[]
   priorCopy?: string[]
@@ -60,7 +64,7 @@ export type PlanningRun = {
   createdAt: string
   updatedAt: string
 }
-export type PlanningView = { run: PlanningRun | null; approved: PlanningRun | null; history: { id: string; version: number; status: PlanningRun["status"]; updatedAt: string; objective: string | null }[]; basis: BrandDossier | null; stale: boolean; posts?: PostsBatch | null; assets?: PostAsset[]; approvedPosts?: PostsBatch | null; approvedAssets?: PostAsset[] }
+export type PlanningView = { run: PlanningRun | null; approved: PlanningRun | null; history: { id: string; version: number; status: PlanningRun["status"]; updatedAt: string; objective: string | null }[]; basis: BrandDossier | null; stale: boolean; factualBlocker?: string | null; posts?: PostsBatch | null; assets?: PostAsset[]; approvedPosts?: PostsBatch | null; approvedAssets?: PostAsset[] }
 
 export function summarizePlan(plan: WeeklyPlan, posts?: PostsPayload, status?: PlanOutline["status"]): PlanOutline {
   return { week: plan.startsOn, objective: plan.objective.objective, directions: plan.contentDirections.map((d) => d.direction), experiment: plan.experimentDecision.experiment?.hypothesis ?? null,

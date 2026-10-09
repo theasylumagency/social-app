@@ -1,5 +1,7 @@
 "use client"
 
+import { browserDraftStorage, clearWorkspaceDrafts } from "../workspace/note-draft"
+
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -23,7 +25,7 @@ export function SignOutButton() {
     try {
       const result = await authClient.signOut()
       if (result.error) setError("გამოსვლა ვერ დასრულდა.")
-      else { router.replace("/login"); router.refresh() }
+      else { clearWorkspaceDrafts(browserDraftStorage()); router.replace("/login"); router.refresh() }
     } catch { setError("გამოსვლა ვერ დასრულდა. სცადე ხელახლა.") }
     finally { setBusy(false) }
   }}>{busy ? "მიმდინარეობს…" : "გამოსვლა"}</button>{error ? <span role="alert">{error}</span> : null}</div>

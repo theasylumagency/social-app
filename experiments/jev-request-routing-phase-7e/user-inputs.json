@@ -1,0 +1,12 @@
+{
+  "source": "Direct human user message in this chat, 2026-10-06",
+  "provenance": "User-authored prospective UNDA requests; not previously executed production notes and not human reference labels",
+  "contextAssumption": "Week page inferred from the five requests; no actual selected plan, baseline counts, approval state, version or calendar reference has been supplied",
+  "items": [
+    { "id": "U01", "text": "მომწონს მიმარტულება, მაგრამ ამ კვირაში მირჩევნია სამი პოსტი გამოვაქვეყნთ ინსტაგრამზე და 5 პოსტი ფეისბუკზე." },
+    { "id": "U02", "text": "საერთოდ არ მომწონს არჩეული გზა. უნდა შევეცადოთ ფეისბუკი უფრო მძლავრი გახდეს." },
+    { "id": "U03", "text": "ინსტაგრამზე, უახლოესი 3-4 კვირის განმავლობაში, ალბათ აჯობებს ორი-ორი პოსტი გამოვაქვეყნოთ, ხოლო ფბ-ზე რამდენსაც შენ გადაწყვეტ იმდენი." },
+    { "id": "U04", "text": "ყველაფერი კარგია, მაგრამ შემოთავაზებულ რაოდენობებს, ორივე არხზე, დაუმატე თითო-თითო პოსტი." },
+    { "id": "U05", "text": "ამ კვირაში ორ ვიდეო პოსტს ვერ გავამზადებთ შესაძლოა ეს მოხდეს შემდეგ კვირაში, ან ერთი კვირის შემდე. ეხლა ვიდეო პოსტები შევცვალოთ კარუსელებით, და რაოდენობა ფბ-სთვის გავზარდოთ ერთით, ხოლო ინსტასთვის შევამციროთ ორით" }
+  ]
+}

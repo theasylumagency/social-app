@@ -45,20 +45,20 @@ test("async webhook processing tolerates result races and never regresses a term
   const receive = createZernioWebhookHttp({ secret, store: inbox })
   const raw = JSON.stringify(payload("published-event"))
   assert.equal((await receive(signed(raw, "published-event"))).status, 204)
-  let now = "2026-09-09T12:02:00.000Z"
+  let now = new Date(Date.now() + 1000).toISOString()
   const process = () => processNextProviderWebhook({ inbox, reconciliations,
     interpret: (provider, body) => { assert.equal(provider, "zernio"); return interpretZernioWebhook(body) },
     now: () => createIsoDateTime(now), retryPolicy: { maxAttempts: 3 },
     handleAccount: async () => assert.fail("unexpected account event"), handleAnalytics: async () => assert.fail("unexpected analytics event") })
   assert.equal((await process()).status, "retryScheduled")
   await publishes.recordResult(unknownResult(publication))
-  now = "2026-09-09T12:02:02.000Z"
+  now = new Date(Date.parse(now) + 2000).toISOString()
   assert.equal((await process()).status, "processed")
   assert.equal((await pool.query("SELECT status FROM social_publish_reconciliations")).rows[0].status, "publicationFound")
 
   const older = JSON.stringify(payload("scheduled-event", "post.scheduled"))
   assert.equal((await receive(signed(older, "scheduled-event"))).status, 204)
-  now = "2026-09-09T12:02:03.000Z"
+  now = new Date(Date.parse(now) + 1000).toISOString()
   assert.equal((await process()).status, "processed")
   const rows = await pool.query("SELECT status FROM social_publish_reconciliations ORDER BY created_at")
   assert.deepEqual(rows.rows.map((row) => row.status), ["publicationFound"])

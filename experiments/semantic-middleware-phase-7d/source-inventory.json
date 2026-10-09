@@ -1,0 +1,22 @@
+{
+  "createdAt": "2026-10-06T02:56:01.602Z",
+  "queriesReadOnly": true,
+  "databaseFailure": {
+    "code": "ECONNREFUSED"
+  },
+  "savedDevelopmentOutputs": [
+    "evals/results/total-charm-dent/audience-hypothesis-v1.json",
+    "evals/results/total-charm-dent/communication-envelope-v1.json",
+    "evals/results/total-charm-dent/communication-profile-v1.json",
+    "evals/results/total-charm-dent/content-audience-direction-v1.json",
+    "evals/results/total-charm-dent/content-brief-v1.json",
+    "evals/results/total-charm-dent/content-direction-v1.json",
+    "evals/results/total-charm-dent/experiment-decision-v1.json",
+    "evals/results/total-charm-dent/weekly-audience-focus-v1.json",
+    "evals/results/total-charm-dent/weekly-objective-v1.json",
+    "evals/results/weekly-sequence/initial-v1.json",
+    "evals/results/weekly-sequence/latest.json",
+    "evals/results/weekly-sequence/ordinary-generation.json",
+    "evals/results/weekly-sequence/ordinary-requested-repeat.json"
+  ]
+}

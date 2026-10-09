@@ -1,9 +1,12 @@
+import { decodeSocialPublicationBundle } from "../../application/publishing/publication-bundle-codec"
+import { publicationFactualBlocker } from "../../application/publishing/factual-authority"
+import { readPublicKnowledge } from "./public-knowledge-store"
 import type { Pool } from "pg"
 import type { DeliveryAttempt, DeliveryRecord } from "../../application/publishing/delivery-view"
 
 type Row = {
   id: string; week: string; run_id: string; version: number; post_key: string; channel: "facebook" | "instagram"
-  account_name: string; publish_at: Date; cancelled: boolean; can_publish: boolean; attempts: DeliveryAttempt[]
+  bundle_schema: string; bundle_version: number; bundle: unknown; hold_reason: string | null; account_name: string; publish_at: Date; cancelled: boolean; can_publish: boolean; attempts: DeliveryAttempt[]
 }
 
 /** Tenant-scoped projection; no payloads, credentials or provider response messages leave storage. */
@@ -12,6 +15,7 @@ export async function readDeliveryRecords(pool: Pool, scope: { ownerId: string; 
     WHERE b.id=$1 AND w.owner_user_id=$2`, [scope.brandId, scope.ownerId])
   if (!access.rowCount) throw new Error("Brand access denied")
   const { rows } = await pool.query<Row>(`SELECT s.id,r.week_start::text AS week,r.id AS run_id,r.version,i.post_key,s.channel,
+    i.bundle_schema,i.bundle_version,i.bundle,(SELECT reason FROM social_publication_fact_holds h WHERE h.publication_input_id=i.id) AS hold_reason,
     coalesce(p.display_name,p.username,s.channel) AS account_name,
     coalesce(moved.publish_at,s.publish_at) AS publish_at,coalesce(e.event_type='cancelled',false) AS cancelled,
     coalesce(b.connection_status='connected' AND b.can_publish AND profile.status='active',false) AS can_publish,
@@ -39,7 +43,13 @@ export async function readDeliveryRecords(pool: Pool, scope: { ownerId: string; 
     ) attempts ON true
     WHERE s.brand_id=$1 AND w.owner_user_id=$2
     ORDER BY coalesce(moved.publish_at,s.publish_at) DESC,s.id`, [scope.brandId, scope.ownerId])
-  return rows.map((row) => ({ id: row.id, week: row.week, runId: row.run_id, version: row.version, postKey: row.post_key,
+  const current = await readPublicKnowledge(pool, scope.brandId)
+  const blocker = (row: Row) => {
+    if (row.hold_reason) return row.hold_reason
+    try { return publicationFactualBlocker(decodeSocialPublicationBundle(row.bundle_schema, row.bundle_version, row.bundle), current, current.capturedAt) }
+    catch { return "პოსტის შენახული ფაქტობრივი საფუძველი ვერ გადამოწმდა." }
+  }
+  return rows.map((row) => ({ factualBlocker: blocker(row), id: row.id, week: row.week, runId: row.run_id, version: row.version, postKey: row.post_key,
     channel: row.channel, accountName: row.account_name, publishAt: row.publish_at.toISOString(), cancelled: row.cancelled,
     canPublish: row.can_publish, attempts: row.attempts }))
 }

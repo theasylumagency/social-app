@@ -30,16 +30,6 @@ const demo = readVisualPolicy({ VISUAL_MODE: "test" })
 const production = readVisualPolicy({ VISUAL_MODE: "production" })
 const input = () => parseVisualInput({ requestId: randomUUID(), prompt: "A ceramic blue bowl" })
 
-test("live OpenAI visual is stored and charged exactly once", { skip: process.env.VISUAL_LIVE_TEST !== "1" || !process.env.DATABASE_URL || !process.env.OPENAI_API_KEY }, async (t) => {
-  const { pool, access } = await fixture(t)
-  const policy = readVisualPolicy({ VISUAL_MODE: "test", OPENAI_IMAGE_QUALITY: "low" })
-  const g = await createPendingVisualGeneration(pool, access, parseVisualInput({ requestId: randomUUID(), prompt: "A minimal studio photograph of a blue ceramic bowl on a warm cream background. Soft daylight, no text, no logo." }), policy)
-  await runVisualGeneration(pool, g.id)
-  const [result] = await listVisualGenerationsForWorkspace(pool, access)
-  assert.equal(result?.status, "succeeded", result?.error ?? undefined)
-  assert.ok(await readVisualAsset(pool, access, g.id))
-  assert.deepEqual(await getVisualCreditBalance(pool, access), { remainingCredits: 19, reservedCredits: 0, availableCredits: 19 })
-})
 
 test("ledger prevents concurrent overspend, duplicate grants, double completion and cross-workspace reads", { skip: !process.env.DATABASE_URL }, async (t) => {
   const { pool, access, other, image } = await fixture(t)

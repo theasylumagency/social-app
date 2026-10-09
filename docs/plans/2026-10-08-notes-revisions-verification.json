@@ -1,0 +1,303 @@
+{
+  "stage": "T10/T11",
+  "status": "complete-in-workspace",
+  "checkedAt": "2026-10-08T10:03:56.153Z",
+  "tests": {
+    "domain": 311,
+    "offlineApp": 198,
+    "postgreSQL": 117,
+    "total": 626,
+    "skipped": 0,
+    "qualityBenchmark": false
+  },
+  "validation": {
+    "fullVerify": {
+      "passed": true,
+      "log": ".local/t10/release-verify.log",
+      "note": "Passed before the final channel-policy history guard; final guard validated by targeted lint, typecheck, all PostgreSQL tests and final production build."
+    },
+    "finalTargetedLint": {
+      "passed": true,
+      "log": ".local/t10/confirmed-lint.log"
+    },
+    "finalTypecheck": {
+      "passed": true,
+      "log": ".local/t10/final-typecheck.log"
+    },
+    "finalIntegration": {
+      "passed": true,
+      "log": ".local/t10/confirmed-integration.log"
+    },
+    "productionBuild": {
+      "passed": true,
+      "id": "qCfnbT7IzYV9YJznwP1Qo",
+      "log": ".local/t10/confirmed-build.log"
+    },
+    "diffCheck": {
+      "passed": true,
+      "log": ".local/t10/confirmed-diff-check.log"
+    },
+    "lint": {
+      "errors": 0,
+      "preExistingWarnings": 6
+    }
+  },
+  "coverage": [
+    "Persist before model execution; same request ID, original text/source/context remain immutable",
+    "Lost response and refresh preserve transcript, target and request ID",
+    "Expired note/reviewer tokens cannot finish newer work; heartbeat and attempt/retry budgets",
+    "Interpretation checkpoint recovers directly into atomic effect/ledger completion",
+    "Existing confirm, dismiss, undo and tenant guards remain covered",
+    "Approved single-channel revision preserves original outline, siblings and other variants",
+    "Fresh factual/editorial review plus explicit human approval; blocking sibling conflicts are visible",
+    "Explicit atomic replacement, concurrent identical retry, cancellation race and stale selected queue item",
+    "Prepared/published/unknown attempt history blocks replacement; channel stop cancels only unsent schedules",
+    "Subsequent versions carry stable post identity and explicit parent; stale original target rejected",
+    "Bounded view retains current approved target beyond recent failed revisions",
+    "V4 immutable publication input and guarded V1/V2/V3 compatibility"
+  ],
+  "browser": {
+    "surface": "Real React components with local mocked API responses; no live provider or paid model",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "checks": [
+      "Old/new copy is readable without horizontal overflow",
+      "Separate confirmation before approval; old schedule remains after approval",
+      "Draft text and selected version survive reload",
+      "Tab/Enter submits note and clears the acknowledged draft"
+    ],
+    "proof": ".local/t10/mobile-proof.png",
+    "cleanup": {
+      "tabClosed": true,
+      "viewportReset": true,
+      "previewServerStopped": true
+    }
+  },
+  "rollout": {
+    "productionDeployed": false,
+    "sharedDatabaseMigrated": false,
+    "pendingMigrations": [
+      "0020_public_knowledge.sql",
+      "0021_weekly_approval_binding.sql",
+      "0022_result_evidence.sql",
+      "0023_schedule_time_context.sql",
+      "0024_contextual_note_jobs.sql",
+      "0025_post_revisions.sql"
+    ],
+    "readOnlyStatusExit": 1,
+    "readOnlyStatusReason": "Pending migrations and an existing queued legacy job",
+    "existingSharedPostJobsUnchanged": true,
+    "providerPublishCalls": 0,
+    "paidModelCalls": 0,
+    "readerVersions": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "nextStage": "T12 measured quality/latency and narrow Jev comparison"
+  },
+  "sourceFiles": [
+    {
+      "path": "db/migrations/0024_contextual_note_jobs.sql",
+      "sha256": "df024a7d66856bf68e4cfc50be849ea55093f53d6a89da56e6a7cc9bb0c72291"
+    },
+    {
+      "path": "db/migrations/0025_post_revisions.sql",
+      "sha256": "40fdc3028d3b57d8bf16b530e42fdef4d16aa28aaca873af7b04df5800b5399a"
+    },
+    {
+      "path": "src/app/api/contextual-notes/route.ts",
+      "sha256": "daefd49975a6e1103e83c70b634d576c6564c0a632f489dc041125fd16a2f4aa"
+    },
+    {
+      "path": "src/app/api/post-revisions/route.ts",
+      "sha256": "b43728a00fa83e1905746e7f8fedc4287c131d0181578539e6451a8bcdb954d7"
+    },
+    {
+      "path": "src/app/api/social/schedules/route.ts",
+      "sha256": "1521fc83283fec82c53f36cfa56e16251a63e0c83912bfddcfb674c8dab691b8"
+    },
+    {
+      "path": "src/app/workspace/contextual-notes.tsx",
+      "sha256": "c131fe86ad626361699bf52d54ce3076ddc4c2e21f1ff40c5d71d928ae93bea0"
+    },
+    {
+      "path": "src/app/workspace/note-draft.ts",
+      "sha256": "7322782d5db4d73ec071076988c6ca333edabcb59aa4a3e8d34fb6c42362848d"
+    },
+    {
+      "path": "src/app/workspace/social-schedule-controls.tsx",
+      "sha256": "33c8dc4dba9813755be9ecc9be76654e40732c21c7ff5ec1c63abfad1d791fac"
+    },
+    {
+      "path": "src/app/workspace/social-schedule-model.ts",
+      "sha256": "21dbf6c7c3c05e13ce13b85e6e1aa28db4c9dfda22fd3e7fac837afd508aca55"
+    },
+    {
+      "path": "src/app/workspace/post-revision-panel.tsx",
+      "sha256": "2fcce88d7e416f55306e0d55c846dfce88f247df4fec6c9be52784f76a0e233d"
+    },
+    {
+      "path": "src/app/workspace/weekly-posts.css",
+      "sha256": "3d5b0bd1c9f5a5761e1d93554ea9bdd405a840d874fd3103c0742769355bbe10"
+    },
+    {
+      "path": "src/application/contextual-notes/model.ts",
+      "sha256": "baf843f034119c17adb2a95c7b9f53b60d30b3ddd1b163b3dcae34a078a9e5e2"
+    },
+    {
+      "path": "src/application/contextual-notes/identity.ts",
+      "sha256": "9138b366f147918772d42b15f62587423b9505d53c8accb6cbd7a05b69056b9a"
+    },
+    {
+      "path": "src/application/contextual-notes/workflow.ts",
+      "sha256": "fd61a685d02472f04a8911bcb148b0fee999a19666a71afa9b68e6221b3a1c5e"
+    },
+    {
+      "path": "src/application/contextual-notes/mutation.ts",
+      "sha256": "2f9893f4db595a0e5c6fe76d67d6ac3bbcd06aeff66aca5859934e0225d882b0"
+    },
+    {
+      "path": "src/application/post-revisions/model.ts",
+      "sha256": "8bcca36afdae155c6fbde1344108ef0d1c1061eebc4ee88418171dbd6f4cd9cd"
+    },
+    {
+      "path": "src/application/post-revisions/scope.ts",
+      "sha256": "13e155343f72a32127f8603b417ffc0291c095273c5af8514c6a98ddee70bd7a"
+    },
+    {
+      "path": "src/application/post-revisions/review.ts",
+      "sha256": "e95be0335c132814c8a2f5c77ad56dd576e3bad59876754e441db662881ea2e7"
+    },
+    {
+      "path": "src/application/publishing/publication-bundle-codec.ts",
+      "sha256": "8fb81951b5f14f69a7e36a122482e24f2fb571abdecc55a698e45b0ed7bdb30b"
+    },
+    {
+      "path": "src/application/publishing/weekly-publication-bundle.ts",
+      "sha256": "1ebdf21f45718d173f3a5b24c5c9321baf6c244f1bc3df6af968e1f9c5a4f033"
+    },
+    {
+      "path": "src/application/publishing/materialize-post-revision.ts",
+      "sha256": "535c051ec13147607a5361ab990b1cd966e1f52b58f313d62f4f8186c0625907"
+    },
+    {
+      "path": "src/application/publishing/publication-store.ts",
+      "sha256": "1c990d2e6583f0707aad4e1e89fabc94fdd13d86573111954df7de69127bd2d2"
+    },
+    {
+      "path": "src/application/publishing/schedule-approved-post.ts",
+      "sha256": "4819ce0132721a0f90e6686d84cd1f70df3259e48cfbf0e1d266263d921ef492"
+    },
+    {
+      "path": "src/infrastructure/postgres/contextual-notes-store.ts",
+      "sha256": "40d1c5871d7c205ac935dcc8e4ce1495e510295e203e5ce078c387a8400f41c2"
+    },
+    {
+      "path": "src/infrastructure/postgres/post-revisions-store.ts",
+      "sha256": "e268a329d3216f7a3566a1a7b3ea00ab5b2317756be2135ec8557f71161c5d94"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "sha256": "4d226e2b6c2db4655bce686df484843e2a784b5ba5ca0b5fb8d4c1a844485c06"
+    },
+    {
+      "path": "src/worker/contextual-notes.ts",
+      "sha256": "69d525e8f49d612d38d345600701e59267599e12b826a8a591e4aad192751dac"
+    },
+    {
+      "path": "src/worker/post-revisions.ts",
+      "sha256": "8847a9ff46a10d2ecaec40b6b654dcca7cfb05d92f266d1bfcb0828d8b70cba8"
+    },
+    {
+      "path": "src/worker/operator-queues.ts",
+      "sha256": "3bb7d6837788f5e95554f7f303dd39f3728c5edddf12394aff3b6b9a5b89857b"
+    },
+    {
+      "path": "tests/contextual-note-jobs.integration.test.mts",
+      "sha256": "8c8a551477200abf22d7a5736dd1a3e6bd090038768291b781866826c0c6e0a6"
+    },
+    {
+      "path": "tests/contextual-note-workflow.test.mts",
+      "sha256": "289eedc760ad7ac92cddd04b9c83d918f51685df540d3389a2fa0e141032e40f"
+    },
+    {
+      "path": "tests/post-revisions.integration.test.mts",
+      "sha256": "7d1036e7f7cd9b99d4593d465f994fec3458dca1bfcae2e1a2eaec8b2f4d5561"
+    },
+    {
+      "path": "tests/post-revision-ui.test.mts",
+      "sha256": "229b8c78318fbd96929bbb790bf4b7c7320a5be234bdde52086d0466936b4365"
+    },
+    {
+      "path": "tests/note-draft.test.mts",
+      "sha256": "ceb37767eddcdd5e12b99151422222feb6275d14d8d737442d7b7610de9382ae"
+    }
+  ],
+  "preservedT08": [
+    {
+      "path": "db/migrations/0023_schedule_time_context.sql",
+      "sha256": "cc29a965294c5d7711b861f73f5616b03d8391ee347327f5c536c5a8833c28db",
+      "currentSha256": "cc29a965294c5d7711b861f73f5616b03d8391ee347327f5c536c5a8833c28db",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/weekly-posts-client.tsx",
+      "sha256": "ba07a0395d7a474b760e1bc850728fd2c7fcf05a4ce8e210be3d58db6bf621fc",
+      "currentSha256": "ba07a0395d7a474b760e1bc850728fd2c7fcf05a4ce8e210be3d58db6bf621fc",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/schedule-time.ts",
+      "sha256": "5ac935ce19a4eb5a1f2c914de4c27f99722e568efdf0f2e12e8b45af4e0c1391",
+      "currentSha256": "5ac935ce19a4eb5a1f2c914de4c27f99722e568efdf0f2e12e8b45af4e0c1391",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/schedule-errors.ts",
+      "sha256": "8454cd62e560d054969b9bb72ccbaae549fe1931ce8466c5e99198d0fe54ffa3",
+      "currentSha256": "8454cd62e560d054969b9bb72ccbaae549fe1931ce8466c5e99198d0fe54ffa3",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/schedule-request.ts",
+      "sha256": "fa95b303299193e1a7102aa532427c19f7de20b280ba90e766ec4d78d70ebedd",
+      "currentSha256": "fa95b303299193e1a7102aa532427c19f7de20b280ba90e766ec4d78d70ebedd",
+      "preserved": true
+    },
+    {
+      "path": "tests/schedule-time.test.mts",
+      "sha256": "d1e4c37ff2da3114dc2c02eae6dd7b4bcb3d645bc6aeec3cce092db3ff579d24",
+      "currentSha256": "d1e4c37ff2da3114dc2c02eae6dd7b4bcb3d645bc6aeec3cce092db3ff579d24",
+      "preserved": true
+    },
+    {
+      "path": "tests/social-schedule-model.test.mts",
+      "sha256": "da5911c92374e35efa01e262a39338ce84e2d06c07d35f3614384af78a021af4",
+      "currentSha256": "da5911c92374e35efa01e262a39338ce84e2d06c07d35f3614384af78a021af4",
+      "preserved": true
+    },
+    {
+      "path": "tests/social-schedule-ui.test.mts",
+      "sha256": "7ba7c541144564c633edf5beaa34410ecd9d4dcdbf13a528cccf05532c9938e8",
+      "currentSha256": "7ba7c541144564c633edf5beaa34410ecd9d4dcdbf13a528cccf05532c9938e8",
+      "preserved": true
+    },
+    {
+      "path": "tests/weekly-scheduling.integration.test.mts",
+      "sha256": "bc02469a49c16ec1365cd37de3310d3f6035c38b3f60250907c3f58638ad3433",
+      "currentSha256": "bc02469a49c16ec1365cd37de3310d3f6035c38b3f60250907c3f58638ad3433",
+      "preserved": true
+    },
+    {
+      "path": "tests/weekly-posts-ux.test.mts",
+      "sha256": "c93fdf076ef4e1d12f62ba058d7495c62d2bc6302b36c8d6c035f736b22d8442",
+      "currentSha256": "c93fdf076ef4e1d12f62ba058d7495c62d2bc6302b36c8d6c035f736b22d8442",
+      "preserved": true
+    }
+  ],
+  "voiceSha256": "8a5657a22235bc46df2a75b9e7c4883565a49c9a73eff49a10416a6d73e07588"
+}

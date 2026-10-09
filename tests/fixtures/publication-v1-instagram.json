@@ -1,0 +1,156 @@
+{
+  "id": "social:input:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+  "brandId": "brand",
+  "sourceWeeklyRunId": "11111111-1111-4111-8111-111111111111",
+  "postKey": "p1",
+  "channel": "instagram",
+  "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+  "contentBriefId": "social:brief:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+  "contentExecutionSpecId": "social:execution:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+  "draftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+  "draftVersion": 1,
+  "schema": "unda.social-publication-input",
+  "version": 1,
+  "bundle": {
+    "contentBrief": {
+      "id": "social:brief:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "weeklyPlanId": "weekly-plan",
+      "weeklyContentDirectionId": "direction",
+      "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "communicationJob": "Explain",
+      "keyTakeaway": "A clear takeaway",
+      "supportingPoints": [
+        "First point",
+        "Second point"
+      ],
+      "audienceDirection": {
+        "primaryAudience": {
+          "source": "brand",
+          "id": "audience"
+        },
+        "secondaryAudiences": [],
+        "bias": "balanced"
+      },
+      "evidenceMode": "noProofNeeded",
+      "evidenceIds": [],
+      "ctaIntent": "none",
+      "constraints": [],
+      "mustNotSay": [
+        "Unsupported claim"
+      ],
+      "rationale": "A useful reason",
+      "createdAt": "2026-09-09T10:00:00.000Z"
+    },
+    "contentExecutionSpec": {
+      "id": "social:execution:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentBriefId": "social:brief:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "channel": "instagram",
+      "contentMode": "social.educational",
+      "format": "staticPost",
+      "depth": "standard",
+      "visualDependency": "essential",
+      "executionGuidance": [
+        "A useful reason",
+        "A real product image"
+      ],
+      "constraints": [
+        "Unsupported claim"
+      ],
+      "rationale": "This channel fits",
+      "createdAt": "2026-09-09T10:00:00.000Z"
+    },
+    "draft": {
+      "id": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentBriefId": "social:brief:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentExecutionSpecId": "social:execution:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "version": 1,
+      "locale": "ka",
+      "format": "staticPost",
+      "text": "Approved caption",
+      "createdAt": "2026-09-09T10:00:00.000Z"
+    },
+    "evaluationAudit": {
+      "id": "social:audit:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "initialDraftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "initialDraftVersion": 1,
+      "initialEvaluation": {
+        "contentDraftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+        "version": 1,
+        "validation": {
+          "contentDraftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+          "version": 1,
+          "projection": {
+            "text": "Approved caption",
+            "segments": [
+              {
+                "kind": "staticText",
+                "text": "Approved caption"
+              }
+            ]
+          },
+          "scan": {
+            "signals": [],
+            "candidates": []
+          },
+          "validation": {
+            "status": "pass",
+            "issues": []
+          }
+        },
+        "quality": {
+          "contentDraftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+          "version": 1,
+          "projection": {
+            "text": "Approved caption",
+            "segments": [
+              {
+                "kind": "staticText",
+                "text": "Approved caption"
+              }
+            ]
+          },
+          "quality": {
+            "status": "pass",
+            "dimensions": [],
+            "issues": []
+          }
+        },
+        "outcome": {
+          "status": "pass"
+        }
+      },
+      "automaticRepairAttempts": 0,
+      "repairBrief": null,
+      "repairedDraftId": null,
+      "repairedDraftVersion": null,
+      "finalEvaluation": null,
+      "finalDraftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "finalDraftVersion": 1,
+      "finalOutcome": {
+        "status": "pass"
+      },
+      "createdAt": "2026-09-09T10:00:00.000Z"
+    },
+    "reviewRequest": {
+      "id": "social:review-request:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "draftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "draftVersion": 1,
+      "evaluationAuditId": "social:audit:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "reason": "standard",
+      "requestedAt": "2026-09-09T10:00:00.000Z"
+    },
+    "reviewDecision": {
+      "id": "social:review-decision:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "reviewRequestId": "social:review-request:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "contentId": "social:content:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "draftId": "social:draft:399819c0540a2a69c22b40e36ac19985e4ea86a87bdfc57806ac548a6c856647",
+      "draftVersion": 1,
+      "decision": "approved",
+      "decidedBy": "owner",
+      "decidedAt": "2026-09-09T10:00:00.000Z"
+    }
+  }
+}

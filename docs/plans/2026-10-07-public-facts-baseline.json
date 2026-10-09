@@ -1,0 +1,22 @@
+{
+  "stage": "T04",
+  "capturedAt": "2026-10-07T07:14:34.8522870Z",
+  "files": [
+    {
+      "path": "src/application/weekly-planning/posts.ts",
+      "sha256": "db74306321b15a45c75a2d04da6fc953ed1cfe1b5f81b4912fc4f655b689168e"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-store.ts",
+      "sha256": "69ef1e2fcf94d5318404378581ee0c24771faca777b33388821475121720a53b"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "sha256": "5959c5f04865f13b54750d0e824cbbaaa83e23d811256b708c3283b51f9f180a"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publish-store.ts",
+      "sha256": "8b3c3d512c04780c0c5509906a9e7f7b9b54ccadc1b9252c2c1863df9829bd36"
+    }
+  ]
+}

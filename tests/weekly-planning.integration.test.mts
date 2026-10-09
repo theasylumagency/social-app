@@ -1,3 +1,5 @@
+import { reviewFixture } from "./weekly-review-fixture"
+import { readPlanningStatus } from "../src/infrastructure/postgres/weekly-planning-status"
 import { subscribeFixture, strategicBrandFixture } from "./strategic-integration-fixture"
 import { currentWeek, shiftWeek } from "../src/application/dashboard/model"
 import { approveStrategy, proposeStrategy } from "../src/infrastructure/postgres/social-strategy-store"
@@ -13,11 +15,13 @@ import { readPlanningRun, readPlanningView, beginWeeklyPlanning, claimPlanningRu
 import { readWeeklyBrief } from "../src/infrastructure/postgres/dashboard-store"
 import { completePlanningFixture, discoveryFixture } from "./weekly-planning-fixture"
 import { beginWeeklyPosts, claimWeeklyPosts, readWeeklyPosts, saveWeeklyPosts, savePostCopy, failWeeklyPosts, mutatePostAsset, readPostAsset, listPostAssets } from "../src/infrastructure/postgres/weekly-posts-store"
-import { scheduleFixture, copyFixture, editorialFixture } from "./weekly-posts-fixture"
+import { currentScheduleFixture as scheduleFixture, copyFixture as historicalCopyFixture, editorialFixture } from "./weekly-posts-fixture"
 import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
 import { runWeeklyPosts } from "../src/worker/weekly-posts"
+
+const copyFixture = () => ({ ...historicalCopyFixture(), factualReferences: { factKeys: [], proofKeys: [] } })
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -49,6 +53,11 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal(await readPlanningRun(pool, "other", first.id), null)
   assert.equal((await readPlanningView(pool, "other", brandId, input.week)).run, null)
   assert.equal(await readWeeklyBrief(pool, "owner", brandId, input.week), null)
+  assert.equal(await readPlanningStatus(pool, "other", brandId, input.week), null)
+  const initialStatus = (await readPlanningStatus(pool, "owner", brandId, input.week))!
+  assert.deepEqual(Object.keys(initialStatus).sort(), ["revision", "working"])
+  assert.equal(initialStatus.working, true)
+  assert.deepEqual(await readPlanningStatus(pool, "owner", brandId, input.week), initialStatus)
   const claims = await Promise.all([claimPlanningRun(pool, "owner", first.id), claimPlanningRun(pool, "owner", first.id)])
   assert.equal(claims.filter(Boolean).length, 1)
   const one = claims.find(Boolean)!
@@ -64,6 +73,13 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal((await readWeeklyPosts(pool, "owner", first.id))?.step, "outline")
   assert.equal(await readWeeklyPosts(pool, "other", first.id), null)
   await assert.rejects(() => beginWeeklyPosts(pool, "other", first.id, 1))
+  const beforeAsset = (await readPlanningStatus(pool, "owner", brandId, input.week))!
+  const assetId = randomUUID()
+  await pool.query("INSERT INTO weekly_post_assets(id,run_id,post_key,slot,name,width,height,content) VALUES($1,$2,'p1',0,'test.png',1,1,$3)", [assetId, first.id, Buffer.from([1])])
+  const withAsset = (await readPlanningStatus(pool, "owner", brandId, input.week))!
+  assert.notEqual(withAsset.revision, beforeAsset.revision)
+  await pool.query("DELETE FROM weekly_post_assets WHERE id=$1", [assetId])
+  assert.equal((await readPlanningStatus(pool, "owner", brandId, input.week))!.revision, beforeAsset.revision)
   const postClaims = await Promise.all([claimWeeklyPosts(pool, "owner", first.id), claimWeeklyPosts(pool, "owner", first.id)])
   assert.equal(postClaims.filter(Boolean).length, 1)
   const pc = postClaims.find(Boolean)!
@@ -105,6 +121,11 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal((await listPostAssets(pool, "owner", first.id)).length, 0)
   await assert.rejects(() => approvePlanningRun(pool, "other", first.id, 1))
   await assert.rejects(() => approvePlanningRun(pool, "owner", first.id, 2))
+  const forApproval = (await readWeeklyPosts(pool, "owner", first.id))!.payload
+  const captions = ["შეფასებისთვის ნივთის სრული და დაზიანების ახლო ხედი მოამზადეთ.", "რომელი ძველი კვალი გსურთ შეინარჩუნოთ? წინასწარ მონიშნეთ ეს დეტალები.", "ფოტო არის პირველი ნაბიჯი. საბოლოო შეფასებისთვის ნივთის ადგილზე ნახვაა საჭირო."]
+  forApproval.outline!.posts.forEach((_, i) => { forApproval.copies[`p${i + 1}`]!.variants.forEach(v => { v.caption = captions[i]! }) })
+  forApproval.reviewEvidence = reviewFixture(ready, forApproval, new Date().toISOString())
+  await pool.query("UPDATE weekly_post_batches SET payload=$2::jsonb WHERE run_id=$1", [first.id, JSON.stringify(forApproval)])
   await Promise.all([approvePlanningRun(pool, "owner", first.id, 1), approvePlanningRun(pool, "owner", first.id, 1)])
   assert.equal((await readPlanningView(pool, "owner", brandId, input.week)).approved?.id, first.id)
   assert.ok((await readWeeklyPosts(pool, "owner", first.id))?.approvedAt)
@@ -128,7 +149,9 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await pool.query("UPDATE weekly_planning_runs SET payload=$2::jsonb WHERE id=$1", [revision.id, JSON.stringify(ready2.payload)])
   await beginWeeklyPosts(pool, "owner", revision.id, 2)
   const secondPosts = (await claimWeeklyPosts(pool, "owner", revision.id))!
-  await saveWeeklyPosts(pool, revision.id, secondPosts.token, completePosts, "ready")
+  const secondCompleted = structuredClone(forApproval)
+  secondCompleted.reviewEvidence = reviewFixture(ready2, secondCompleted, new Date().toISOString())
+  await saveWeeklyPosts(pool, revision.id, secondPosts.token, secondCompleted, "ready")
   // A forced failure during the new approval must also roll back superseding the old one.
   await pool.query("CREATE FUNCTION reject_test_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status='approved' THEN RAISE EXCEPTION 'test approval failure'; END IF; RETURN NEW; END $$")
   await pool.query("CREATE TRIGGER test_approval_failure BEFORE UPDATE ON weekly_planning_runs FOR EACH ROW EXECUTE FUNCTION reject_test_approval()")
@@ -147,7 +170,9 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const cadenceReady = await completePlanningFixture(cc.run)
   await finishPlanningStep(pool, cc.run, cc.token, cadenceReady.payload, "ready")
   const cb = (await claimWeeklyPosts(pool, "owner", cadenceBase.id))!
-  await saveWeeklyPosts(pool, cadenceBase.id, cb.token, completePosts, "ready")
+  const cadenceCompleted = structuredClone(forApproval)
+  cadenceCompleted.reviewEvidence = reviewFixture(cadenceReady, cadenceCompleted, new Date().toISOString())
+  await saveWeeklyPosts(pool, cadenceBase.id, cb.token, cadenceCompleted, "ready")
   await mutatePostAsset(pool, "owner", cadenceBase.id, "p1", 0, { content, width: 20, height: 25, name: "kept.webp" })
   await approvePlanningRun(pool, "owner", cadenceBase.id, 1)
   await assert.rejects(() => changeWeeklyCadence(pool, "other", randomUUID(), cadenceBase.id, 1, { facebook: 1, instagram: 0 }))
@@ -164,7 +189,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const reducedBatch = (await readWeeklyPosts(pool, "owner", reduced.id))!
   assert.equal(reducedBatch.step, "review")
   assert.equal(reducedBatch.payload.copies.p1!.variants.length, 1)
-  assert.deepEqual(reducedBatch.payload.copies.p1!.variants[0], completePosts.copies.p1.variants[0])
+  assert.deepEqual(reducedBatch.payload.copies.p1!.variants[0], cadenceCompleted.copies.p1!.variants[0])
   const keptAsset = (await listPostAssets(pool, "owner", reduced.id))[0]!
   assert.deepEqual(await readPostAsset(pool, "owner", keptAsset.id), content)
   assert.equal((await listPostAssets(pool, "owner", cadenceBase.id)).length, 1)

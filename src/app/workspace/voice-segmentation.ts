@@ -2,7 +2,7 @@ export const VOICE_SILENCE = {
   minimumEnergy: 0.012,
   noiseMultiplier: 3,
   speechConfirmationMs: 180,
-  sessionSilenceMs: 6_000,
+  sessionSilenceMs: 3_000,
 } as const
 
 /** Browser-independent silence timer; it deliberately never controls recorder segmentation. */

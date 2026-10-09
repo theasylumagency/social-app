@@ -1,10 +1,11 @@
+import { readPlanningStatus } from "../../../infrastructure/postgres/weekly-planning-status"
 import { authenticateWorkRequest, currentSession, subscriptionRequired } from "../../_server/auth"
 import { getDatabasePool } from "../../_server/database"
 import { isWeek } from "../../../application/dashboard/model"
 import { isDiscoveryId } from "../../../infrastructure/postgres/brand-discovery-store"
 import { approvePlanningRun, beginWeeklyPlanning, PlanningConflict, readPlanningRun, readPlanningView, retryPlanningRun, type BeginPlanningInput } from "../../../infrastructure/postgres/weekly-planning-store"
 import { beginWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-store"
-import { repairWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-repair"
+import { repairWeeklyPosts, recheckWeeklyPosts } from "../../../infrastructure/postgres/weekly-posts-repair"
 import { changeWeeklyCadence } from "../../../infrastructure/postgres/weekly-planning-store"
 import { isPostCadence } from "../../../blueprints/social/weekly-planning/posts"
 
@@ -18,6 +19,10 @@ export async function GET(request: Request) {
   const brandId = query.get("brand")
   const week = query.get("week")
   if (!brandId || brandId.length > 160 || !isWeek(week)) return Response.json({ message: "ბრენდი ან კვირა არასწორია." }, { status: 400 })
+  if (query.get("mode") === "status") {
+    const status = await readPlanningStatus(getDatabasePool(), auth.user.id, brandId, week)
+    return status ? Response.json(status, { headers: { "cache-control": "private, no-store" } }) : Response.json({ message: "ბრენდი ვერ მოიძებნა." }, { status: 404 })
+  }
   return Response.json(await readPlanningView(getDatabasePool(), auth.user.id, brandId, week), { headers: { "cache-control": "private, no-store" } })
 }
 export async function POST(request: Request) {
@@ -47,6 +52,10 @@ export async function POST(request: Request) {
       if (!run) return Response.json({ message: "გეგმა ვერ მოიძებნა." }, { status: 404 })
       if (body.action === "approve") await approvePlanningRun(pool, ownerId, body.id, body.version as number)
       else if (body.action === "posts" || body.action === "retry-posts") await beginWeeklyPosts(pool, ownerId, body.id, body.version as number, body.action === "retry-posts")
+      else if (body.action === "recheck-posts") {
+        if (body.postModes !== undefined && (!body.postModes || typeof body.postModes !== "object" || Array.isArray(body.postModes))) throw Error("აირჩიეთ პოსტების მიზნები.")
+        await recheckWeeklyPosts(pool, ownerId, body.id, body.version as number, body.postModes as Record<string, import("../../../blueprints/social/tokens").SocialContentMode> | undefined)
+      }
       else if (body.action === "repair-posts") await repairWeeklyPosts(pool, ownerId, body.id, body.version as number)
       else if (body.action === "retry") await retryPlanningRun(pool, ownerId, body.id, body.version as number)
       else if (body.action !== "resume") throw new Error("ქმედება არასწორია.")

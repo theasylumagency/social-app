@@ -79,7 +79,10 @@ export async function readWeekEvidence(pool: Pool | PoolClient, ownerId: string,
 export async function saveWeekEvidence(pool: Pool, ownerId: string, brandId: string, evidence: WeekEvidence) {
   if (evidence.week > currentWeek()) throw Error("მომავალი კვირის შედეგებს ჯერ ვერ შევაფასებთ.")
   return transaction(pool, ownerId, brandId, async (c) => {
-    const saved = { ...evidence, reviewedAt: new Date().toISOString(), availability: evidence.observations.length ? "available" : "unavailable" }
+    // Owner input can never mint automatic measurement authority, even through an internal caller.
+    const saved: WeekEvidence = { week: evidence.week, reviewedAt: new Date().toISOString(), availability: "unavailable",
+      observations: evidence.observations.map(o => ({ level: o.level, observation: o.observation, source: o.source, provenance: "manual" })),
+      execution: evidence.execution, unknowns: evidence.unknowns, businessContext: evidence.businessContext }
     await c.query("INSERT INTO social_week_reviews(brand_id,week_start,payload) VALUES($1,$2,$3::jsonb) ON CONFLICT(brand_id,week_start) DO UPDATE SET payload=excluded.payload,reviewed_at=now()", [brandId, evidence.week, JSON.stringify(saved)])
   })
 }

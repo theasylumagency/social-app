@@ -1,0 +1,11 @@
+{
+  "sampleHash": "bdcfebc7344672996da6eb7dd44d2bcbed20f3d19c88d59f37585ec067173560",
+  "plannedPasses": 3,
+  "subsetAnchors": 0,
+  "actualRequests": 0,
+  "status": "notDemonstratedNoEligibleRealAnchors",
+  "reason": "The fixed real sample contains no application-prepared anchors; controlled smoke cases were not substituted.",
+  "labelFlips": null,
+  "bindingFlips": null,
+  "probabilityVariance": null
+}

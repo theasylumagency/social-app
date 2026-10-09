@@ -4,3 +4,9 @@ export const editorialFixture = (keys = ["p1", "p2", "p3"]): PostEditorialReview
 export const scheduleFixture = (): PostSchedule => ({ summary: "სამი პასუხი ნივთის შეფასებამდე", cadenceReason: "სამი განსხვავებული კითხვა ზედმეტი გამეორების გარეშე", channelReason: "Facebook-ზე ახსნა, Instagram-ზე ვიზუალური შეფასების გზა", posts: [0, 1, 2].map((i) => ({ directionKey: `d${i + 1}`, dayOffset: i * 2, title: `შეფასების ნაბიჯი ${i + 1}`, why: "მფლობელი გაარჩევს შეფასებას გარანტიისგან", format: "image", channels: [{ channel: "facebook", reason: "შეფასების პროცესის განმარტება" }, { channel: "instagram", reason: "ფოტოების როლის ჩვენება" }], brief: { job: ["ფოტოთი შეფასების ზღვარი", "სასარგებლო ფოტოების მომზადება", "შესანარჩუნებელი კვალის არჩევა"][i]!, takeaway: ["ფოტო არ იძლევა გარანტიას", "საჭიროა ნივთის სრული და დაზიანების ახლო ხედი", "ძველი კვალი და ახალი დაზიანება წინასწარ გამოყავით"][i]!, points: ["ფოტოს კუთხე", "დაზიანების დეტალი"], mustNotSay: ["გარანტირებული შედეგი"] }, visual: { kind: "graphic", description: "ნივთის მარტივი სქემა და ორი შეფასების კითხვა", aspectRatio: "4:5", frames: ["შეფასების კითხვების მარტივი სქემა"] } })) })
 export const copyFixture = (): PostCopy => ({ variants: ["facebook", "instagram"].map((channel) => ({ channel: channel as "facebook" | "instagram", caption: "რა ჩანს ფოტოზე და რა უნდა შეფასდეს ადგილზე?\n\nდაზიანების დეტალი შეფასებაში გვეხმარება.", frames: [], script: "", onScreenText: [] })) })
 
+
+export function currentScheduleFixture(): PostSchedule {
+  const schedule = scheduleFixture()
+  schedule.posts.forEach(post => { post.contentMode = "social.educational" as never; post.factKeys = [] })
+  return schedule
+}

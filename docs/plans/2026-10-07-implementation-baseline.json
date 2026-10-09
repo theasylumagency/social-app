@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-07",
+  "head": "3602b90d2ab49c537262563a433d1dc06057a3ac",
+  "existingModifiedFiles": [
+    {
+      "path": ".env.example",
+      "sha256": "16bf7243d82847440e2df9f8bc025562c33d7b093fbe00139de65edcc2f235f9"
+    },
+    {
+      "path": "package.json",
+      "sha256": "02b60e9967debdb384a18507d999f74338d5732101311ca84204066639f303ba"
+    },
+    {
+      "path": "src/app/workspace/shell.tsx",
+      "sha256": "5597bcfeffcce00eba333f76f9e36f897f3d3082c0ae647bd70cc31ee2117fe0"
+    },
+    {
+      "path": "src/app/workspace/voice-segmentation.ts",
+      "sha256": "8a5657a22235bc46df2a75b9e7c4883565a49c9a73eff49a10416a6d73e07588"
+    },
+    {
+      "path": "src/application/weekly-planning/posts.ts",
+      "sha256": "40aa375df1d8690807c4f2dd57914d95d7200ae942a3d871db0ee1215cb1fe24"
+    },
+    {
+      "path": "src/worker/weekly-posts.ts",
+      "sha256": "387920533493529b7bfcfcf28ac3bbf9e4635ea33e6b1a0be338cb32c6e801cb"
+    }
+  ],
+  "initialStatus": [
+    " M .env.example",
+    " M package.json",
+    " M src/app/workspace/shell.tsx",
+    " M src/app/workspace/voice-segmentation.ts",
+    " M src/application/weekly-planning/posts.ts",
+    " M src/worker/weekly-posts.ts",
+    "?? docs/audits/2026-10-06-architecture-and-experience-audit.md",
+    "?? docs/plans/",
+    "?? docs/semantic-middleware-contract-v1.md",
+    "?? docs/semantic-middleware-phase-7a.md",
+    "?? docs/semantic-middleware-phase-7c-verification.json",
+    "?? docs/semantic-middleware-phase-7c.md",
+    "?? docs/semantic-signal-utility-map-v1.md",
+    "?? \"docs/\\341\\203\\241\\341\\203\\220\\341\\203\\230\\341\\203\\234\\341\\203\\244\\341\\203\\235\\341\\203\\240\\341\\203\\233\\341\\203\\220\\341\\203\\252\\341\\203\\230\\341\\203\\235 \\341\\203\\222\\341\\203\\225\\341\\203\\224\\341\\203\\240\\341\\203\\223\\341\\203\\230.md\"",
+    "?? experiments/",
+    "?? scripts/semantic-middleware-shadow.mts",
+    "?? src/application/semantic-middleware/",
+    "?? src/blueprints/social/semantic-middleware/",
+    "?? src/core/domain/semantic-observation.ts",
+    "?? src/infrastructure/models/jev-semantic-shadow.ts",
+    "?? src/infrastructure/models/semantic-shadow-config.ts",
+    "?? src/infrastructure/semantic-shadow/",
+    "?? src/worker/semantic-shadow.ts",
+    "?? tests/fixtures/semantic-middleware.ts",
+    "?? tests/fixtures/semantic-shadow.ts",
+    "?? tests/semantic-middleware-shadow.test-d.ts",
+    "?? tests/semantic-middleware-shadow.test.mts",
+    "?? tests/semantic-middleware.test-d.ts",
+    "?? tests/semantic-middleware.test.mts"
+  ],
+  "purpose": "Preserve pre-existing changes; hashes record the start of implementation."
+}

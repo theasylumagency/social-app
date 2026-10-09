@@ -1,6 +1,8 @@
 "use client"
 
 import Link from "next/link"
+import { startPlanningPolling } from "./planning-polling"
+import { PostReviewUpgrade } from "./post-review-upgrade"
 import { WeeklyPostsClient } from "./weekly-posts-client"
 import { WeeklyCadenceClient } from "./weekly-cadence-client"
 import type { PostCadence } from "../../blueprints/social/weekly-planning/posts"
@@ -48,9 +50,7 @@ export function WeeklyPlanningClient({ initial, initialPriority, brandId, ownerI
   const [error, setError] = useState("")
   const [restored, setRestored] = useState<string | null>(null)
   const requestId = useRef<string>(crypto.randomUUID())
-  const wakeAt = useRef(0)
   const run = view.run
-  const runId = run?.id
   const planningWorking = run?.status === "queued" || run?.status === "running"
   const postsWorking = view.posts?.status === "queued" || view.posts?.status === "running"
   const working = planningWorking || postsWorking
@@ -58,14 +58,9 @@ export function WeeklyPlanningClient({ initial, initialPriority, brandId, ownerI
   const url = `/api/weekly-planning?brand=${encodeURIComponent(brandId)}&week=${week}`
   const blocking = (run?.payload.review?.concerns.some((c) => c.severity === "blocking") ?? false) || (view.posts?.payload.review?.issues.some((i) => i.severity === "blocking") ?? false)
   const postsReady = view.posts?.status === "ready"
-  const contentApproved = run?.status === "approved" && Boolean(view.posts?.approvedAt)
+  const needsReviewUpgrade = postsReady && view.posts?.payload.reviewEvidence?.version !== 2 && !!view.posts?.payload.outline?.posts.length
+  const contentApproved = run?.status === "approved" && Boolean(view.posts?.approvedAt) && (!view.posts?.payload.outline?.posts.length || Boolean(view.posts?.approvalEvidence))
 
-  useEffect(() => {
-    const controller = new AbortController()
-    const refresh = () => { void fetch(url, { cache: "no-store", signal: controller.signal }).then(async response => { if (response.ok) { const latest = await response.json() as PlanningView; if (!controller.signal.aborted) setView(latest) } }).catch(() => {}) }
-    window.addEventListener("unda:notes-changed", refresh)
-    return () => { controller.abort(); window.removeEventListener("unda:notes-changed", refresh) }
-  }, [url])
 
   useEffect(() => {
     let active = true
@@ -82,35 +77,32 @@ export function WeeklyPlanningClient({ initial, initialPriority, brandId, ownerI
   }, [draftKey, restored, priority, note])
 
   useEffect(() => {
-    let active = true
-    let timer: ReturnType<typeof setTimeout>
-    const poll = async () => {
-      try {
-        const response = await fetch(url, { cache: "no-store" })
-        if (!response.ok) throw Error()
+    const polling = startPlanningPolling({
+      visible: () => document.visibilityState !== "hidden",
+      status: async signal => {
+        const response = await fetch(url + "&mode=status", { cache: "no-store", signal })
+        if (!response.ok) throw Error("Status unavailable")
+        return response.json() as Promise<{ revision: string; working: boolean }>
+      },
+      refresh: async signal => {
+        const response = await fetch(url, { cache: "no-store", signal })
+        if (!response.ok) throw Error("Plan unavailable")
         const latest = await response.json() as PlanningView
-        if (!active) return
-        setView(latest); setError("")
-        const current = latest.run
-        const postBatch = latest.posts
-        const postsNeedWake = postBatch?.status === "queued" || (postBatch?.status === "running" && postBatch.leaseUntil && Date.parse(postBatch.leaseUntil) < Date.now())
-        if (current && (current.status === "queued" || (current.status === "running" && current.leaseUntil && Date.parse(current.leaseUntil) < Date.now()) || postsNeedWake) && Date.now() - wakeAt.current > 12_000) {
-          wakeAt.current = Date.now()
-          await fetch("/api/weekly-planning", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "resume", id: current.id, version: current.version }) })
-        }
-      } catch { if (active) setError("კავშირი დროებით გაწყდა. გეგმის შენახულ მდგომარეობას ხელახლა შევამოწმებთ.") }
-      if (active) timer = setTimeout(poll, working ? 3500 : 15000)
-    }
-    void poll()
-    return () => { active = false; clearTimeout(timer) }
-  }, [working, runId, url])
+        if (!signal.aborted) { setView(latest); setError("") }
+      },
+      onError: () => setError("კავშირი დროებით გაწყდა. გეგმის შენახულ მდგომარეობას ხელახლა შევამოწმებთ."),
+    })
+    window.addEventListener("unda:notes-changed", polling.refresh)
+    document.addEventListener("visibilitychange", polling.visibilityChanged)
+    return () => { polling.stop(); window.removeEventListener("unda:notes-changed", polling.refresh); document.removeEventListener("visibilitychange", polling.visibilityChanged) }
+  }, [url])
 
-  async function action(kind: "start" | "revise" | "approve" | "retry" | "posts" | "retry-posts" | "repair-posts" | "cadence", revisionNote = note, cadence?: PostCadence) {
+  async function action(kind: "start" | "revise" | "approve" | "retry" | "posts" | "retry-posts" | "repair-posts" | "recheck-posts" | "cadence", revisionNote = note, cadence?: PostCadence, postModes?: Record<string, import("../../blueprints/social/tokens").SocialContentMode>) {
     if (week !== currentWeek()) { setError("ახალი სამუშაო მხოლოდ მიმდინარე კვირისთვის მზადდება. არჩეული კვირა ისტორიად რჩება."); return }
     setBusy(true); setError("")
     try {
       const generating = kind === "start" || kind === "revise" || kind === "cadence"
-      const response = await fetch("/api/weekly-planning", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: kind, id: generating ? requestId.current : run?.id, version: run?.version, brandId, week, priority, ...(kind === "revise" || kind === "cadence" ? { parentId: run?.id, parentVersion: run?.version, revisionNote, cadence } : {}) }) })
+      const response = await fetch("/api/weekly-planning", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: kind, id: generating ? requestId.current : run?.id, version: run?.version, brandId, week, priority, ...(postModes ? { postModes } : {}), ...(kind === "revise" || kind === "cadence" ? { parentId: run?.id, parentVersion: run?.version, revisionNote, cadence } : {}) }) })
       const data = await response.json() as PlanningView & { message?: string }
       if (!response.ok) {
         if (response.status === 409) { const fresh = await fetch(url, { cache: "no-store" }); if (fresh.ok) setView(await fresh.json()); requestId.current = crypto.randomUUID() }
@@ -128,11 +120,12 @@ export function WeeklyPlanningClient({ initial, initialPriority, brandId, ownerI
     {error ? <p className="wp-error" role="alert">{error}</p> : null}
     {!run && mode === "content" ? <section className="wp-start"><h2>ამ კვირის კონტენტი ჯერ არ მომზადებულა.</h2><p>ჯერ კვირის გეგმა შექმენით. პოსტების მომზადება შემდეგ ავტომატურად დაიწყება.</p><Link className="wp-button" href={`/workspace/week?week=${week}`}>კვირის გეგმის შექმნა →</Link></section> : null}
     {!run && mode === "week" ? <section className="wp-start"><div><p className="wp-eyebrow">ბრენდის ცოდნიდან — ამ კვირის არჩევანამდე</p><h2>რა უნდა მივაღწიოთ<br />ამ კვირის კომუნიკაციით?</h2><p>შეთანხმებული სტრატეგიიდან და ხელმისაწვდომი შედეგებიდან ავირჩევთ კვირის მიზანს. შემდეგ განვსაზღვრავთ, რა კონტენტი და რა რაოდენობით სჭირდება ამ მიზანს.</p><div className="wp-foundation-chips"><span>{view.basis.payload.landscape?.entries.filter((e) => e.influence !== "none").length} აუდიტორიული სიტუაცია</span><span>ერთი შეთანხმებული სოციალური მიზანი</span><span>შენახული კომუნიკაციის ჩარჩო</span></div><Link className="wp-text-link" href="/workspace/brand">რას ვეყრდნობით ↗</Link></div><form onSubmit={(e) => { e.preventDefault(); void action("start") }}><label htmlFor="wp-priority">ამ კვირაში რამეს განსაკუთრებული ყურადღება სჭირდება?</label><textarea id="wp-priority" rows={5} maxLength={1200} value={priority} onChange={(e) => setPriority(e.target.value)} placeholder="მაგ. ახალი შეთავაზება გვაქვს, ან ხშირად გვიმეორებენ ერთსა და იმავე კითხვას…" /><p>სურვილისამებრ. თუ პრიორიტეტს არ მიუთითებთ, კვირას შეთანხმებული სოციალური მიზნის მიხედვით დავგეგმავთ.</p><button className="wp-button" disabled={busy}>{busy ? "ვიწყებთ…" : "შემომთავაზე კვირის გეგმა →"}</button><small>ჯერ გეგმას განიხილავთ და დაადასტურებთ.</small></form></section> : null}
-    {view.stale ? <section className="wp-notice"><h2>ბრენდის ცოდნა ან სოციალური სტრატეგია განახლდა.</h2><p>ახალი ვერსია უკვე გაითვალისწინებს თქვენს ბოლო დაზუსტებებს. ძველი გეგმა ისტორიაში დარჩება.</p>{!working ? <button className="wp-button wp-button-outline" disabled={busy} onClick={() => void action("revise", "გეგმა განაახლე ბრენდის ბოლო დადასტურებული ცოდნისა და არჩეული მიზნების მიხედვით.")}>გეგმის ახალ ცოდნაზე განახლება</button> : null}</section> : null}
+    {view.stale ? <section className="wp-notice"><h2>{view.factualBlocker ? "პოსტის ფაქტი შესამოწმებელია." : "ბრენდის ცოდნა ან სოციალური სტრატეგია განახლდა."}</h2>{view.factualBlocker ? <p>{view.factualBlocker}</p> : null}<p>ახალი ვერსია უკვე გაითვალისწინებს თქვენს ბოლო დაზუსტებებს. ძველი გეგმა ისტორიაში დარჩება.</p>{!working ? <button className="wp-button wp-button-outline" disabled={busy} onClick={() => void action("revise", "გეგმა განაახლე ბრენდის ბოლო დადასტურებული ცოდნისა და არჩეული მიზნების მიხედვით.")}>გეგმის ახალ ცოდნაზე განახლება</button> : null}</section> : null}
     {planningWorking && run ? <section className="wp-progress" aria-live="polite"><p className="wp-eyebrow">შეთანხმებული სტრატეგიიდან — მიმდინარე კვირამდე</p><h2>ვადგენთ ამ კვირის გეგმას.</h2><p>ვითვალისწინებთ ბრენდის ცოდნას, სტრატეგიულ მიზანს და ხელმისაწვდომ დაკვირვებებს.</p><p>{run.status === "queued" ? "მოთხოვნა შენახულია და შესრულებას ელოდება." : "გეგმის მომზადება მიმდინარეობს…"} გვერდის განახლება პროცესს თავიდან არ დაიწყებს.</p></section> : null}
     {run?.status === "failed" ? <section className="wp-error"><h2>გაგრძელება შენახული ეტაპიდან შეგვიძლია.</h2><p>{run.error}</p><button className="wp-button" disabled={busy} onClick={() => void action("retry")}>ამ ეტაპის ხელახლა ცდა</button><button className="wp-text-link" onClick={() => setRevising(true)}>პრიორიტეტის დაზუსტება</button></section> : null}
     {run?.payload.review?.concerns.length ? <section className="wp-concerns"><h2>{blocking ? "დადასტურებამდე დასაზუსტებელია" : "რა გავითვალისწინოთ მომზადებისას"}</h2>{run?.payload.review.concerns.map((c, i) => <article key={i}><span>{c.severity === "blocking" ? "დასაზუსტებელია" : "გასათვალისწინებელია"}</span><p>{c.message}</p>{c.directionKeys.length ? <small>მიმართულებები: {c.directionKeys.map((key) => key.slice(1)).join(", ")}</small> : null}</article>)}</section> : null}
-    {run?.payload.plan && !planningWorking ? <>{mode === "content" ? <WeeklyPostsClient run={run} batch={view.posts} assets={view.assets ?? []} onAssets={(assets) => setView((v) => ({ ...v, assets }))} onStart={() => void action("posts")} onRetry={() => void action("retry-posts")} onRepair={() => void action("repair-posts")} busy={busy} readOnly={week !== currentWeek()} /> : <><PlanReport run={run} /><WeeklyCadenceClient key={run.id} batch={view.posts} week={week} busy={busy} blocked={week !== currentWeek() || view.stale || Boolean(run.payload.review?.concerns.some((c) => c.severity === "blocking"))} onSave={(cadence) => action("cadence", note, cadence)} onStart={() => void action("posts")} onRetry={() => void action("retry-posts")} /></>}<section className="wp-review-actions"><div><p className="wp-eyebrow">{contentApproved ? "გადაწყვეტილება შენახულია" : "თქვენი ხედვა გეგმას ასრულებს"}</p><h2>{contentApproved ? "ამ კვირის გეგმა დადასტურებულია." : "კვირის მიმართულება და კონტენტი განვიხილოთ."}</h2><p>{contentApproved ? "გეგმა და ტექსტები შენახულია. გამოსახულებები და გამოქვეყნების განრიგი კონტენტის გვერდზე ნახეთ." : "დადასტურება შეინახავს გეგმასა და მომზადებულ ტექსტებს. გამოქვეყნებისთვის ჯერ ვიზუალები და ანგარიშების დაკავშირებაა საჭირო."}</p></div><div>{week === currentWeek() && mode === "content" && ["ready", "approved"].includes(run.status) && !contentApproved ? <button className="wp-button" disabled={busy || blocking || view.stale || revising || !postsReady} onClick={() => void action("approve")}>{busy ? "ინახება…" : "ვადასტურებ კვირის გეგმას →"}</button> : null}{mode === "week" ? <Link className="wp-button" href={`/workspace/content?week=${week}`}>პოსტების განხილვა →</Link> : <Link className="wp-text-link" href={`/workspace/week?week=${week}`}>კვირის მიზანი და რაოდენობის შეცვლა ↗</Link>}<button className="wp-button wp-button-outline" disabled={week !== currentWeek() || busy || planningWorking} onClick={() => setRevising(!revising)}>{revising ? "დაზუსტების დახურვა" : "გეგმის დაზუსტება"}</button></div></section></> : null}
+    {run?.payload.plan && !planningWorking ? <>{mode === "content" ? <WeeklyPostsClient run={run} batch={view.posts} assets={view.assets ?? []} onAssets={(assets) => setView((v) => ({ ...v, assets }))} onStart={() => void action("posts")} onRetry={() => void action("retry-posts")} onRepair={() => void action("repair-posts")} busy={busy} readOnly={week !== currentWeek()} /> : <><PlanReport run={run} /><WeeklyCadenceClient key={run.id} batch={view.posts} week={week} busy={busy} blocked={week !== currentWeek() || view.stale || Boolean(run.payload.review?.concerns.some((c) => c.severity === "blocking"))} onSave={(cadence) => action("cadence", note, cadence)} onStart={() => void action("posts")} onRetry={() => void action("retry-posts")} /></>}<section className="wp-review-actions"><div><p className="wp-eyebrow">{contentApproved ? "გადაწყვეტილება შენახულია" : "თქვენი ხედვა გეგმას ასრულებს"}</p><h2>{contentApproved ? "ამ კვირის გეგმა დადასტურებულია." : "კვირის მიმართულება და კონტენტი განვიხილოთ."}</h2><p>{contentApproved ? "გეგმა და ტექსტები შენახულია. გამოსახულებები და გამოქვეყნების განრიგი კონტენტის გვერდზე ნახეთ." : "დადასტურება შეინახავს გეგმასა და მომზადებულ ტექსტებს. გამოქვეყნებისთვის ჯერ ვიზუალები და ანგარიშების დაკავშირებაა საჭირო."}</p></div><div>{week === currentWeek() && mode === "content" && ["ready", "approved"].includes(run.status) && !contentApproved ? <button className="wp-button" disabled={busy || blocking || view.stale || revising || !postsReady || needsReviewUpgrade} onClick={() => void action("approve")}>{busy ? "ინახება…" : "ვადასტურებ კვირის გეგმას →"}</button> : null}{mode === "week" ? <Link className="wp-button" href={`/workspace/content?week=${week}`}>პოსტების განხილვა →</Link> : <Link className="wp-text-link" href={`/workspace/week?week=${week}`}>კვირის მიზანი და რაოდენობის შეცვლა ↗</Link>}<button className="wp-button wp-button-outline" disabled={week !== currentWeek() || busy || planningWorking} onClick={() => setRevising(!revising)}>{revising ? "დაზუსტების დახურვა" : "გეგმის დაზუსტება"}</button></div></section></> : null}
+    {run && mode === "content" && needsReviewUpgrade ? <PostReviewUpgrade key={run.id + view.posts!.updatedAt} posts={view.posts!.payload.outline!.posts} disabled={busy || week !== currentWeek()} onRecheck={modes => void action("recheck-posts", note, undefined, modes)} /> : null}
     {revising && run && !planningWorking ? <form className="wp-revision" onSubmit={(e) => { e.preventDefault(); void action("revise") }}><h2>რა უნდა შეიცვალოს გეგმაში?</h2><label htmlFor="wp-revision-note">თქვენი დაზუსტება<textarea id="wp-revision-note" required minLength={10} maxLength={2000} rows={4} value={note} onChange={(e) => setNote(e.target.value)} placeholder="მაგ. ამ კვირაში ჯერ შეთავაზების განსხვავება უნდა ავხსნათ; პროცესის დეტალებზე შემდეგ გადავიდეთ." /></label><label htmlFor="wp-revised-priority">კვირის პრიორიტეტი<textarea id="wp-revised-priority" maxLength={1200} rows={3} value={priority} onChange={(e) => setPriority(e.target.value)} /></label><p>ახალი ვერსია თქვენს შენიშვნასა და მიმდინარე ბრენდის ცოდნას დაეყრდნობა. წინა დადასტურებული გეგმა ახალი ვერსიის დადასტურებამდე შენარჩუნდება.</p><button className="wp-button" disabled={busy}>დაზუსტებული გეგმის მომზადება →</button></form> : null}
     {view.approved && view.approved.id !== run?.id ? <details className="wp-previous wp-details"><summary>წინა დადასტურებული გეგმა კვლავ შენახულია · ვერსია {view.approved.version}</summary><h3>{view.approved.payload.plan?.objective.objective}</h3><ol>{view.approved.payload.plan?.contentDirections.map((d) => <li key={d.id}>{d.direction}</li>)}</ol>{mode === "content" && view.approvedPosts ? <WeeklyPostsClient run={view.approved} batch={view.approvedPosts} assets={view.approvedAssets ?? []} onAssets={() => {}} onStart={() => {}} onRetry={() => {}} busy={false} readOnly /> : null}</details> : null}
     {view.history.length > 1 ? <details className="wp-history wp-details"><summary>გეგმის ვერსიები და გადაწყვეტილებები</summary>{view.history.map((item) => <article key={item.id}><span>ვერსია {item.version} · {statusLabels[item.status]}</span><time dateTime={item.updatedAt}>{displayDate(item.updatedAt, { hour: "2-digit", minute: "2-digit" })}</time><p>{item.objective ?? "გეგმის მომზადება"}</p></article>)}</details> : null}

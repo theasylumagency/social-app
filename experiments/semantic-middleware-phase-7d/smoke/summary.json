@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "issue": null,
+  "completedLiveCases": 4,
+  "plannedLiveCases": 4,
+  "authenticationVerified": true,
+  "batchedKeyParsingVerified": true,
+  "rawProbabilitySerializationVerified": true,
+  "applicationIdentityVerified": true,
+  "isolationVerified": true,
+  "configuration": {
+    "provider": "jev",
+    "executionMode": "provider",
+    "protocolVersion": "unda-semantic-shadow-jev-bounded-v1",
+    "model": "jev-1.13.0",
+    "timeoutMs": 2000,
+    "budgetMs": 5000,
+    "maxTasks": 5,
+    "policy": {
+      "mode": "rawOnly"
+    },
+    "configurationRef": "semantic-shadow-config:631dd6e42d2bdc27acae"
+  },
+  "rateSource": {
+    "url": "https://docs.typesafe.ai/models",
+    "checkedAt": "2026-10-06",
+    "kind": "published-rate-estimate-not-invoice"
+  },
+  "metrics": {
+    "shadowEligibleTexts": 4,
+    "shadowIneligibleTexts": 0,
+    "providerRequests": 4,
+    "semanticDecisions": 24,
+    "familyDecisions": 12,
+    "polarityDecisions": 8,
+    "candidateBindingDecisions": 4,
+    "temporalDecisions": 0,
+    "amountDecisions": 0,
+    "applicationDeadZoneEvents": 0,
+    "contractInvalidObservations": 0,
+    "providerInvalidResponses": 0,
+    "unresolvedSemanticFields": 16,
+    "knownEllipsisLimitCases": 1,
+    "knownAmbiguousBindingCases": 0,
+    "providerFailures": 0,
+    "timeouts": 0,
+    "timeoutRate": 0,
+    "latencyMs": {
+      "count": 4,
+      "mean": 441.6149,
+      "p50": 308.9975999999999,
+      "p95": 726.0577000000001
+    },
+    "inputTokens": 6035,
+    "outputTokens": 468,
+    "requestsWithUnknownUsage": 0,
+    "knownCostUsd": 0.00025347,
+    "requestsWithUnknownCost": 0
+  },
+  "evaluationStopped": false,
+  "syntheticIsolationChecksAreNotQualityEvidence": true
+}

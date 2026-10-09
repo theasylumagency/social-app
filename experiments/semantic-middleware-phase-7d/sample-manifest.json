@@ -1,0 +1,264 @@
+{
+  "sampleId": "unda-semantic-phase7d-real-v1",
+  "version": 1,
+  "createdAt": "2026-10-06T03:04:00.929Z",
+  "sampleHash": "bdcfebc7344672996da6eb7dd44d2bcbed20f3d19c88d59f37585ec067173560",
+  "selection": {
+    "version": "phase7d-deterministic-real-posts-v1",
+    "cohortA": "First 50 unique saved complete Georgian post copies ordered by run creation time then immutable internal source ID; no signal filtering. Require a matching non-mock writer run with nonzero native input usage.",
+    "cohortB": "First 25 additional unique real historical repair/development copies matching the fixed textual signal/negation/time/branch/contrast rules, in the same chronological order; disjoint from A. No synthetic quota filling.",
+    "deduplication": "Exact public textual surfaces, channel and surface order; first source wins.",
+    "requested": {
+      "A": 50,
+      "B": 25
+    },
+    "available": {
+      "rawSavedAndRepairCopies": 6,
+      "excludedUnverifiedWriterProvenance": 3,
+      "verifiedSources": 3,
+      "uniqueContent": 3
+    },
+    "sourceLimitations": [
+      "Only the configured local UNDA database was available as a verifiable complete-post source.",
+      "Archived sequence evaluations contain reviewer scenarios/plans, not verifiable new complete writer output, and were excluded.",
+      "Original independent Safety output is not persisted separately; consolidated per-post review is linked where available."
+    ],
+    "noProviderOutputUsedForSelection": true
+  },
+  "configuration": {
+    "provider": "jev",
+    "executionMode": "provider",
+    "protocolVersion": "unda-semantic-shadow-jev-bounded-v1",
+    "model": "jev-1.13.0",
+    "timeoutMs": 2000,
+    "budgetMs": 5000,
+    "maxTasks": 5,
+    "policy": {
+      "mode": "rawOnly"
+    },
+    "configurationRef": "semantic-shadow-config:631dd6e42d2bdc27acae"
+  },
+  "rateSource": {
+    "url": "https://docs.typesafe.ai/models",
+    "checkedAt": "2026-10-06",
+    "kind": "published-rate-estimate-not-invoice"
+  },
+  "codeHashes": {
+    "src/infrastructure/models/jev-semantic-shadow.ts": "6de44e3c6b3c26481dd793e1ea352db06d0c30fcee78c0ca6e43e0401a65e51a",
+    "src/infrastructure/models/semantic-shadow-config.ts": "bb3ff4902997a9eb942c859d95fad355aa747f65b2686ac2fe7f1d493c3f5018",
+    "src/application/semantic-middleware/collect-shadow.ts": "784964cb3c8ac89f90c88804063876c3ff2083ff25b4da5a14758fa1147e7c5f",
+    "src/application/semantic-middleware/adapt-shadow.ts": "b401b387807ae0c866fb9079a7313538ae9dbff8c1995122126761d8eb5c04b7",
+    "src/blueprints/social/semantic-middleware/shadow.ts": "468e202df605a131af69d1013e3c37cf9e81f0e02f9533bb035ba539fa571861",
+    "src/blueprints/social/semantic-middleware/shadow-task.ts": "66b9f4e18fff1407a08cddee4ae018978bb3792e43c35238a3d5a0dfeab64474",
+    "src/blueprints/social/semantic-middleware/check-contract.ts": "b6f7d5fcdbd7759678c31062ac469fbd297428205a1bf14497bfb6d912ae61ed",
+    "src/blueprints/social/semantic-middleware/profile.ts": "92590d4b8abc6c9973cf4e3f3763f794a3768ce85e79020e1adc187867a96b3c",
+    "experiments/semantic-middleware-phase-7d/sample.mts": "c40029abc0fc131744302fd1eec14ddb1b26b1b64c42151b215af90ae26aab08"
+  },
+  "repeatSubset": [],
+  "repeatPasses": 3,
+  "cohorts": {
+    "A": 2,
+    "B": 1
+  },
+  "items": [
+    {
+      "itemId": "A001",
+      "cohort": "A",
+      "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/savedCopy/p1",
+      "sourceRevision": "ace7764a03e55e4cff2f7b22ad5f05473290ce81ac742eb0c1e1820f4f1faa25",
+      "contentHash": "ccd7262bac2f71f75a050797576343442957155d20f5ae0d61d3e577ee2674d0",
+      "selectionTags": [
+        "price",
+        "negation",
+        "contrastOrEllipsis"
+      ],
+      "texts": [
+        {
+          "surface": "caption",
+          "channel": "instagram",
+          "textHash": "a0cef71ee86d18ce6f8126c30b61ca2d1f8191bb068d6312ed28d9ee18954989"
+        },
+        {
+          "surface": "frames.0.heading",
+          "channel": "instagram",
+          "textHash": "3721d474081c52a3d837b8c9c2709d7f2bfec6d0552b2d3a1075ddeea07d75c6"
+        },
+        {
+          "surface": "frames.0.body",
+          "channel": "instagram",
+          "textHash": "4dc7cdf0850db295805bd8feec4cfac88b4e4135b710ae0ed4acb33b9609755d"
+        },
+        {
+          "surface": "frames.1.heading",
+          "channel": "instagram",
+          "textHash": "d9f8b3deb6717a6de0ca84e6853d22a011e9cf2fa01caea6c4be785cbef4d3ba"
+        },
+        {
+          "surface": "frames.1.body",
+          "channel": "instagram",
+          "textHash": "2f3a61b9d465cce254d71ecb267e12202da651fb5249c12b1a61238ab3caf974"
+        },
+        {
+          "surface": "frames.2.heading",
+          "channel": "instagram",
+          "textHash": "4303ff8437d62240c58639f68d1527a76e618ad903cd646b360467b2f7853ca1"
+        },
+        {
+          "surface": "frames.2.body",
+          "channel": "instagram",
+          "textHash": "6ecb88e554ecbce7d1147d42da19d3a23a2db2c0bb41fbed9b59090b4188a8ed"
+        },
+        {
+          "surface": "frames.3.heading",
+          "channel": "instagram",
+          "textHash": "2088474e490d3d8ef94fe5af4a7fb1af0324f076bb918d00dc135079d2cb4e58"
+        },
+        {
+          "surface": "frames.3.body",
+          "channel": "instagram",
+          "textHash": "3253c6de6b33332a7bd7acb8ad02b361bccd34f2fc6fec8b5258067852a6b30e"
+        }
+      ]
+    },
+    {
+      "itemId": "A002",
+      "cohort": "A",
+      "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/savedCopy/p2",
+      "sourceRevision": "aeb8e1ff17c10fada07677a58961c5c55bab03457f27794183fce79cd75c1dd6",
+      "contentHash": "e11ad5dcb904d327030a55ce59d12f421a21c86e1dc12ebf4e78c6baaf585833",
+      "selectionTags": [
+        "negation",
+        "contrastOrEllipsis"
+      ],
+      "texts": [
+        {
+          "surface": "caption",
+          "channel": "instagram",
+          "textHash": "b1366f3f4a9d0d18f643b38a7b4cc36f6c41010678291afe69157f3da3081adc"
+        },
+        {
+          "surface": "frames.0.heading",
+          "channel": "instagram",
+          "textHash": "178c327abe28bcf67d5f3eeba37b51e0122a6075de228b3302e2a2db957c40ec"
+        },
+        {
+          "surface": "frames.0.body",
+          "channel": "instagram",
+          "textHash": "c8993ff254b10eaeafbc0fe03da09b59f4be3dd070b16ff954ff50fc3e85a547"
+        },
+        {
+          "surface": "frames.1.heading",
+          "channel": "instagram",
+          "textHash": "05ca4301a4748bd114188af0a2ca76125e39f0e4404093a6ed8fcf82fbed1eab"
+        },
+        {
+          "surface": "frames.1.body",
+          "channel": "instagram",
+          "textHash": "0ae968909afc37f796fa09f46b1310cbb7ff32cf515d11fe18c4acf26b88b761"
+        },
+        {
+          "surface": "frames.2.heading",
+          "channel": "instagram",
+          "textHash": "aefc9d41a6d2a4438ba7f8bce2db27d5e51a72f3e432a39a10f3a1605ba66531"
+        },
+        {
+          "surface": "frames.2.body",
+          "channel": "instagram",
+          "textHash": "74827f0cfde1315ad1a82d86827d9b9b540440fc055e1541e26e5418ba310d6b"
+        },
+        {
+          "surface": "frames.3.heading",
+          "channel": "instagram",
+          "textHash": "c426d1f76de0b6dcf609f6e4a2c1dad40910d70b1493d13c6d82ae7752c87b2e"
+        },
+        {
+          "surface": "frames.3.body",
+          "channel": "instagram",
+          "textHash": "66dd80e20ac1050dc739ab8fec019c9bd1f3c2c5b34722450953ec9345f2624c"
+        },
+        {
+          "surface": "frames.4.heading",
+          "channel": "instagram",
+          "textHash": "e82f32c47f7b700bcca642b7edf3b94d1e27c15b40fa3a3e9dee5d0845336e48"
+        },
+        {
+          "surface": "frames.4.body",
+          "channel": "instagram",
+          "textHash": "ee89a800e36e14ffaac37d93a9f3b3fbcaa226fcf06085720a984851df5df904"
+        }
+      ]
+    },
+    {
+      "itemId": "B001",
+      "cohort": "B",
+      "sourceId": "weekly_post_batches:1588c602-4784-4927-87bc-54ea58189997/repairDraft/p3",
+      "sourceRevision": "9d1e5acd7430fee473d611e248f4f1f7a6560b1260c5745a8fc5ca760ff4ac93",
+      "contentHash": "c29f42bd3390ebdf76707c1e3a6ef0796e6428f26a0089e493349242302c84be",
+      "selectionTags": [
+        "price",
+        "negation",
+        "contrastOrEllipsis"
+      ],
+      "texts": [
+        {
+          "surface": "caption",
+          "channel": "instagram",
+          "textHash": "1258317dbbe07ff32dc7d692eb7487c3625109909de2bd800e04ab34aed966ca"
+        }
+      ]
+    }
+  ],
+  "hashPayload": {
+    "sampleId": "unda-semantic-phase7d-real-v1",
+    "version": 1,
+    "createdAt": "2026-10-06T03:04:00.929Z",
+    "selection": {
+      "version": "phase7d-deterministic-real-posts-v1",
+      "cohortA": "First 50 unique saved complete Georgian post copies ordered by run creation time then immutable internal source ID; no signal filtering. Require a matching non-mock writer run with nonzero native input usage.",
+      "cohortB": "First 25 additional unique real historical repair/development copies matching the fixed textual signal/negation/time/branch/contrast rules, in the same chronological order; disjoint from A. No synthetic quota filling.",
+      "deduplication": "Exact public textual surfaces, channel and surface order; first source wins.",
+      "requested": {
+        "A": 50,
+        "B": 25
+      },
+      "available": {
+        "rawSavedAndRepairCopies": 6,
+        "excludedUnverifiedWriterProvenance": 3,
+        "verifiedSources": 3,
+        "uniqueContent": 3
+      },
+      "sourceLimitations": [
+        "Only the configured local UNDA database was available as a verifiable complete-post source.",
+        "Archived sequence evaluations contain reviewer scenarios/plans, not verifiable new complete writer output, and were excluded.",
+        "Original independent Safety output is not persisted separately; consolidated per-post review is linked where available."
+      ],
+      "noProviderOutputUsedForSelection": true
+    },
+    "configuration": {
+      "provider": "jev",
+      "executionMode": "provider",
+      "protocolVersion": "unda-semantic-shadow-jev-bounded-v1",
+      "model": "jev-1.13.0",
+      "timeoutMs": 2000,
+      "budgetMs": 5000,
+      "maxTasks": 5,
+      "policy": {
+        "mode": "rawOnly"
+      },
+      "configurationRef": "semantic-shadow-config:631dd6e42d2bdc27acae"
+    },
+    "codeHashes": {
+      "src/infrastructure/models/jev-semantic-shadow.ts": "6de44e3c6b3c26481dd793e1ea352db06d0c30fcee78c0ca6e43e0401a65e51a",
+      "src/infrastructure/models/semantic-shadow-config.ts": "bb3ff4902997a9eb942c859d95fad355aa747f65b2686ac2fe7f1d493c3f5018",
+      "src/application/semantic-middleware/collect-shadow.ts": "784964cb3c8ac89f90c88804063876c3ff2083ff25b4da5a14758fa1147e7c5f",
+      "src/application/semantic-middleware/adapt-shadow.ts": "b401b387807ae0c866fb9079a7313538ae9dbff8c1995122126761d8eb5c04b7",
+      "src/blueprints/social/semantic-middleware/shadow.ts": "468e202df605a131af69d1013e3c37cf9e81f0e02f9533bb035ba539fa571861",
+      "src/blueprints/social/semantic-middleware/shadow-task.ts": "66b9f4e18fff1407a08cddee4ae018978bb3792e43c35238a3d5a0dfeab64474",
+      "src/blueprints/social/semantic-middleware/check-contract.ts": "b6f7d5fcdbd7759678c31062ac469fbd297428205a1bf14497bfb6d912ae61ed",
+      "src/blueprints/social/semantic-middleware/profile.ts": "92590d4b8abc6c9973cf4e3f3763f794a3768ce85e79020e1adc187867a96b3c",
+      "experiments/semantic-middleware-phase-7d/sample.mts": "c40029abc0fc131744302fd1eec14ddb1b26b1b64c42151b215af90ae26aab08"
+    },
+    "repeatSubset": [],
+    "repeatPasses": 3
+  }
+}

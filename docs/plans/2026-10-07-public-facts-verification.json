@@ -1,0 +1,178 @@
+{
+  "stage": "T04 public facts and source proof",
+  "verifiedAt": "2026-10-07T07:46:25.239Z",
+  "domain": {
+    "tests": 311,
+    "pass": 311,
+    "fail": 0
+  },
+  "offline": {
+    "tests": 172,
+    "pass": 172,
+    "fail": 0,
+    "skipped": 0
+  },
+  "isolatedPostgres": {
+    "files": 19,
+    "tests": 83,
+    "pass": 83,
+    "fail": 0,
+    "skipped": 0
+  },
+  "finalRegistryPostgres": {
+    "tests": 7,
+    "pass": 7,
+    "fail": 0,
+    "skipped": 0
+  },
+  "finalReviewAndAuthorityOffline": {
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "skipped": 0
+  },
+  "uniqueTestsAcrossSuites": 566,
+  "typecheck": "passed",
+  "lint": {
+    "errors": 0,
+    "preexistingWarnings": 6
+  },
+  "productionBuild": {
+    "status": "passed",
+    "next": "16.3.4",
+    "finalSourceBuild": true
+  },
+  "migration": {
+    "file": "0020_public_knowledge.sql",
+    "appliedTo": "isolated temporary test schemas only",
+    "requiredBeforeRuntimeDeployment": true
+  },
+  "deploymentPerformed": false,
+  "paidModelCalls": 0,
+  "socialPublications": 0,
+  "jevEnabled": false,
+  "liveVisualQa": false,
+  "measuredLatencyOrQualityBenefit": false,
+  "sources": [
+    {
+      "path": "db/migrations/0020_public_knowledge.sql",
+      "sha256": "0155b18cb622004d7ebff76a85557a73faa7cf607fa0b5028aed4fb1d77ef0d0"
+    },
+    {
+      "path": "src/blueprints/social/public-knowledge.ts",
+      "sha256": "e62557a5158107bcff735999d86f569a7dd69dcf91cd6d75785dbbbd0b12d6db"
+    },
+    {
+      "path": "src/infrastructure/postgres/public-knowledge-store.ts",
+      "sha256": "5df190a81bcd36071681b0528a060ef666c5cb5c89f548f89cad223e26be0031"
+    },
+    {
+      "path": "src/app/api/public-facts/route.ts",
+      "sha256": "0073f7a2d23346aa1f3be59f39a154871a3e15f0dfefd6586484433a9b97a78e"
+    },
+    {
+      "path": "src/app/workspace/public-facts-client.tsx",
+      "sha256": "50c610940efbc8c81fa38cf812f03de3003f91c04244f019ce095afac1f10e42"
+    },
+    {
+      "path": "src/app/workspace/public-facts.css",
+      "sha256": "4c81569248b36687b263c78ee3fb52c03f3ac2eb955051ef44ae5957f7529144"
+    },
+    {
+      "path": "src/app/workspace/[[...section]]/page.tsx",
+      "sha256": "1f56f2bb127e036648fc39f5dbb3b195a47aa786ef54527b00621fa71e47765f"
+    },
+    {
+      "path": "src/application/weekly-planning/posts.ts",
+      "sha256": "b567a308ee152938c5ec4a53070fd84c3338706b4278c30d4c6d6c87f4f8e86c"
+    },
+    {
+      "path": "src/application/weekly-planning/advance.ts",
+      "sha256": "5a4545901863c4cc20abbe16c4fa965fd27b50435b600a01dafea293e6c2fe2e"
+    },
+    {
+      "path": "src/application/weekly-planning/factual-authority.ts",
+      "sha256": "6438ae899b9692b2b0350dba545094095616a0610c076dd5af37550205309974"
+    },
+    {
+      "path": "src/application/weekly-planning/review-evidence.ts",
+      "sha256": "c53b645d871b38975a158b9fc3eb92b86108c512989279669a0c423368dee2d2"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/model.ts",
+      "sha256": "f13e22c8316d3903f4f7b69e796169c93268b9f8a1b5dac314209043e52bc0fb"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/posts.ts",
+      "sha256": "8a0eab5b8c6b677cca1c394c37c9d2889d9fa0fe5f736a9936ed1e8eacec136d"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/post-context.ts",
+      "sha256": "f19c4f72d04b27188638aead5792de843a62b6d26b83f17de5d031c5951f592c"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/cadence.ts",
+      "sha256": "ef4e08c15476c2bfb69b115f35323bbf2a93f67a4fb6fb75e155a72183d4685e"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/review-evidence.ts",
+      "sha256": "d560416123e7321b8acb01e32872826ed680510ee6296d4b08d54b0167028300"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/prompts/posts.ts",
+      "sha256": "60f1df905086d038ccbfcd290c0dbe874e530ee4d1f903589b50ddc7d3bf0455"
+    },
+    {
+      "path": "src/application/publishing/factual-authority.ts",
+      "sha256": "11e5b031596c6ec4d57c49f39364fee464835ce9ea71bcf3b44217ca41492136"
+    },
+    {
+      "path": "src/application/publishing/delivery-view.ts",
+      "sha256": "f613dd202c8864bc37f9282c3557621799f11bf34a0dd464b870a54dd3ddf2a6"
+    },
+    {
+      "path": "src/application/publishing/materialize-approved-post.ts",
+      "sha256": "bc57490838f9105284898bcffce8b71f74730376f3467f01ae8f3ce57dfe90da"
+    },
+    {
+      "path": "src/application/publishing/weekly-publication-bundle.ts",
+      "sha256": "0d8fbb22bb38c7f3825e0a81b58b66d40cdf84d5cde9cbf6fa4739bc65fdafe8"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "sha256": "b10973d22411f4959de325b6856d9c249426292905a92f5f39a1dc94fdeda9a6"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publish-store.ts",
+      "sha256": "a41bd0beddc95416d2ddf03d432c9a9626b155b775347f7e991d07dff129b4d5"
+    },
+    {
+      "path": "src/infrastructure/postgres/delivery-view-store.ts",
+      "sha256": "d263fbba1ad92b9d8cc80c78e6655c569d6b0212c1f304bd1b3b009f6d92f8ec"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-store.ts",
+      "sha256": "7172acb81eaf0350ec85d4b64458a407a82fc2d3dcc8eeaad05f056d4e7bafdf"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-status.ts",
+      "sha256": "c58a2cf60355d8b46d76ef2b269fb612c62ffb4046d27829385e038abeb4d11e"
+    },
+    {
+      "path": "src/infrastructure/postgres/contextual-notes-store.ts",
+      "sha256": "109b026f322158791cd2d069d5725dcd7d26ba6a00b35efab1c3919f25aa8230"
+    },
+    {
+      "path": "src/infrastructure/zernio/publisher.ts",
+      "sha256": "33080f6a5b771b2ea64c0e56ac2576e5871458fd4e993fadfc9431dfa5613727"
+    },
+    {
+      "path": "src/app/workspace/weekly-planning-client.tsx",
+      "sha256": "51436709f5611d982e7c1635b5fb892e76adfe0c6440e7f77728d4b1cbba512f"
+    },
+    {
+      "path": "src/app/workspace/delivery-status.tsx",
+      "sha256": "a50a2ab45c6b8fa2b9f46971d8435f532145276f5d375f30f65e70b18b0eeba3"
+    }
+  ]
+}

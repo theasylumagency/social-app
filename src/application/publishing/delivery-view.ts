@@ -10,17 +10,17 @@ export type DeliveryAttempt = {
 }
 export type DeliveryRecord = {
   id: string; week: string; runId: string; version: number; postKey: string; channel: "facebook" | "instagram"
-  accountName: string; publishAt: string; cancelled: boolean; canPublish: boolean; attempts: DeliveryAttempt[]
+  factualBlocker?: string | null; accountName: string; publishAt: string; cancelled: boolean; canPublish: boolean; attempts: DeliveryAttempt[]
 }
 export type DeliveryPolicy = { enabled: boolean; maxAttempts: number; graceMs: number }
-export type DeliveryState = "published" | "cancelled" | "scheduled" | "queued" | "sending" | "retrying" | "confirming" | "unconfirmed" | "failed" | "delayed" | "disconnected" | "disabled" | "unavailable"
+export type DeliveryState = "published" | "cancelled" | "scheduled" | "queued" | "sending" | "retrying" | "confirming" | "unconfirmed" | "failed" | "delayed" | "disconnected" | "disabled" | "unavailable" | "factBlocked"
 export type DeliveryItem = Omit<DeliveryRecord, "attempts" | "canPublish"> & {
   state: DeliveryState; attention: boolean; unresolvedAttempt: boolean; publishedAt: string | null; lastActivityAt: string | null; attempts: number
 }
 export type DeliverySnapshot = { availability: "available"; checkedAt: string; publishingEnabled: boolean | null; items: DeliveryItem[] }
   | { availability: "unavailable"; checkedAt: string }
 
-const attentionStates = new Set<DeliveryState>(["unconfirmed", "failed", "delayed", "disconnected", "disabled", "unavailable"])
+const attentionStates = new Set<DeliveryState>(["factBlocked", "unconfirmed", "failed", "delayed", "disconnected", "disabled", "unavailable"])
 
 /** Observation only: never retries, dispatches, or grants publishing authority. */
 export function deliveryItem(record: DeliveryRecord, policy: DeliveryPolicy | null, now: string): DeliveryItem {
@@ -35,6 +35,7 @@ export function deliveryItem(record: DeliveryRecord, policy: DeliveryPolicy | nu
   // Cancellation, replacement bindings and later retries cannot erase delivery evidence.
   if (published) state = "published"
   else if (unresolved) state = !policy || late(unresolved.recordedAt ?? unresolved.attemptedAt) ? "unconfirmed" : "confirming"
+  else if (record.factualBlocker && !record.cancelled) state = "factBlocked"
   else if (latest && !latest.result) state = !policy ? "unavailable" : late(latest.attemptedAt) ? "delayed" : "sending"
   else if (record.cancelled) state = "cancelled"
   else if (latest?.result === "permanentFailure" || (latest?.reconciliation === "publicationFailed" && latest.failureType === "permanent")) state = "failed"

@@ -1,0 +1,116 @@
+{
+  "sourceStatus": "Minimized historical candidates, not gold; not yet evaluation sample",
+  "sources": [
+    {
+      "sourceId": "32297ae8-0d38-4297-905a-2adb4cb27fb1",
+      "itemId": "N001",
+      "sourceRevision": "8becb7ad056a31336f5cf9dcdd7ebbc417c10dd72ae7eb256fe268d8275b690c",
+      "createdAt": "2026-09-15T17:29:09.649Z",
+      "updatedAt": "2026-09-15T17:29:09.808Z",
+      "text": "მოკლე.",
+      "textHash": "72608755a9078de9194affcc328f8af0b292a2da0735700adfc22874db6d8306",
+      "inputSource": "text",
+      "status": "failed",
+      "context": {
+        "section": "content",
+        "postKey": "p1",
+        "channel": "facebook",
+        "runId": "e368dfdc-b660-4778-b6a3-d1f770d804b3",
+        "postVersion": "2026-09-15T17:23:23.033Z",
+        "target": null
+      },
+      "provenance": {
+        "fixtureTextMatch": true,
+        "nativeModelRunCount": 0,
+        "humanOriginVerified": false,
+        "classification": "knownControlledTextMatch"
+      },
+      "historical": {
+        "interpretation": null,
+        "decision": null,
+        "runs": [
+          {
+            "id": "18fcc3e6-8a8b-493b-be04-0d6609754d56",
+            "createdAt": "2026-09-15T17:29:09.803Z",
+            "step": "contextual_notes",
+            "model": "gpt-5.6-terra",
+            "durationMs": 108,
+            "inputTokens": null,
+            "outputTokens": null,
+            "validationFailures": 1
+          }
+        ]
+      }
+    },
+    {
+      "sourceId": "baad84bf-dc75-44f3-a457-0fe9facdb479",
+      "itemId": "N002",
+      "sourceRevision": "c2ee56b995b89403a0d171025392bb2d25c59a2936ea98b1967b82c420da9c46",
+      "createdAt": "2026-09-15T17:30:46.296Z",
+      "updatedAt": "2026-09-15T17:31:00.930Z",
+      "text": "მოკლე.",
+      "textHash": "72608755a9078de9194affcc328f8af0b292a2da0735700adfc22874db6d8306",
+      "inputSource": "text",
+      "status": "reverted",
+      "context": {
+        "section": "content",
+        "postKey": "p1",
+        "channel": "facebook",
+        "runId": "e368dfdc-b660-4778-b6a3-d1f770d804b3",
+        "postVersion": "2026-09-15T17:23:23.033Z",
+        "target": null
+      },
+      "provenance": {
+        "fixtureTextMatch": true,
+        "nativeModelRunCount": 2,
+        "humanOriginVerified": false,
+        "classification": "knownControlledTextMatch"
+      },
+      "historical": {
+        "interpretation": {
+          "action": "revise_post",
+          "response": "ფეისბუკის ამ პოსტის ტექსტს შევამოკლებ.",
+          "ambiguous": false,
+          "statements": [
+            {
+              "kind": "draft_correction",
+              "quote": "მოკლე.",
+              "scope": "post",
+              "meaning": "პოსტის ტექსტი უფრო მოკლე უნდა იყოს.",
+              "actionable": true
+            }
+          ],
+          "instruction": "შეამოკლე არჩეული Facebook პოსტის ქოფი, შეინარჩუნე შეფასების საზღვრის განმარტება და არ დაჰპირდე შედეგს.",
+          "clarification": ""
+        },
+        "decision": {
+          "mode": "apply",
+          "action": "revise_post",
+          "message": "არჩეული პოსტის ტექსტს თქვენი შენიშვნის მიხედვით შევასწორებ."
+        },
+        "runs": [
+          {
+            "id": "e4403e4a-a87b-42ef-a0df-a8c484c14b5f",
+            "createdAt": "2026-09-15T17:30:53.108Z",
+            "step": "contextual_notes",
+            "model": "gpt-5.6-terra",
+            "durationMs": 6784,
+            "inputTokens": 9189,
+            "outputTokens": 167,
+            "validationFailures": 0
+          },
+          {
+            "id": "7ffcad24-5a85-4818-a58e-7b8f6e10a7c9",
+            "createdAt": "2026-09-15T17:31:00.825Z",
+            "step": "contextual_post_revision",
+            "model": "gpt-5.6-terra",
+            "durationMs": 7710,
+            "inputTokens": 849,
+            "outputTokens": 187,
+            "validationFailures": 0
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "id": "social:input:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+  "brandId": "historical-brand",
+  "sourceWeeklyRunId": "1e7d9d9c-b0ce-4a01-916e-08b78b6cf3bd",
+  "postKey": "p1",
+  "channel": "facebook",
+  "contentId": "social:content:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+  "contentBriefId": "social:brief:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+  "contentExecutionSpecId": "social:execution:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+  "draftId": "social:draft:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+  "draftVersion": 1,
+  "schema": "unda.social-publication-input",
+  "version": 2,
+  "bundle": {
+    "contentBrief": {
+      "id": "social:brief:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "weeklyPlanId": "plan",
+      "weeklyContentDirectionId": "direction",
+      "contentId": "social:content:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "communicationJob": "Explain",
+      "keyTakeaway": "Clear",
+      "supportingPoints": [
+        "One",
+        "Two"
+      ],
+      "audienceDirection": {
+        "primaryAudience": {
+          "source": "brand",
+          "id": "audience"
+        },
+        "secondaryAudiences": [],
+        "bias": "balanced"
+      },
+      "evidenceMode": "noProofNeeded",
+      "evidenceIds": [],
+      "ctaIntent": "none",
+      "constraints": [],
+      "mustNotSay": [],
+      "rationale": "Useful",
+      "createdAt": "2026-10-07T10:01:00.000Z"
+    },
+    "contentExecutionSpec": {
+      "id": "social:execution:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "contentBriefId": "social:brief:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "channel": "facebook",
+      "contentMode": "social.educational",
+      "format": "staticPost",
+      "depth": "standard",
+      "visualDependency": "none",
+      "executionGuidance": [
+        "Useful"
+      ],
+      "constraints": [],
+      "rationale": "Fits",
+      "createdAt": "2026-10-07T10:01:00.000Z"
+    },
+    "draft": {
+      "id": "social:draft:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "contentId": "social:content:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "contentBriefId": "social:brief:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "contentExecutionSpecId": "social:execution:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "version": 1,
+      "locale": "ka",
+      "format": "staticPost",
+      "text": "Historical version two text",
+      "createdAt": "2026-10-07T10:01:00.000Z"
+    },
+    "weeklyReview": {
+      "version": 1,
+      "runId": "1e7d9d9c-b0ce-4a01-916e-08b78b6cf3bd",
+      "runVersion": 1,
+      "reviewedAt": "2026-10-07T10:00:00.000Z",
+      "contextDigest": "77b99da1869c295b73d0edfe8c22f30d21055d20f75fd9a3bfb2d5ad8f2c5b75",
+      "postDigests": {
+        "p1": "be0a92ada8dab00a6cacb614bdbca960da59b4d0b9f5731e9045f4f39e363895"
+      },
+      "safety": {
+        "summary": "Fixture factual review",
+        "issues": []
+      },
+      "editorial": {
+        "posts": [
+          {
+            "postKey": "p1",
+            "dimensions": [
+              {
+                "dimension": "brandFidelity",
+                "rating": "acceptable",
+                "note": "Fixture reviewer assessment"
+              },
+              {
+                "dimension": "taskFit",
+                "rating": "acceptable",
+                "note": "Fixture reviewer assessment"
+              },
+              {
+                "dimension": "structure",
+                "rating": "acceptable",
+                "note": "Fixture reviewer assessment"
+              },
+              {
+                "dimension": "nonGenericity",
+                "rating": "acceptable",
+                "note": "Fixture reviewer assessment"
+              },
+              {
+                "dimension": "CTAQuality",
+                "rating": "acceptable",
+                "note": "Fixture reviewer assessment"
+              }
+            ],
+            "issues": []
+          }
+        ]
+      },
+      "modelRuns": [
+        {
+          "id": "fixture-post_review",
+          "step": "post_review",
+          "model": "fixture",
+          "promptVersion": "fixture-v1",
+          "inputHash": "c7fe79c3244c70eae9efda38747d621a0884917baef9997aad0967dff2f0fb3d"
+        },
+        {
+          "id": "fixture-post_editorial",
+          "step": "post_editorial",
+          "model": "fixture",
+          "promptVersion": "fixture-v1",
+          "inputHash": "0a1a5513b4a438e8a8f9c2bdce637dcd7ce0844917f7c0cb25bf39bf7f438a51"
+        }
+      ]
+    },
+    "reviewedPost": {
+      "key": "p1",
+      "outline": {
+        "directionKey": "d1",
+        "format": "text",
+        "channels": [
+          {
+            "channel": "facebook",
+            "reason": "Fits"
+          }
+        ],
+        "why": "Useful",
+        "brief": {
+          "job": "Explain",
+          "takeaway": "Clear",
+          "points": [
+            "One",
+            "Two"
+          ],
+          "mustNotSay": []
+        },
+        "visual": {
+          "description": ""
+        }
+      },
+      "copy": {
+        "variants": [
+          {
+            "channel": "facebook",
+            "caption": "Historical version two text",
+            "script": "",
+            "frames": [],
+            "onScreenText": []
+          }
+        ]
+      }
+    },
+    "approval": {
+      "id": "social:review-decision:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "requestId": "social:review-request:ec29e28a63d2380e251b4e407a01adbb6806b53995767bc215beac8bc35e2431",
+      "actorId": "owner",
+      "approvedAt": "2026-10-07T10:01:00.000Z",
+      "runId": "1e7d9d9c-b0ce-4a01-916e-08b78b6cf3bd",
+      "runVersion": 1,
+      "draftDigest": "8ab9a7a069bb679b9b6caaaf3d0989dedf4f5f3425bf859d1ceaa454a6403cf2"
+    }
+  }
+}

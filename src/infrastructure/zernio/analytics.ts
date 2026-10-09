@@ -45,7 +45,7 @@ function normalize(profile: AnalyticsProfile, raw: unknown, observedAt: string):
       nativePublicationRef: platform.platformPostId === null || platform.platformPostId === undefined ? null : ref(platform.platformPostId),
       publicationUrl: safeUrl(platform.platformPostUrl ?? post.platformPostUrl),
       providerUpdatedAt: instant(analytics.lastUpdated ?? post.syncedAt ?? post.updatedAt), observedAt,
-      metrics: { ...values, engagementRate }, availability, rawMetrics }
+      metrics: { ...values, engagementRate }, availability, rawMetrics, metricContract: "zernio.reported-fields.v1" }
   })
 }
 

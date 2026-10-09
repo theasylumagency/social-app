@@ -11,6 +11,8 @@ export type NormalizedSocialAnalytics = {
   readonly publicationUrl: string | null
   readonly providerUpdatedAt: string
   readonly observedAt: string
+  /** Versioned field mapping, not an assertion of provider metric semantics. */
+  readonly metricContract?: string
   readonly metrics: Readonly<Record<SocialMetricName, number | null>> & { readonly engagementRate: number | null }
   readonly availability: Readonly<Record<SocialMetricName | "engagementRate", boolean>>
   readonly rawMetrics: Readonly<Record<string, number>>

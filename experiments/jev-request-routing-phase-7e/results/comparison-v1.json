@@ -1,0 +1,427 @@
+{
+  "status": "AuthorizedBaselineComparisonCompleted",
+  "authorization": {
+    "status": "explicitHumanAuthorizationGranted",
+    "humanReply": "კი გააგზავნე",
+    "authorizationContext": "The preceding question explicitly requested permission to send these five exact texts to the existing external OpenAI interpreter for comparison with Jev.",
+    "destination": "Existing OpenAI Responses API interpreter",
+    "purpose": "Isolated comparison of interpretation-stage latency and preservation of the human-confirmed requirements",
+    "scope": {
+      "sample": "weekly-sample.json",
+      "sampleHash": "2d9b497311517fca0ef68a707f963c0e6f5e637c7f2971a0c9de35b7c27ab830",
+      "cases": [
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U05"
+      ],
+      "logicalTasks": 5,
+      "context": "Frozen minimal context; no actual brand/plan data",
+      "productionExecution": false,
+      "databaseWrites": false
+    },
+    "previousRejectionRetained": "blocked-baseline.json is a historical receipt; this direct human authorization resolves that specific destination/export concern."
+  },
+  "referenceStatus": "Already human-confirmed meanings; engineering source review only. Independent blind final-content quality remains unmeasured.",
+  "hashes": {
+    "baselineSample": "2d9b497311517fca0ef68a707f963c0e6f5e637c7f2971a0c9de35b7c27ab830",
+    "jevSupplementSample": "4184eb9670e23b0f64903fbedfdbbb4aff7775d8dd0e46a3af8bfbf6bfddcb71",
+    "baselineResponses": "5c19ca41f6de03a8676da539319495b27595d7b877de1f1c84ce673134da853b",
+    "engineeringAssessment": "b97af15a147a8d6e0d0ab2751cd47b9b8a81296a74823b1e12368c5dc7ebac45"
+  },
+  "baseline": {
+    "configuredModel": "gpt-5.6-terra",
+    "logicalTasks": 5,
+    "completeRuns": 1,
+    "actualNetworkRequests": 5,
+    "technicalFailures": 0,
+    "validationRepairAttempts": 0,
+    "extraNetworkRequests": 0,
+    "latencyMs": {
+      "n": 5,
+      "min": 5371.7078,
+      "mean": 11646.45982,
+      "p50": 9234.575399999998,
+      "p95": 23278.371700000003,
+      "max": 23278.371700000003,
+      "quantileMethod": "nearestRank"
+    },
+    "totalRecordedStageMs": 58232.299100000004,
+    "inputTokens": 4505,
+    "outputTokens": 2329,
+    "reasoningTokens": 1102,
+    "cachedInputTokens": 0,
+    "nativeUsageReceipts": 5,
+    "monetaryCostUsd": null,
+    "costStatus": "Native token usage available; invoice or confirmed model rate not provided. Do not invent a dollar cost."
+  },
+  "jevV1": {
+    "completeRuns": 3,
+    "requests": 15,
+    "decisionsPerRequest": 11,
+    "latencyMs": {
+      "n": 15,
+      "min": 277.42509999999993,
+      "mean": 356.9355533333335,
+      "p50": 314.6975000000002,
+      "p95": 819.2955999999999,
+      "max": 819.2955999999999,
+      "quantileMethod": "nearestRank"
+    }
+  },
+  "jevV2": {
+    "completeRuns": 3,
+    "requests": 15,
+    "decisionsPerRequest": 12,
+    "latencyMs": {
+      "n": 15,
+      "min": 281.37660000000005,
+      "mean": 345.96366000000006,
+      "p50": 313.75049999999965,
+      "p95": 789.691,
+      "max": 789.691,
+      "quantileMethod": "nearestRank"
+    }
+  },
+  "byCase": [
+    {
+      "caseId": "U01",
+      "baselineMs": 12062.3611,
+      "baselineRuns": 1,
+      "baselineNetworkRequests": 1,
+      "jevV1": {
+        "n": 3,
+        "min": 314.6975000000002,
+        "mean": 526.9121333333334,
+        "p50": 446.7433,
+        "p95": 819.2955999999999,
+        "max": 819.2955999999999,
+        "quantileMethod": "nearestRank"
+      },
+      "jevV2": {
+        "n": 3,
+        "min": 284.1725999999999,
+        "mean": 341.77983333333344,
+        "p50": 300.0206000000003,
+        "p95": 441.14630000000005,
+        "max": 441.14630000000005,
+        "quantileMethod": "nearestRank"
+      },
+      "observedStageMsDifference": 11762.3405,
+      "baselineDecision": {
+        "mode": "clarify",
+        "action": "none",
+        "message": "რომელ კვირას გულისხმობთ?"
+      }
+    },
+    {
+      "caseId": "U02",
+      "baselineMs": 8285.2831,
+      "baselineRuns": 1,
+      "baselineNetworkRequests": 1,
+      "jevV1": {
+        "n": 3,
+        "min": 286.4537,
+        "mean": 298.97533333333337,
+        "p50": 295.9633000000001,
+        "p95": 314.509,
+        "max": 314.509,
+        "quantileMethod": "nearestRank"
+      },
+      "jevV2": {
+        "n": 3,
+        "min": 300.9644000000003,
+        "mean": 312.32566666666696,
+        "p50": 314.9431000000001,
+        "p95": 321.0695000000005,
+        "max": 321.0695000000005,
+        "quantileMethod": "nearestRank"
+      },
+      "observedStageMsDifference": 7970.34,
+      "baselineDecision": {
+        "mode": "clarify",
+        "action": "none",
+        "message": "ფეისბუკის გაძლიერებაში კონკრეტულად რას გულისხმობთ?"
+      }
+    },
+    {
+      "caseId": "U03",
+      "baselineMs": 9234.575399999998,
+      "baselineRuns": 1,
+      "baselineNetworkRequests": 1,
+      "jevV1": {
+        "n": 3,
+        "min": 330.8838999999998,
+        "mean": 347.16876666666667,
+        "p50": 333.62570000000005,
+        "p95": 376.99670000000015,
+        "max": 376.99670000000015,
+        "quantileMethod": "nearestRank"
+      },
+      "jevV2": {
+        "n": 3,
+        "min": 283.6151,
+        "mean": 304.99209999999994,
+        "p50": 313.75049999999965,
+        "p95": 317.6107000000002,
+        "max": 317.6107000000002,
+        "quantileMethod": "nearestRank"
+      },
+      "observedStageMsDifference": 8920.824899999998,
+      "baselineDecision": {
+        "mode": "clarify",
+        "action": "none",
+        "message": "რომელი კონკრეტული კვირა განვიხილოთ პირველ რიგში?"
+      }
+    },
+    {
+      "caseId": "U04",
+      "baselineMs": 5371.7078,
+      "baselineRuns": 1,
+      "baselineNetworkRequests": 1,
+      "jevV1": {
+        "n": 3,
+        "min": 277.42509999999993,
+        "mean": 301.5306666666668,
+        "p50": 290.84100000000035,
+        "p95": 336.32590000000005,
+        "max": 336.32590000000005,
+        "quantileMethod": "nearestRank"
+      },
+      "jevV2": {
+        "n": 3,
+        "min": 286.3690999999999,
+        "mean": 304.95029999999997,
+        "p50": 296.12159999999994,
+        "p95": 332.3602000000001,
+        "max": 332.3602000000001,
+        "quantileMethod": "nearestRank"
+      },
+      "observedStageMsDifference": 5075.5862,
+      "baselineDecision": {
+        "mode": "confirm",
+        "action": "revise_plan",
+        "message": "მომზადდება ამ კვირის გეგმის ახალი ვერსია: მიმდინარე კვირის კანდიდატ გეგმაში Facebook-ისა და Instagram-ის შემოთავაზებულ რაოდენობას თითო პოსტი დაამატე.\nმიზანს შევინარჩუნებთ. ახალი გეგმა დასადასტურებელი იქნება; წინა ვერსია და უკვე შენახული განრიგი შენარჩუნდება."
+      }
+    },
+    {
+      "caseId": "U05",
+      "baselineMs": 23278.371700000003,
+      "baselineRuns": 1,
+      "baselineNetworkRequests": 1,
+      "jevV1": {
+        "n": 3,
+        "min": 294.9313000000002,
+        "mean": 310.09086666666707,
+        "p50": 301.9276000000009,
+        "p95": 333.41370000000006,
+        "max": 333.41370000000006,
+        "quantileMethod": "nearestRank"
+      },
+      "jevV2": {
+        "n": 3,
+        "min": 281.37660000000005,
+        "mean": 465.77039999999994,
+        "p50": 326.2435999999998,
+        "p95": 789.691,
+        "max": 789.691,
+        "quantileMethod": "nearestRank"
+      },
+      "observedStageMsDifference": 22952.1281,
+      "baselineDecision": {
+        "mode": "confirm",
+        "action": "revise_plan",
+        "message": "მომზადდება ამ კვირის გეგმის ახალი ვერსია: მოამზადე მიმდინარე კვირის გეგმის ახალი კანდიდატი: გაითვალისწინე ორი ვიდეოპოსტის წარმოების შეზღუდვა; შეაფასე ალტერნატიული ფორმატები იმავე მიზნისთვის და არ ჩაანაცვლო ვიდეოები კარუსელებით ავტომატურად; Facebook-ის პოსტების რაოდენობა გაზარდე ერთით, Instagram-ის — შეამცირე ორით. მოგვიანებით ვიდეოების მზადყოფნა მონიშნე მხოლოდ შესაძლო ვადად.\nმიზანს შევინარჩუნებთ. ახალი გეგმა დასადასტურებელი იქნება; წინა ვერსია და უკვე შენახული განრიგი შენარჩუნდება."
+      }
+    }
+  ],
+  "engineeringAssessment": {
+    "status": "EngineeringSourceReviewNotIndependentBlindHumanQualityGold",
+    "reviewMethod": "Assistant source review of the five stored baseline outputs against the already human-confirmed meanings. No additional provider or model judge calls. Quality is assessed separately in statements/response and downstream instruction.",
+    "reference": "user-reference.json",
+    "limits": [
+      "No actual plan or calendar reference was supplied.",
+      "A clarification about the selected week is therefore not automatically an error.",
+      "Not explicitly represented does not prove an actual direction change.",
+      "No finished plan or actual user-facing output was generated by either experiment."
+    ],
+    "cases": [
+      {
+        "caseId": "U01",
+        "requirements": [
+          {
+            "aspect": "Instagram set 3; Facebook set 5",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.statements[0].meaning",
+              "quote": "ამ კვირის კონტენტის სასურველი სიხშირეა: Instagram — 3 პოსტი, Facebook — 5 პოსტი."
+            }
+          },
+          {
+            "aspect": "Current-week intent",
+            "status": "preservedButCalendarReferenceMissing",
+            "evidence": {
+              "path": "interpretation.statements[0].meaning",
+              "quote": "ამ კვირის კონტენტის"
+            }
+          },
+          {
+            "aspect": "Retain direction",
+            "status": "notExplicitlyRepresented",
+            "evidence": {
+              "path": "interpretation.instruction",
+              "quote": "კვირის დაზუსტების შემდეგ მოამზადე მხოლოდ იმ კვირის გეგმის ახალი კანდიდატი: Instagram-ზე 3 პოსტი და Facebook-ზე 5 პოსტი."
+            },
+            "impact": "No change of direction is observed; explicit approval of direction is omitted from the stored interpretation."
+          }
+        ],
+        "contextHandling": {
+          "status": "reasonableClarificationGivenMissingReference",
+          "evidence": {
+            "path": "interpretation.clarification",
+            "quote": "რომელ კვირას გულისხმობთ?"
+          }
+        }
+      },
+      {
+        "caseId": "U02",
+        "requirements": [
+          {
+            "aspect": "Reject direction and strengthen Facebook",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.response",
+              "quote": "არჩეული გზა არ მოგწონთ და ფეისბუკის გაძლიერება გსურთ."
+            }
+          },
+          {
+            "aspect": "No concrete count supplied",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.instruction",
+              "quote": "დაზუსტების გარეშე ცვლილება არ მოამზადო."
+            }
+          }
+        ],
+        "contextHandling": {
+          "status": "asksConcreteStrategicClarification",
+          "evidence": {
+            "path": "interpretation.clarification",
+            "quote": "ფეისბუკის გაძლიერებაში კონკრეტულად რას გულისხმობთ?"
+          }
+        }
+      },
+      {
+        "caseId": "U03",
+        "requirements": [
+          {
+            "aspect": "Instagram 2 per week over 3–4 weeks; Facebook delegated",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.response",
+              "quote": "Instagram-ზე 3–4 კვირის განმავლობაში კვირაში ორი პოსტი გირჩევნიათ; Facebook-ის სიხშირეს ჩვენ განვსაზღვრავთ."
+            }
+          }
+        ],
+        "contextHandling": {
+          "status": "asksFirstSelectedWeek;NoOperationalInstruction",
+          "evidence": {
+            "path": "interpretation.clarification",
+            "quote": "რომელი კონკრეტული კვირა განვიხილოთ პირველ რიგში?"
+          },
+          "instruction": "",
+          "impact": "Meaning is retained in response/statements, but multi-week planning is not encoded as an actionable existing contract instruction."
+        }
+      },
+      {
+        "caseId": "U04",
+        "requirements": [
+          {
+            "aspect": "Both channels +1 relative to existing counts",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.statements[0].meaning",
+              "quote": "ორივე არხისთვის შემოთავაზებულ პოსტების რაოდენობას თითო პოსტი დაემატოს."
+            }
+          },
+          {
+            "aspect": "Do not invent final counts without baselines",
+            "status": "preservedAsRelativeInstruction",
+            "evidence": {
+              "path": "interpretation.instruction",
+              "quote": "Facebook-ისა და Instagram-ის შემოთავაზებულ რაოდენობას თითო პოსტი დაამატე."
+            }
+          }
+        ],
+        "extraMeaning": {
+          "aspect": "Current-week binding",
+          "status": "inferredFromUIRatherThanExplicitText",
+          "referenceStatus": "engineeringNegativeControl",
+          "evidence": {
+            "path": "interpretation.instruction",
+            "quote": "მიმდინარე კვირის კანდიდატ გეგმაში"
+          },
+          "impact": "Same temporal over-inference as Jev; actual plan/week ownership must remain in the application."
+        }
+      },
+      {
+        "caseId": "U05",
+        "requirements": [
+          {
+            "aspect": "Facebook +1; Instagram −2",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.instruction",
+              "quote": "Facebook-ის პოსტების რაოდენობა გაზარდე ერთით, Instagram-ის — შეამცირე ორით."
+            }
+          },
+          {
+            "aspect": "Future video only possible, no firm date",
+            "status": "preserved",
+            "evidence": {
+              "path": "interpretation.instruction",
+              "quote": "მოგვიანებით ვიდეოების მზადყოფნა მონიშნე მხოლოდ შესაძლო ვადად."
+            }
+          },
+          {
+            "aspect": "Explicit video → carousel replacement",
+            "status": "recognizedInStatementButWeakenedInInstruction",
+            "evidence": [
+              {
+                "path": "interpretation.statements[2].meaning",
+                "quote": "ვიდეოპოსტების ნაცვლად კარუსელების გამოყენებას ითხოვთ."
+              },
+              {
+                "path": "interpretation.instruction",
+                "quote": "შეაფასე ალტერნატიული ფორმატები იმავე მიზნისთვის და არ ჩაანაცვლო ვიდეოები კარუსელებით ავტომატურად;"
+              }
+            ],
+            "impact": "The final instruction substitutes reconsidering alternatives for the explicitly confirmed format constraint; no generated plan is available to determine the eventual format."
+          }
+        ],
+        "extraMeaning": {
+          "aspect": "Strategy reconsideration",
+          "status": "notAdded",
+          "impact": "Unlike Jev's extra direction field, the baseline does not ask for a strategy change."
+        },
+        "promptDependency": {
+          "source": "src/application/contextual-notes/model.ts:84",
+          "quote": "never mechanical video-to-carousel replacement",
+          "diagnosis": "Likely prompt-induced overgeneralization of the constraint-only example to a message with an explicit format request. This is an inference from the unchanged prompt and stored output, not a causal ablation result."
+        }
+      }
+    ]
+  },
+  "limits": [
+    "Only five distinct prospective user tasks.",
+    "Baseline has one run per case; Jev has three per protocol.",
+    "Calls were not interleaved/randomized across providers.",
+    "Identical user texts and minimal context, but closed decisions and generative interpretation have different depth/output responsibilities.",
+    "No actual plan/baseline cadence/calendar reference; clarification is not automatically a quality failure.",
+    "No planner/Safety/DB/user-facing completion latency or final plan quality was measured.",
+    "No production route or provider thresholds activated."
+  ],
+  "recommendation": "Disabled shadow role for channel/mode/grounded quantity/counting basis; app owns real context, arithmetic, period, fidelity checks and authority. Keep broader strategy and generation on the existing interpreter/planner.",
+  "productionStateChanged": false
+}

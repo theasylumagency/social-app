@@ -1,3 +1,5 @@
+import { PublicFactsClient } from "../public-facts-client"
+import { readPublicKnowledgeView } from "../../../infrastructure/postgres/public-knowledge-store"
 import Link from "next/link"
 import { readStrategyView, readWeekEvidence } from "../../../infrastructure/postgres/social-strategy-store"
 import { StrategyClient } from "../strategy-client"
@@ -19,7 +21,7 @@ import { socialConnectionsAvailable } from "../../_server/social-connections"
 import { PostgresSocialConnectionsStore } from "../../../infrastructure/postgres/social-connections-store"
 import { readConnectionAccounts } from "../../../application/social-connections/view"
 import { sectionLabels, WorkspaceShell } from "../shell"
-import { PostgresSocialAnalyticsStore } from "../../../infrastructure/postgres/social-analytics-store"
+import { readWeekResultEvidence } from "../../../infrastructure/postgres/week-result-evidence-store"
 import { ResultsClient } from "../results-client"
 import { BrandView, ConnectionsView, ContentView, SettingsView, WeekView } from "../views"
 import { Overview } from "../overview"
@@ -51,7 +53,7 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
   if (!brand || !brand.ready) redirect("/onboarding")
   const today = currentWeek()
   const week = section !== "overview" && isWeek(query.week) ? query.week : today
-  const [sources, brief, dossier, history, planning, accounts, strategy, evidence, analytics, delivery] = await Promise.all([
+  const [sources, brief, dossier, history, planning, accounts, strategy, evidence, analytics, delivery, publicKnowledge] = await Promise.all([
     listDashboardSources(pool, session.user.id, brand.id),
     section === "week" ? readWeeklyBrief(pool, session.user.id, brand.id, week) : Promise.resolve(null),
     section === "brand" ? readBrandDossier(pool, session.user.id, brand.id) : Promise.resolve(null),
@@ -60,8 +62,9 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
     (section === "overview" || section === "connections") ? readConnectionAccounts(new PostgresSocialConnectionsStore(pool), { ownerId: session.user.id, brandId: brand.id }) : Promise.resolve([]),
     readStrategyView(pool, session.user.id, brand.id),
     section === "results" ? readWeekEvidence(pool, session.user.id, brand.id) : Promise.resolve([]),
-    section === "results" ? new PostgresSocialAnalyticsStore(pool).listResults({ ownerId: session.user.id, brandId: brand.id }) : Promise.resolve([]),
+    section === "results" ? readWeekResultEvidence(pool, session.user.id, brand.id, today) : Promise.resolve([]),
     (section === "overview" || section === "content") ? readDeliveryView(pool, { ownerId: session.user.id, brandId: brand.id }) : Promise.resolve(null),
+    section === "brand" ? readPublicKnowledgeView(pool, session.user.id, brand.id) : Promise.resolve(null),
   ])
   const textParam = (name: string) => typeof query[name] === "string" ? query[name] as string : ""
   return <WorkspaceShell section={section as DashboardSection} brands={brands} brand={brand} user={session.user} week={week}>
@@ -72,8 +75,9 @@ export default async function WorkspacePage({ params, searchParams }: Props) {
     {section === "week" && (strategy.active || planning?.run) ? <WeekView planning={planning!} ownerId={session.user.id} brand={brand} sources={sources} week={week} today={today} brief={brief} /> : null}
     {section === "content" && (strategy.active || planning?.run) ? <ContentView planning={planning!} brand={brand} ownerId={session.user.id} week={week} /> : null}
     {section === "content" ? <DeliveryStatus snapshot={delivery!} week={week} /> : null}
-    {section === "results" ? <><ResultsClient results={analytics} /><details className="brief-details"><summary>ბიზნესკონტექსტის დამატება და წინა დაკვირვებები</summary><div className="brief-panel"><EvidenceClient key={brand.id} brandId={brand.id} initial={evidence} /></div></details></> : null}
+    {section === "results" ? <><ResultsClient key={brand.id} evidence={analytics} objective={strategy.active?.payload.proposal?.objective} /><details className="brief-details"><summary>ბიზნესკონტექსტის დამატება და წინა დაკვირვებები</summary><div className="brief-panel"><EvidenceClient key={brand.id} brandId={brand.id} initial={evidence} /></div></details></> : null}
     {section === "brand" ? <BrandView history={history} dossier={dossier ? { ...dossier, payload: publicDiscoveryPayload(dossier.payload) } : null} brand={brand} sources={sources} view={textParam("view")} /> : null}
+    {section === "brand" && publicKnowledge ? <PublicFactsClient key={brand.id} brandId={brand.id} initial={publicKnowledge} /> : null}
     {section === "connections" ? <ConnectionsView sources={sources} brandId={brand.id} accounts={accounts} available={socialConnectionsAvailable()} intentId={textParam("intent")} outcome={textParam("connection")} /> : null}
     {section === "settings" ? <SettingsView brand={brand} user={session.user} brandCount={brands.length} /> : null}
   </WorkspaceShell>

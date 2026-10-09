@@ -1,0 +1,96 @@
+{
+  "stage": "T10/T11",
+  "capturedAt": "2026-10-08T08:47:26.515Z",
+  "previousStage": [
+    {
+      "path": "db/migrations/0023_schedule_time_context.sql",
+      "sha256": "cc29a965294c5d7711b861f73f5616b03d8391ee347327f5c536c5a8833c28db"
+    },
+    {
+      "path": "src/app/api/social/schedules/route.ts",
+      "sha256": "01a0a84eeff381c8788c2be6e491dd478b669daa7325cc447e12f7945c71fa45"
+    },
+    {
+      "path": "src/app/workspace/social-schedule-controls.tsx",
+      "sha256": "c98098da954c14c3bc7c91b9d86d9a118030f6199f0fddbaf2fb80c01daa9e7d"
+    },
+    {
+      "path": "src/app/workspace/social-schedule-model.ts",
+      "sha256": "3dae5b33fcc97a2c4a3b46951fec0d06ad1e1bf93e042ecb0be1ae7341c8566e"
+    },
+    {
+      "path": "src/app/workspace/weekly-posts-client.tsx",
+      "sha256": "ba07a0395d7a474b760e1bc850728fd2c7fcf05a4ce8e210be3d58db6bf621fc"
+    },
+    {
+      "path": "src/app/workspace/weekly-posts.css",
+      "sha256": "4d0131c59aa5cdd7931c913c2f8ef1620f2e8f342b88db9d9b1917bd02278922"
+    },
+    {
+      "path": "src/application/publishing/publication-store.ts",
+      "sha256": "477dd3c858b36b69a7fec240695370cd5e3e325a47988cdedff1cfcb795589a4"
+    },
+    {
+      "path": "src/application/publishing/schedule-approved-post.ts",
+      "sha256": "0b3ea5fdb1cdb18b67deb44e6232f09bca36710c4401cc1dff15f1665c33049b"
+    },
+    {
+      "path": "src/application/publishing/schedule-time.ts",
+      "sha256": "5ac935ce19a4eb5a1f2c914de4c27f99722e568efdf0f2e12e8b45af4e0c1391"
+    },
+    {
+      "path": "src/application/publishing/schedule-errors.ts",
+      "sha256": "8454cd62e560d054969b9bb72ccbaae549fe1931ce8466c5e99198d0fe54ffa3"
+    },
+    {
+      "path": "src/application/publishing/schedule-request.ts",
+      "sha256": "fa95b303299193e1a7102aa532427c19f7de20b280ba90e766ec4d78d70ebedd"
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "sha256": "411e1edc4192315dc4e8a754b1c991449ac5364e9ec6529e8e29866327684d21"
+    },
+    {
+      "path": "tests/schedule-time.test.mts",
+      "sha256": "d1e4c37ff2da3114dc2c02eae6dd7b4bcb3d645bc6aeec3cce092db3ff579d24"
+    },
+    {
+      "path": "tests/social-schedule-model.test.mts",
+      "sha256": "da5911c92374e35efa01e262a39338ce84e2d06c07d35f3614384af78a021af4"
+    },
+    {
+      "path": "tests/social-schedule-ui.test.mts",
+      "sha256": "7ba7c541144564c633edf5beaa34410ecd9d4dcdbf13a528cccf05532c9938e8"
+    },
+    {
+      "path": "tests/weekly-scheduling.integration.test.mts",
+      "sha256": "bc02469a49c16ec1365cd37de3310d3f6035c38b3f60250907c3f58638ad3433"
+    },
+    {
+      "path": "tests/weekly-posts-ux.test.mts",
+      "sha256": "c93fdf076ef4e1d12f62ba058d7495c62d2bc6302b36c8d6c035f736b22d8442"
+    }
+  ],
+  "files": [
+    {
+      "path": "src/infrastructure/postgres/contextual-notes-store.ts",
+      "sha256": "109b026f322158791cd2d069d5725dcd7d26ba6a00b35efab1c3919f25aa8230"
+    },
+    {
+      "path": "src/application/contextual-notes/model.ts",
+      "sha256": "ed008dde7b6ca6aa4172591023a2567da27341ee32c3d9e2391750012876bc16"
+    },
+    {
+      "path": "src/app/api/contextual-notes/route.ts",
+      "sha256": "89f72f8787a203350bcc35ed902c6b77c3c0054ad13133a86a28bfa594931d1f"
+    },
+    {
+      "path": "src/app/workspace/contextual-notes.tsx",
+      "sha256": "0e5297c419d2b8f499a2ff327ac1b47cbd046214fb5493767b0aedce772b0b35"
+    },
+    {
+      "path": "src/worker/operator-queues.ts",
+      "sha256": "c85608ae79afff73e5d0b80b7bae17da28cc7aa0c11252282c35b99bf3e42899"
+    }
+  ]
+}

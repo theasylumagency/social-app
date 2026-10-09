@@ -1,5 +1,35 @@
+import { isPostContentMode } from "../../blueprints/social/weekly-planning/post-mode"
+import type { SocialContentMode } from "../../blueprints/social/tokens"
 import type { Pool } from "pg"
 import { postRepairFeedback, type PostsPayload } from "../../blueprints/social/weekly-planning/posts"
+
+/** Upgrade a historical review without regenerating its copy; approval must be renewed. */
+export async function recheckWeeklyPosts(pool: Pool, ownerId: string, runId: string, version: number, modes?: Record<string, SocialContentMode>) {
+  const c = await pool.connect()
+  try {
+    await c.query("BEGIN")
+    const run = await c.query(`SELECT r.id FROM weekly_planning_runs r JOIN brands b ON b.id=r.brand_id JOIN workspaces w ON w.id=b.workspace_id
+      WHERE r.id=$1 AND r.owner_user_id=$2 AND w.owner_user_id=$2 AND r.version=$3 AND r.status IN ('ready','approved')
+      AND NOT EXISTS(SELECT 1 FROM weekly_planning_runs n WHERE n.brand_id=r.brand_id AND n.week_start=r.week_start AND n.version>r.version) FOR UPDATE OF r`, [runId, ownerId, version])
+    if (!run.rowCount) throw Error("გეგმა შეიცვალა. განაახლეთ გვერდი.")
+    const found = await c.query<{ payload: PostsPayload }>("SELECT payload FROM weekly_post_batches WHERE run_id=$1 AND status='ready' FOR UPDATE", [runId])
+    const p = found.rows[0]?.payload
+    if (!p?.outline?.posts.length || (p.reviewEvidence?.version === 2 && p.outline.posts.every(post => isPostContentMode(post.contentMode)))) throw Error("ხელახალი შემოწმება ამ ვერსიას არ სჭირდება.")
+    if (modes && (Object.keys(modes).length !== p.outline.posts.length || p.outline.posts.some((_, i) => !isPostContentMode(modes[`p${i + 1}`])))) throw Error("თითოეული პოსტისთვის აირჩიეთ მიზნის რეჟიმი.")
+    p.outline.posts.forEach((post, i) => {
+      const mode = modes?.[`p${i + 1}`] ?? post.contentMode
+      if (!isPostContentMode(mode)) throw Error("თითოეული პოსტისთვის აირჩიეთ მიზნის რეჟიმი.")
+      post.contentMode = mode
+    })
+    delete p.reviewEvidence
+    if (p.outline.posts.some((_, i) => !p.copies[`p${i + 1}`])) throw Error("ჯერ ტექსტების მომზადება დაასრულეთ.")
+    const count = await c.query<{ n: number }>("SELECT count(*)::int n FROM weekly_planning_events WHERE run_id=$1 AND kind='posts-rechecked' AND created_at>now()-interval '1 hour'", [runId])
+    if (count.rows[0]!.n >= 5) throw Error("შემოწმების ლიმიტი ამოიწურა. მოგვიანებით სცადეთ.")
+    await c.query("UPDATE weekly_post_batches SET status='queued',step='review',payload=$2::jsonb,approval_evidence=NULL,approved_at=NULL,approved_by_user_id=NULL,error=NULL,lease_until=NULL,lease_token=NULL,updated_at=now() WHERE run_id=$1", [runId, JSON.stringify(p)])
+    await c.query("INSERT INTO weekly_planning_events(run_id,kind,payload) VALUES($1,'posts-rechecked',$2::jsonb)", [runId, JSON.stringify({ decidedBy: ownerId, postModes: Object.fromEntries(p.outline.posts.map((post, i) => [`p${i + 1}`, post.contentMode])) })])
+    await c.query("COMMIT")
+  } catch (error) { await c.query("ROLLBACK"); throw error } finally { c.release() }
+}
 
 export async function repairWeeklyPosts(pool: Pool, ownerId: string, runId: string, version: number) {
   const c = await pool.connect()
