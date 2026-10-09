@@ -1,0 +1,857 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-09T07:49:06.393Z",
+  "model": "gpt-6.1-sol",
+  "repetitions": 2,
+  "caseCount": 8,
+  "completedArms": 48,
+  "evidence": {
+    "manifestPath": ".local/reasoning-comparison/live-01/manifest.json",
+    "manifestHash": "660560a17d14afa47f1fab85c9ced1b4f51060444c9a7582ad61bdab31a8871c",
+    "reportPath": ".local/reasoning-comparison/live-01/report.json",
+    "reportHash": "215caec9c5ef8a049065c4717798d63741ca555a52e28911883f352fc8a65109",
+    "resultsHash": "66741d7914a272e7bd03267fb920cb9c1a98f36202fc1da68bc458c19bd3735f",
+    "requestsHash": "f59180dc4e3a85a18404d4c3d9d434f31513cfcace5f078d419ceb8dc210fa18",
+    "allSourceHashesMatchedAtSummaryTime": true,
+    "sourceHashCount": 389,
+    "sourceSnapshotDirectory": ".local/reasoning-comparison/live-01/source-snapshot"
+  },
+  "cases": [
+    {
+      "caseId": "brand-understanding",
+      "title": "ბრენდის გააზრება ფაქტების, ხმისა და შეზღუდვების გარჩევით",
+      "role": "brand",
+      "inputDigest": "a5fff4570c145506605700b00b49e88d55c967a3a3c3ea46dbf749a2bd2c1d13",
+      "criteria": [
+        "ფოტოს პირველ შეფასებასა და ადგილზე დათვალიერებას ზუსტად არჩევს",
+        "საგნობრივ ხმას მოქმედ პრინციპებად აქცევს",
+        "სერვისს, შეზღუდვას და მომხმარებლის სასურველ ცვლილებას ერთმანეთში არ ურევს",
+        "ცნობილ ფაქტს გამოყოფს უცნობი ფასისა და გარანტიისგან"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 32130.212550000022,
+          "summedStageMs": 64260.425100000044,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0323834,
+          "inputTokens": 2584,
+          "outputTokens": 2902,
+          "cacheReadTokens": 1289,
+          "cacheWriteTokens": 1289,
+          "reasoningTokensIncludedInOutput": 100
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 36136.55249999998,
+          "summedStageMs": 72273.10499999997,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0341634,
+          "inputTokens": 2584,
+          "outputTokens": 3080,
+          "cacheReadTokens": 1289,
+          "cacheWriteTokens": 1289,
+          "reasoningTokensIncludedInOutput": 356
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 55604.616150000016,
+          "summedStageMs": 111209.23230000003,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0536234,
+          "inputTokens": 2584,
+          "outputTokens": 5026,
+          "cacheReadTokens": 1289,
+          "cacheWriteTokens": 1289,
+          "reasoningTokensIncludedInOutput": 2060
+        }
+      }
+    },
+    {
+      "caseId": "strategy",
+      "title": "სტრატეგიის გადახედვა მტკიცებულებისა და დროებითი შეზღუდვის გარჩევით",
+      "role": "strategy",
+      "inputDigest": "c8c126e3cf1693e45d2772fc56c6137ef244b074fc613470d8939b05f0d54530",
+      "criteria": [
+        "მუდმივ მიზანს მიმდინარე კვირის მედიის არქონისგან არჩევს",
+        "პასუხობს გარანტიის მცდარ მოლოდინს კონკრეტული გეგმით",
+        "ორივე არხის როლი ბრენდსა და აუდიტორიას ეყრდნობა",
+        "საჯარო სიგნალს გაყიდვისა და კერძო ანალიტიკის მტკიცებულებად არ აქცევს"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 0,
+          "failedArms": 2,
+          "observedChecksPassed": 0,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 70650.22149999999,
+          "summedStageMs": 141300.44299999997,
+          "providerRequests": 4,
+          "invalidAttempts": 4,
+          "estimatedCostUsd": 0.09656569999999999,
+          "inputTokens": 13613,
+          "outputTokens": 6888,
+          "cacheReadTokens": 2642,
+          "cacheWriteTokens": 10959,
+          "reasoningTokensIncludedInOutput": 84
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 1,
+          "failedArms": 1,
+          "observedChecksPassed": 4,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 84065.83480000003,
+          "summedStageMs": 168131.66960000005,
+          "providerRequests": 4,
+          "invalidAttempts": 3,
+          "estimatedCostUsd": 0.1098782,
+          "inputTokens": 14074,
+          "outputTokens": 8104,
+          "cacheReadTokens": 2642,
+          "cacheWriteTokens": 11420,
+          "reasoningTokensIncludedInOutput": 430
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 0,
+          "failedArms": 2,
+          "observedChecksPassed": 0,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 121169.79435000003,
+          "summedStageMs": 242339.58870000005,
+          "providerRequests": 4,
+          "invalidAttempts": 4,
+          "estimatedCostUsd": 0.1356757,
+          "inputTokens": 14433,
+          "outputTokens": 10594,
+          "cacheReadTokens": 2642,
+          "cacheWriteTokens": 11779,
+          "reasoningTokensIncludedInOutput": 2188
+        }
+      }
+    },
+    {
+      "caseId": "planner",
+      "title": "გეგმა განსხვავებული რაოდენობებით და ვიდეოს შეზღუდვით",
+      "role": "planner",
+      "inputDigest": "0eeed5bd02eea0584dc65d7e7c7b88d9296b2176084fddd54d815de8b81688f9",
+      "criteria": [
+        "პოსტების სამუშაო ერთმანეთისგან განსხვავდება",
+        "ფორმატების წარმოება მოცემული რესურსებით შესაძლებელია",
+        "იგივე სათქმელის უაზრო გამეორებას ერიდება",
+        "გეგმა მიზანს, აუდიტორიას და ყველა მნიშვნელოვან მიმართულებას აკავშირებს"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 54208.38259999998,
+          "summedStageMs": 108416.76519999997,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0515534,
+          "inputTokens": 8084,
+          "outputTokens": 4104,
+          "cacheReadTokens": 4039,
+          "cacheWriteTokens": 4039,
+          "reasoningTokensIncludedInOutput": 37
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 52780.18795000002,
+          "summedStageMs": 105560.37590000004,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0566834,
+          "inputTokens": 8084,
+          "outputTokens": 4617,
+          "cacheReadTokens": 4039,
+          "cacheWriteTokens": 4039,
+          "reasoningTokensIncludedInOutput": 333
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 83873.28684999997,
+          "summedStageMs": 167746.57369999995,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.07974339999999999,
+          "inputTokens": 8084,
+          "outputTokens": 6923,
+          "cacheReadTokens": 4039,
+          "cacheWriteTokens": 4039,
+          "reasoningTokensIncludedInOutput": 2423
+        }
+      },
+      "outputWorkload": [
+        {
+          "effort": "high",
+          "repetition": 1,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "image"
+          ],
+          "impliedVisualAssetCount": 4
+        },
+        {
+          "effort": "low",
+          "repetition": 1,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "carousel"
+          ],
+          "impliedVisualAssetCount": 6
+        },
+        {
+          "effort": "medium",
+          "repetition": 1,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "image"
+          ],
+          "impliedVisualAssetCount": 4
+        },
+        {
+          "effort": "low",
+          "repetition": 2,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "carousel"
+          ],
+          "impliedVisualAssetCount": 6
+        },
+        {
+          "effort": "medium",
+          "repetition": 2,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "image"
+          ],
+          "impliedVisualAssetCount": 4
+        },
+        {
+          "effort": "high",
+          "repetition": 2,
+          "jobs": 3,
+          "formats": [
+            "carousel",
+            "text",
+            "image"
+          ],
+          "impliedVisualAssetCount": 4
+        }
+      ]
+    },
+    {
+      "caseId": "writer-price",
+      "title": "ქართული ტექსტი დადასტურებული 50-ლარიანი ფასით",
+      "role": "writer",
+      "inputDigest": "bf782f9d2521e827923745d7e901db8df2f614bea6f79f04b057672cdf6c53a1",
+      "criteria": [
+        "პოსტს კონკრეტული სათქმელი აქვს",
+        "ბრენდის ხმა დაცულია და ზოგად რჩევებში არ იკარგება",
+        "არგუმენტი ვითარდება და დასკვნა საწყის კითხვას პასუხობს",
+        "ფაქტი, ინტერპრეტაცია და დაპირება გამიჯნულია"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 4330.877449999971,
+          "summedStageMs": 8661.754899999942,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0065902,
+          "inputTokens": 3520,
+          "outputTokens": 201,
+          "cacheReadTokens": 1757,
+          "cacheWriteTokens": 1757,
+          "reasoningTokensIncludedInOutput": 0
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 8511.543249999988,
+          "summedStageMs": 17023.086499999976,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.010250200000000001,
+          "inputTokens": 3520,
+          "outputTokens": 567,
+          "cacheReadTokens": 1757,
+          "cacheWriteTokens": 1757,
+          "reasoningTokensIncludedInOutput": 405
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 8,
+          "expectedChecks": 8,
+          "meanStageMsIncludingFailures": 13988.627699999954,
+          "summedStageMs": 27977.255399999907,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0155402,
+          "inputTokens": 3520,
+          "outputTokens": 1096,
+          "cacheReadTokens": 1757,
+          "cacheWriteTokens": 1757,
+          "reasoningTokensIncludedInOutput": 909
+        }
+      }
+    },
+    {
+      "caseId": "writer-voice",
+      "title": "პოლიტიკური ტექსტი ბრენდის ხმით",
+      "role": "writer",
+      "inputDigest": "ad1c959b591575577bc0d3a5de0bb0292481eca2945f55557c48aea9a5caacbf",
+      "criteria": [
+        "პოსტს კონკრეტული სათქმელი აქვს",
+        "ბრენდის ხმა დაცულია და ზოგად რჩევებში არ იკარგება",
+        "არგუმენტი ვითარდება და დასკვნა საწყის კითხვას პასუხობს",
+        "ფაქტი, ინტერპრეტაცია და დაპირება გამიჯნულია"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 15918.258500000054,
+          "summedStageMs": 31836.51700000011,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.011974199999999999,
+          "inputTokens": 3800,
+          "outputTokens": 703,
+          "cacheReadTokens": 1897,
+          "cacheWriteTokens": 1897,
+          "reasoningTokensIncludedInOutput": 0
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 15925.177549999964,
+          "summedStageMs": 31850.355099999928,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0139542,
+          "inputTokens": 3800,
+          "outputTokens": 901,
+          "cacheReadTokens": 1897,
+          "cacheWriteTokens": 1897,
+          "reasoningTokensIncludedInOutput": 175
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 4,
+          "expectedChecks": 4,
+          "meanStageMsIncludingFailures": 34567.95085000002,
+          "summedStageMs": 69135.90170000005,
+          "providerRequests": 2,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0297042,
+          "inputTokens": 3800,
+          "outputTokens": 2476,
+          "cacheReadTokens": 1897,
+          "cacheWriteTokens": 1897,
+          "reasoningTokensIncludedInOutput": 1748
+        }
+      }
+    },
+    {
+      "caseId": "review-valid-price",
+      "title": "სწორი 50-ლარიანი ტექსტის მიღება",
+      "role": "review",
+      "inputDigest": "e87ab4ebf3b932317544abf2151f4bb4b56d33a3248e3b3ac9d54f97501e86ba",
+      "criteria": [
+        "ცნობილ სწორ ფასს უსაფუძვლოდ არ ბლოკავს",
+        "მცდარ ფასს ზუსტად პოულობს",
+        "შესწორების ინსტრუქცია მხოლოდ პრობლემას ეხება",
+        "შენიშვნა რეალური ტექსტითა და მოცემული ამოცანითაა დასაბუთებული"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 6335.354650000052,
+          "summedStageMs": 12670.709300000104,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0136846,
+          "inputTokens": 6074,
+          "outputTokens": 578,
+          "cacheReadTokens": 3031,
+          "cacheWriteTokens": 3031,
+          "reasoningTokensIncludedInOutput": 0
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 8732.86499999999,
+          "summedStageMs": 17465.72999999998,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0159346,
+          "inputTokens": 6074,
+          "outputTokens": 803,
+          "cacheReadTokens": 3031,
+          "cacheWriteTokens": 3031,
+          "reasoningTokensIncludedInOutput": 224
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 14707.624149999989,
+          "summedStageMs": 29415.248299999977,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0236146,
+          "inputTokens": 6074,
+          "outputTokens": 1571,
+          "cacheReadTokens": 3031,
+          "cacheWriteTokens": 3031,
+          "reasoningTokensIncludedInOutput": 984
+        }
+      }
+    },
+    {
+      "caseId": "review-wrong-price",
+      "title": "არასწორი 30-ლარიანი ფასის აღმოჩენა",
+      "role": "review",
+      "inputDigest": "df6964799ad5ac24e3fb1c2bd2e2d501beda056cbbd408f3b0b6c85deef7c4bb",
+      "criteria": [
+        "ცნობილ სწორ ფასს უსაფუძვლოდ არ ბლოკავს",
+        "მცდარ ფასს ზუსტად პოულობს",
+        "შესწორების ინსტრუქცია მხოლოდ პრობლემას ეხება",
+        "შენიშვნა რეალური ტექსტითა და მოცემული ამოცანითაა დასაბუთებული"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 9481.98219999997,
+          "summedStageMs": 18963.96439999994,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.015184600000000003,
+          "inputTokens": 6074,
+          "outputTokens": 980,
+          "cacheReadTokens": 4081,
+          "cacheWriteTokens": 1981,
+          "reasoningTokensIncludedInOutput": 98
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 11070.343249999976,
+          "summedStageMs": 22140.686499999953,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.015214599999999998,
+          "inputTokens": 6074,
+          "outputTokens": 983,
+          "cacheReadTokens": 4081,
+          "cacheWriteTokens": 1981,
+          "reasoningTokensIncludedInOutput": 137
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 17815.93724999996,
+          "summedStageMs": 35631.87449999992,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.0264446,
+          "inputTokens": 6074,
+          "outputTokens": 2106,
+          "cacheReadTokens": 4081,
+          "cacheWriteTokens": 1981,
+          "reasoningTokensIncludedInOutput": 1134
+        }
+      }
+    },
+    {
+      "caseId": "review-thin-voice",
+      "title": "სწორი ფორმატით დაწერილი, მაგრამ ბრენდის ხმადაკარგული ტექსტი",
+      "role": "review",
+      "inputDigest": "d877eb902b2456cfd51dd82cfa4c08b8d647bb21c5b9806a723ae3b327333aa2",
+      "criteria": [
+        "არგუმენტისა და ხმის დაკარგვას პოულობს",
+        "ზუსტად ციტირებს სუსტ მონაკვეთს",
+        "შესწორება კონკურენტ არგუმენტებსა და პოლიტიკურ დაძაბულობას აღადგენს",
+        "არ ამატებს ფაქტობრივ ბრალდებას ან ამოცანისთვის უცხო მოთხოვნას"
+      ],
+      "efforts": {
+        "low": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 18008.897000000055,
+          "summedStageMs": 36017.79400000011,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.025976000000000003,
+          "inputTokens": 7452,
+          "outputTokens": 1880,
+          "cacheReadTokens": 4770,
+          "cacheWriteTokens": 2670,
+          "reasoningTokensIncludedInOutput": 141
+        },
+        "medium": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 23556.447899999912,
+          "summedStageMs": 47112.895799999824,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.031246,
+          "inputTokens": 7452,
+          "outputTokens": 2407,
+          "cacheReadTokens": 4770,
+          "cacheWriteTokens": 2670,
+          "reasoningTokensIncludedInOutput": 357
+        },
+        "high": {
+          "observations": 2,
+          "successfulArms": 2,
+          "failedArms": 0,
+          "observedChecksPassed": 2,
+          "expectedChecks": 2,
+          "meanStageMsIncludingFailures": 32540.679399999965,
+          "summedStageMs": 65081.35879999993,
+          "providerRequests": 4,
+          "invalidAttempts": 0,
+          "estimatedCostUsd": 0.050755999999999996,
+          "inputTokens": 7452,
+          "outputTokens": 4358,
+          "cacheReadTokens": 4770,
+          "cacheWriteTokens": 2670,
+          "reasoningTokensIncludedInOutput": 2242
+        }
+      }
+    }
+  ],
+  "totals": {
+    "low": {
+      "observations": 16,
+      "successfulArms": 14,
+      "failedArms": 2,
+      "observedChecksPassed": 30,
+      "expectedChecks": 38,
+      "meanStageMsIncludingFailures": 26383.023306250012,
+      "summedStageMs": 422128.3729000002,
+      "providerRequests": 24,
+      "invalidAttempts": 4,
+      "estimatedCostUsd": 0.2539121,
+      "inputTokens": 51201,
+      "outputTokens": 18236,
+      "cacheReadTokens": 23506,
+      "cacheWriteTokens": 27623,
+      "reasoningTokensIncludedInOutput": 460
+    },
+    "medium": {
+      "observations": 16,
+      "successfulArms": 15,
+      "failedArms": 1,
+      "observedChecksPassed": 34,
+      "expectedChecks": 38,
+      "meanStageMsIncludingFailures": 30097.36902499998,
+      "summedStageMs": 481557.9043999997,
+      "providerRequests": 24,
+      "invalidAttempts": 3,
+      "estimatedCostUsd": 0.2873246,
+      "inputTokens": 51662,
+      "outputTokens": 21462,
+      "cacheReadTokens": 23506,
+      "cacheWriteTokens": 28084,
+      "reasoningTokensIncludedInOutput": 2417
+    },
+    "high": {
+      "observations": 16,
+      "successfulArms": 14,
+      "failedArms": 2,
+      "observedChecksPassed": 30,
+      "expectedChecks": 38,
+      "meanStageMsIncludingFailures": 46783.56458749999,
+      "summedStageMs": 748537.0333999998,
+      "providerRequests": 24,
+      "invalidAttempts": 4,
+      "estimatedCostUsd": 0.4151021,
+      "inputTokens": 52021,
+      "outputTokens": 34150,
+      "cacheReadTokens": 23506,
+      "cacheWriteTokens": 28443,
+      "reasoningTokensIncludedInOutput": 13688
+    }
+  },
+  "actualBudget": {
+    "requests": 72,
+    "requestBytes": 1020102,
+    "knownOutputTokens": 73848,
+    "unknownOutputReservation": 0,
+    "pendingOutputReservation": 0,
+    "upperCostBudgetConsumedUsd": 0.9563387999999999,
+    "elapsedMs": 1653814.8654,
+    "limits": {
+      "requests": 80,
+      "requestBytes": 3000000,
+      "outputTokens": 150000,
+      "minutes": 30,
+      "estimatedUsd": 3
+    }
+  },
+  "invalidAttempts": [
+    {
+      "caseId": "strategy",
+      "effort": "medium",
+      "repetition": 1,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 1,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 1,
+      "requestOrdinal": 2,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 1,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 1,
+      "requestOrdinal": 2,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 2,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 2,
+      "requestOrdinal": 2,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 2,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 2,
+      "requestOrdinal": 2,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "medium",
+      "repetition": 2,
+      "requestOrdinal": 1,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    },
+    {
+      "caseId": "strategy",
+      "effort": "medium",
+      "repetition": 2,
+      "requestOrdinal": 2,
+      "errors": [
+        "Missing or inaccessible input must remain unknown"
+      ]
+    }
+  ],
+  "failedArms": [
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 1,
+      "failure": {
+        "kind": "contract",
+        "transient": false
+      }
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 1,
+      "failure": {
+        "kind": "contract",
+        "transient": false
+      }
+    },
+    {
+      "caseId": "strategy",
+      "effort": "high",
+      "repetition": 2,
+      "failure": {
+        "kind": "contract",
+        "transient": false
+      }
+    },
+    {
+      "caseId": "strategy",
+      "effort": "low",
+      "repetition": 2,
+      "failure": {
+        "kind": "contract",
+        "transient": false
+      }
+    },
+    {
+      "caseId": "strategy",
+      "effort": "medium",
+      "repetition": 2,
+      "failure": {
+        "kind": "contract",
+        "transient": false
+      }
+    }
+  ],
+  "pricing": {
+    "capturedAt": "2026-10-09",
+    "tier": "default",
+    "ratesPerMillion": {
+      "input": 2,
+      "cached": 0.1,
+      "write": 2.5,
+      "output": 10
+    },
+    "sources": [
+      "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+      "https://developers.openai.com/api/docs/models/gpt-5.4-nano",
+      "https://developers.openai.com/api/docs/guides/prompt-caching"
+    ]
+  },
+  "independentHumanRating": null,
+  "assistantQualitativeAssessment": "separate artifact",
+  "productionWrites": false,
+  "automaticActivation": false,
+  "actualInvoiceUsd": null,
+  "fullWorkflowTime": null,
+  "limitations": [
+    "Eight controlled cases, two repetitions per effort; not representative live traffic or a statistical quality/latency estimate.",
+    "Native usage, cache writes/reads, retries and failures are included. Cost is a standard-rate estimate, not an invoice.",
+    "A sum of isolated stages does not include production queue, downstream per-post workload, images, database or publishing.",
+    "Named checks establish their own requirements only. Model reviewers are test subjects, not independent judges.",
+    "Same current prompts, validators, output cap and request timeout across efforts; high is compared without rewriting prompts."
+  ]
+}

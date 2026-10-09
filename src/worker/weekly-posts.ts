@@ -1,7 +1,7 @@
 import { captureWeeklyReview } from "../application/weekly-planning/review-evidence"
 import type { BrandModelRun } from "../infrastructure/models/brand-reasoning"
 import { hasSubscription } from "../infrastructure/postgres/subscription-store"
-import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel } from "../infrastructure/models/runtime-policy"
+import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel, postStageEffort } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
 import { createPostSchedule, writePost, reviewPosts } from "../application/weekly-planning/posts"
 import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
@@ -36,7 +36,7 @@ async function runWeeklyPostsStages(pool: Pool, ownerId: string, id: string, dea
       if (!run) throw Error("Missing owned plan")
       const payload = structuredClone(claim.batch.payload)
       const modelRuns: BrandModelRun[] = []
-      const reason = createBrandReasoner(async r => { await recordPlanningModelRun(pool, id, r); modelRuns.push(r) }, { model, reasoningEffort: "low" })
+      const reason = createBrandReasoner(async r => { await recordPlanningModelRun(pool, id, r); modelRuns.push(r) }, { model, reasoningEffort: postStageEffort(claim.batch.step) })
       let step = claim.batch.step
       let shadowEvent: CommittedWeeklyShadow | undefined
       if (step === "outline") {

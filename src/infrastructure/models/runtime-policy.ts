@@ -13,6 +13,17 @@ export function postStageModel(step: "outline" | "writing" | "review" | "ready",
   return configured(env, step === "outline" ? "OPENAI_POST_PLANNER_MODEL" : "OPENAI_POST_REVIEW_MODEL") ?? configured(env, "OPENAI_PLANNING_MODEL") ?? "gpt-5.6-terra"
 }
 
+export type ConfiguredReasoningEffort = "low" | "medium" | "high"
+type EffortSetting = "OPENAI_STRATEGY_REASONING_EFFORT" | "OPENAI_POST_PLANNER_REASONING_EFFORT" | "OPENAI_POST_WRITER_REASONING_EFFORT" | "OPENAI_POST_REVIEW_REASONING_EFFORT"
+export function configuredReasoningEffort(key: EffortSetting, env: ModelEnvironment = process.env): ConfiguredReasoningEffort {
+  const value = configured(env, key) ?? "low"
+  if (value !== "low" && value !== "medium" && value !== "high") throw Error(`INVALID_REASONING_EFFORT:${key}`)
+  return value
+}
+export function postStageEffort(step: "outline" | "writing" | "review" | "ready", env: ModelEnvironment = process.env) {
+  return configuredReasoningEffort(step === "outline" ? "OPENAI_POST_PLANNER_REASONING_EFFORT" : step === "writing" ? "OPENAI_POST_WRITER_REASONING_EFFORT" : "OPENAI_POST_REVIEW_REASONING_EFFORT", env)
+}
+
 const networkCodes = new Set(["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH", "EPIPE", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"])
 const transientStatuses = new Set([429, 500, 502, 503, 504])
 /** Only allowlisted metadata goes to logs/audits; never error.message or cause wholesale. */

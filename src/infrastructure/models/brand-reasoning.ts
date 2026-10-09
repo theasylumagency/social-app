@@ -10,7 +10,7 @@ export type BrandModelRun = { id: string; step: string; promptVersion: string; m
 export type BrandReasoner = <T>(call: BrandModelCall) => Promise<T>
 export const BRAND_REASONING_TIMEOUT_MS = MODEL_REQUEST_TIMEOUT_MS
 
-export function createBrandReasoner(record: (run: BrandModelRun) => Promise<void>, options: { fetch?: typeof fetch; apiKey?: string; model?: string; reasoningEffort?: "none" | "low" | "medium"; sleep?: (ms: number) => Promise<unknown>; requestTimeoutMs?: number } = {}): BrandReasoner {
+export function createBrandReasoner(record: (run: BrandModelRun) => Promise<void>, options: { fetch?: typeof fetch; apiKey?: string; model?: string; reasoningEffort?: "none" | "low" | "medium" | "high"; sleep?: (ms: number) => Promise<unknown>; requestTimeoutMs?: number } = {}): BrandReasoner {
   return async <T>(call: BrandModelCall): Promise<T> => {
     const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY
     if (!apiKey) throw new Error("AI_ANALYSIS_UNAVAILABLE")

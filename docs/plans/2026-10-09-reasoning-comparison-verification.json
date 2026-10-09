@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-09T08:01:26.533Z",
+  "primary": {
+    "summaryPath": "docs/plans/2026-10-09-reasoning-comparison-results.json",
+    "summaryFileSha256": "55ac46c4e33bbf9a76cec954cf6d6b18bbc57896a550a75c73adf9ef1d3c7bf0",
+    "manifestHash": "660560a17d14afa47f1fab85c9ced1b4f51060444c9a7582ad61bdab31a8871c",
+    "reportHash": "215caec9c5ef8a049065c4717798d63741ca555a52e28911883f352fc8a65109",
+    "resultsHash": "66741d7914a272e7bd03267fb920cb9c1a98f36202fc1da68bc458c19bd3735f",
+    "requestsHash": "f59180dc4e3a85a18404d4c3d9d434f31513cfcace5f078d419ceb8dc210fa18",
+    "sourceSnapshotCount": 389,
+    "frozenSourceSnapshotsVerified": true,
+    "arms": 48,
+    "providerRequests": 72,
+    "estimatedCostUsd": 0.9563387999999999,
+    "failedArms": 5
+  },
+  "corrective": {
+    "skippedPhase": {
+      "path": ".local/reasoning-comparison/strategy-contract-followup-01/result.json",
+      "providerRequests": 0,
+      "reason": "insufficient-time-in-original-shared-budget"
+    },
+    "executedPhase": {
+      "path": ".local/reasoning-comparison/strategy-contract-followup-02/result.json",
+      "fileSha256": "a651a43f4b22b8f6262229b5b24d8add1760c0adc970c17139ba8686e02a5c73",
+      "promptVersion": "social-strategy-v2",
+      "effort": "medium",
+      "providerRequests": 1,
+      "acceptedOnFirstAttempt": true,
+      "checksPassed": 4,
+      "checksTotal": 4,
+      "durationMs": 47386.8347,
+      "estimatedCostUsd": 0.025611000000000002,
+      "exactOriginalInputReused": true,
+      "currentSourceHashesVerified": true,
+      "includedInPrimaryArmMeans": false
+    }
+  },
+  "combined": {
+    "requests": 73,
+    "requestBytes": 1037433,
+    "knownOutputTokens": 75730,
+    "unknownOutputReservation": 0,
+    "pendingOutputReservation": 0,
+    "upperCostBudgetConsumedUsd": 0.9819498,
+    "elapsedMs": 1701379.3375000001,
+    "limits": {
+      "requests": 80,
+      "requestBytes": 3000000,
+      "outputTokens": 150000,
+      "minutes": 30,
+      "estimatedUsd": 3
+    },
+    "actualInvoiceUsd": null,
+    "accounting": "Cumulative experiment execution time across primary and corrective phases; offline analysis/repair time excluded. The corrective executor preserved all prior request, byte, output, unknown-usage and cost counters. First corrective attempt was skipped with no API calls."
+  },
+  "validation": {
+    "separateTypeCheckExitCode": 0,
+    "fullVerifyExitCode": 0,
+    "domainTestsPassed": 311,
+    "appTestsPassed": 224,
+    "totalTestsPassed": 535,
+    "testsFailed": 0,
+    "lintErrors": 0,
+    "lintWarnings": 6,
+    "productionBuild": "passed",
+    "verifyLogPath": ".local/reasoning-comparison-final-verify.log",
+    "verifyLogSha256": "4abbb0c1797d0b4c6e9ade1c5f216214a8682d2e6095b3f3ce8f136845bb9935",
+    "checkLogSha256": "2f1e8d6bf5ab335e3fe2b60877913682c411605e63b8f29fef3fba7ab0f36d58",
+    "buildId": "fcApyFGYsDQL0pbQ96Hkl",
+    "networkNote": "Full verification required loopback networking for existing mocked Zernio transport tests. No live provider operation is part of the verification suite."
+  },
+  "implementationSourceHashes": {
+    ".env.example": "46bc26420b71ebcc00e165f26eb4fee444b7a401db0a21cc60885a6a51d2b478",
+    "src/infrastructure/models/runtime-policy.ts": "2936a9a285f4829a865d32e3d8683ad5e734411b3deb27ed1ac9ce3fda536352",
+    "src/infrastructure/models/brand-reasoning.ts": "811e36d3830aeb4b264e686b933135006bd6659b602b194ceda2682f5291ac04",
+    "src/infrastructure/models/attempt-telemetry.ts": "15b58d3fb682bedba03bf10bc3d848beee3c12e3669abeb982be9146381a3b98",
+    "src/worker/weekly-posts.ts": "05a5e534f09a84675db45ee662eb4ac82a6e578b1ae03c5a954f74986b5e3ce2",
+    "src/worker/social-strategy.ts": "50da691facba3ecf5c6ce4b29312c82c79eba1ca698ef4a812b271b273e7107d",
+    "src/blueprints/social/strategy/model.ts": "3304177cfbdb6c8745b0fad99ce8f9f7d8735540ef862c82505b7df32c12ee5f",
+    "src/blueprints/social/strategy/prompt.ts": "8f93a0534335d8ed6d61c12524de474ca49e25f8cb2881b346deba9e5f7b08d8",
+    "tests/reasoning-comparison.test.mts": "442f31659a70e2548d616bebd4eee412f8a3fad740c30465d0051f9137c064ce",
+    "evals/reasoning-comparison/cases.ts": "7fc8c8f85883edaec5e18e9f59184f7c089a2d42e27009f7d096749e741fae0d",
+    "evals/reasoning-comparison/budget.ts": "da3ce61a0be0d9c5895d18c06f56f9e16f730d4cbbbf58fb6ad8b270a221b19d",
+    "scripts/reasoning-comparison.mts": "961f4046a5b9ac669d80f4014b5fa19edf7988e9c068c0e128b7e0263c83dc5c"
+  },
+  "localPilot": {
+    "planner": {
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "writer": {
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "review": {
+      "model": "gpt-6.1-sol",
+      "effort": "low"
+    },
+    "strategy": {
+      "model": "gpt-6.1-sol",
+      "effort": "low"
+    },
+    "brand": {
+      "model": "gpt-6.1-sol",
+      "effort": "provider-default-medium"
+    },
+    "extraction": {
+      "model": "gpt-6-luna"
+    }
+  },
+  "qualitativeAssessment": {
+    "author": "assistant",
+    "independentHuman": false,
+    "blinded": false,
+    "numericalQualityScore": null,
+    "basis": "Frozen four-criterion rubrics and all six outputs per case; effort labels and metrics were visible to the assessor. Mechanical checks are separate from editorial judgement.",
+    "cases": [
+      {
+        "caseId": "brand-understanding",
+        "observations": "All levels identified the repair-versus-manufacture ambiguity and kept price/guarantees unknown. High added no consistent useful distinction.",
+        "decision": "Retain existing provider-default medium; no promotion to high."
+      },
+      {
+        "caseId": "strategy",
+        "observations": "Five of six arms failed the same unknown-source field contract, which confounds comparison. A changed prompt plus precise repair diagnostics passed one separate medium observation.",
+        "decision": "Repair prompt/diagnostics; retain low until a new controlled post-fix comparison."
+      },
+      {
+        "caseId": "planner",
+        "observations": "All outputs covered the required placements and directions without video. Both medium and high outputs implied four visual assets; both low outputs implied six. This measures plan workload, not rendered image quality or image-generation savings.",
+        "decision": "Medium pilot; similar observed latency to low with less implied production work."
+      },
+      {
+        "caseId": "writer-price",
+        "observations": "All levels preserved 50 GEL without invented conditions. Some outputs expose source-verification language that is awkward in public copy; higher effort did not consistently remove it.",
+        "decision": "No established price-copy gain from higher effort; included in writer-wide medium pilot, with added observed latency."
+      },
+      {
+        "caseId": "writer-voice",
+        "observations": "All levels developed coherent arguments in the requested voice. Some medium/high outputs sharpened the opening thesis and citizenship-versus-utility distinction. High was not consistently superior across both repetitions; medium had virtually the same mean latency as low.",
+        "decision": "Medium pilot reflects the user's quality priority; general quality improvement remains unproven."
+      },
+      {
+        "caseId": "review-valid-price",
+        "observations": "Every level accepted the correct price. Higher effort did not find an additional relevant issue.",
+        "decision": "Retain low."
+      },
+      {
+        "caseId": "review-wrong-price",
+        "observations": "Every level caught the incorrect price. Higher effort did not change the useful verdict.",
+        "decision": "Retain low."
+      },
+      {
+        "caseId": "review-thin-voice",
+        "observations": "Every level detected an editorial weakness in the synthetically generic caption despite valid formatting. More time did not produce a new decisive issue.",
+        "decision": "Retain low."
+      }
+    ]
+  },
+  "deployment": {
+    "productionUpdated": false,
+    "productionDataWrites": false,
+    "localEffortSettingsUpdated": [
+      "OPENAI_POST_PLANNER_REASONING_EFFORT",
+      "OPENAI_POST_WRITER_REASONING_EFFORT"
+    ],
+    "migrationRequired": false,
+    "workerRestartRequiredOnDeployment": true
+  }
+}

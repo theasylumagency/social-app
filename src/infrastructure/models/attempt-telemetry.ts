@@ -16,6 +16,6 @@ export type ModelAttemptTelemetry = {
   instructionsBytes: number
   schemaBytes: number
   timeoutMs: number
-  reasoningEffort: "none" | "low" | "medium" | null
+  reasoningEffort: "none" | "low" | "medium" | "high" | null
   responseModel: string | null
 }

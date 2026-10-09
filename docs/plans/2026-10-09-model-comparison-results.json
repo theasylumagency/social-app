@@ -1,0 +1,695 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-09T05:18:06.281Z",
+  "scope": "isolated-stage-diagnostic",
+  "runDate": "2026-10-09",
+  "baseCommit": "ab1904bff68f57079c27680adfea89de266e3caa",
+  "evidence": {
+    "manifest": ".local/model-comparison/live-01/manifest.json",
+    "manifestHash": "bcd8775ea1fffef4cc1f6ae6ec3d7bd430bf5bf2f34c01376343c49be0d887ee",
+    "report": ".local/model-comparison/live-01/report.json",
+    "reportDigest": "c3629e22f7f7882dfaacf34b6a5609d11254b76bf303002c462082954ac1c3d2",
+    "reportFileSha256": "8606a7b70dc39aa1e530db0fd52930b87818ec9e14da1f3d4f84ec4c843f1165",
+    "results": ".local/model-comparison/live-01/results.jsonl",
+    "resultsDigest": "5695c874bdcd495ebbcc9539deee02e9b71de317526765772ae9e32a58949c79",
+    "requests": ".local/model-comparison/live-01/requests.jsonl",
+    "requestsDigest": "ae3fa1cb01d8a5b7dc2a5b95c5d7ace9ea5c975105d43ea42f3068fce25fc371",
+    "supplementalResult": ".local/model-comparison/default-effort-01/result.json",
+    "supplementalResultSha256": "19ac9ede4c30f02830be822e3f0c71e5f74fa3bbc118be1fac7d9a58586213f0",
+    "supplementalExecutorSha256": "b6f62c995b734b1a643ceb5604b87b782ccea994503a0d3a6171640093a99e01",
+    "sourceHashCount": 386,
+    "allSourceHashesStillMatch": true
+  },
+  "oldConfiguration": {
+    "notes": "gpt-5.6-terra",
+    "planner": "gpt-5.6-terra",
+    "writer": "gpt-5.6-sol",
+    "review": "gpt-5.6-terra",
+    "extraction": "gpt-5.4-nano"
+  },
+  "newEnvironmentModelKeys": {
+    "OPENAI_PLANNING_MODEL": "gpt-6.1-sol",
+    "OPENAI_POST_PLANNER_MODEL": "gpt-6.1-sol",
+    "OPENAI_POST_WRITER_MODEL": "gpt-6.1-sol",
+    "OPENAI_POST_REVIEW_MODEL": "gpt-6.1-sol",
+    "OPENAI_BRAND_MODEL": "gpt-6.1-sol",
+    "OPENAI_EXTRACTION_MODEL": "gpt-6-luna",
+    "OPENAI_EXTRACTION_FALLBACK_MODEL": "gpt-6.1-sol",
+    "OPENAI_CONTEXTUAL_NOTES_MODEL": "gpt-6.1-sol"
+  },
+  "comparedEfforts": {
+    "notes": "medium",
+    "planner": "low",
+    "writer": "low",
+    "review": "low",
+    "extractionControlled": "none",
+    "extractionSupplemental": "omitted; documented default medium"
+  },
+  "matchedEffort": {
+    "old": {
+      "arms": 8,
+      "providerRequests": 11,
+      "summedStageMs": 100980.47340000002,
+      "contractFailures": 0,
+      "checksPassed": 20,
+      "checksTotal": 20,
+      "allChecksPassedCases": 8,
+      "estimatedCostUsd": 0.1452124,
+      "knownInputTokens": 35561,
+      "knownOutputTokens": 4707,
+      "unknownUsageReceipts": 0
+    },
+    "new": {
+      "arms": 8,
+      "providerRequests": 10,
+      "summedStageMs": 110496.5252,
+      "contractFailures": 0,
+      "checksPassed": 20,
+      "checksTotal": 20,
+      "allChecksPassedCases": 8,
+      "estimatedCostUsd": 0.12368120000000002,
+      "knownInputTokens": 33487,
+      "knownOutputTokens": 5043,
+      "unknownUsageReceipts": 0
+    },
+    "differences": {
+      "timeIncreasePercent": 9.423655365830342,
+      "costDecreasePercent": 14.827383887326405
+    }
+  },
+  "asConfiguredExtractionDerivedSummary": {
+    "method": "Replace the new extraction-none observation with the separate new extraction-default observation on identical frozen input. This is a sum of isolated stages, not an end-to-end workflow or full environment audit.",
+    "old": {
+      "arms": 8,
+      "providerRequests": 11,
+      "summedStageMs": 100980.47340000002,
+      "contractFailures": 0,
+      "checksPassed": 20,
+      "checksTotal": 20,
+      "allChecksPassedCases": 8,
+      "estimatedCostUsd": 0.1452124,
+      "knownInputTokens": 35561,
+      "knownOutputTokens": 4707,
+      "unknownUsageReceipts": 0
+    },
+    "new": {
+      "arms": 8,
+      "providerRequests": 10,
+      "summedStageMs": 114899.92430000001,
+      "contractFailures": 0,
+      "checksPassed": 20,
+      "checksTotal": 20,
+      "allChecksPassedCases": 8,
+      "estimatedCostUsd": 0.12389520000000001,
+      "knownInputTokens": 33487,
+      "knownOutputTokens": 5471,
+      "unknownUsageReceipts": 0
+    },
+    "differences": {
+      "timeIncreasePercent": 13.784299509928811,
+      "costDecreasePercent": 14.680013552561611
+    }
+  },
+  "controlledPairs": [
+    {
+      "caseId": "note-U05",
+      "title": "რაოდენობისა და ფორმატის ზუსტი ცვლილება",
+      "role": "notes",
+      "complete": true,
+      "inputDigest": "07b8e8d9dba4bb5cd2cf27258bfe1f4e48215696a0227870988f6efce77ea18a",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-terra",
+        "durationMs": 13934.4274,
+        "checks": [
+          {
+            "id": "exactCadence",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          },
+          {
+            "id": "period",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          },
+          {
+            "id": "engineeringDirection",
+            "passed": true,
+            "provenance": "engineering-invariant"
+          },
+          {
+            "id": "format",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.030722
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 19064.7707,
+        "checks": [
+          {
+            "id": "exactCadence",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          },
+          {
+            "id": "period",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          },
+          {
+            "id": "engineeringDirection",
+            "passed": true,
+            "provenance": "engineering-invariant"
+          },
+          {
+            "id": "format",
+            "passed": true,
+            "provenance": "human-confirmed-fields"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.032206
+      }
+    },
+    {
+      "caseId": "note-C04",
+      "title": "ადგილობრივი და მუდმივი ცვლილების გარჩევა",
+      "role": "notes",
+      "complete": true,
+      "inputDigest": "efaba9afd6f4bb9a6e53956873875d542b8b3f08b96f440e3ddd05b5df1010e4",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-terra",
+        "durationMs": 7137.267699999997,
+        "checks": [
+          {
+            "id": "expectedMode",
+            "passed": true,
+            "provenance": "engineering-control"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.025986799999999997
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 11941.549699999996,
+        "checks": [
+          {
+            "id": "expectedMode",
+            "passed": true,
+            "provenance": "engineering-control"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0263989
+      }
+    },
+    {
+      "caseId": "planner",
+      "title": "ორი პოსტი თითო არხზე",
+      "role": "planner",
+      "complete": true,
+      "inputDigest": "5506bf9439bb32c92c58c47f0c24931188aa7c31618317385ed07ef595ceac79",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-terra",
+        "durationMs": 31919.233,
+        "checks": [
+          {
+            "id": "exactCadence",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noUnsupportedVideo",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0248035
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 44363.2592,
+        "checks": [
+          {
+            "id": "exactCadence",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noUnsupportedVideo",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0304535
+      }
+    },
+    {
+      "caseId": "writer-price",
+      "title": "ქართული ტექსტი დადასტურებული 50-ლარიანი ფასით",
+      "role": "writer",
+      "complete": true,
+      "inputDigest": "bf782f9d2521e827923745d7e901db8df2f614bea6f79f04b057672cdf6c53a1",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-sol",
+        "durationMs": 5536.9504000000015,
+        "checks": [
+          {
+            "id": "GeorgianMajority",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noExtraChannels",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "registeredPriceRetained",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noWrongPrice",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.013397
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 3021.5646000000124,
+        "checks": [
+          {
+            "id": "GeorgianMajority",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noExtraChannels",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "registeredPriceRetained",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noWrongPrice",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0051685
+      }
+    },
+    {
+      "caseId": "writer-voice",
+      "title": "პოლიტიკური ტექსტი ბრენდის ხმით",
+      "role": "writer",
+      "complete": true,
+      "inputDigest": "ad1c959b591575577bc0d3a5de0bb0292481eca2945f55557c48aea9a5caacbf",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-sol",
+        "durationMs": 13309.883100000006,
+        "checks": [
+          {
+            "id": "GeorgianMajority",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noExtraChannels",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.016857
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 12679.447200000024,
+        "checks": [
+          {
+            "id": "GeorgianMajority",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noExtraChannels",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0085985
+      }
+    },
+    {
+      "caseId": "review-valid-price",
+      "title": "სწორი 50-ლარიანი ტექსტის მიღება",
+      "role": "review",
+      "complete": true,
+      "inputDigest": "e87ab4ebf3b932317544abf2151f4bb4b56d33a3248e3b3ac9d54f97501e86ba",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-terra",
+        "durationMs": 6732.107400000008,
+        "checks": [
+          {
+            "id": "validPriceNotBlocked",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0118255
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 6372.123300000007,
+        "checks": [
+          {
+            "id": "validPriceNotBlocked",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.010569499999999999
+      }
+    },
+    {
+      "caseId": "review-wrong-price",
+      "title": "არასწორი 30-ლარიანი ფასის აღმოჩენა",
+      "role": "review",
+      "complete": true,
+      "inputDigest": "df6964799ad5ac24e3fb1c2bd2e2d501beda056cbbd408f3b0b6c85deef7c4bb",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.6-terra",
+        "durationMs": 18967.4406,
+        "checks": [
+          {
+            "id": "wrongPriceBlocked",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.020915
+      },
+      "new": {
+        "model": "gpt-6.1-sol",
+        "durationMs": 9747.005599999975,
+        "checks": [
+          {
+            "id": "wrongPriceBlocked",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0100395
+      }
+    },
+    {
+      "caseId": "extraction",
+      "title": "წყაროთი დასაბუთებული ინფორმაციის ამოღება",
+      "role": "extraction",
+      "complete": true,
+      "inputDigest": "22debc4aa7ee3fe84414d2508cb7d7f1b1744d0ef365c4e9307c2ad28f54d991",
+      "sameInput": true,
+      "old": {
+        "model": "gpt-5.4-nano",
+        "durationMs": 3443.1638000000094,
+        "checks": [
+          {
+            "id": "groundedExtractionReturned",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "brandName",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "location",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "services",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noInventedPhone",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.0007056
+      },
+      "new": {
+        "model": "gpt-6-luna",
+        "durationMs": 3306.8048999999883,
+        "checks": [
+          {
+            "id": "groundedExtractionReturned",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "brandName",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "location",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "services",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          },
+          {
+            "id": "noInventedPhone",
+            "passed": true,
+            "provenance": "controlled-test-reference"
+          }
+        ],
+        "failure": null,
+        "estimatedCostUsd": 0.00024680000000000004
+      }
+    }
+  ],
+  "supplementalExtraction": {
+    "durationMs": 7710.204000000001,
+    "estimatedCostUsd": 0.00046080000000000003,
+    "checks": [
+      {
+        "id": "groundedExtractionReturned",
+        "passed": true,
+        "provenance": "controlled-test-reference"
+      },
+      {
+        "id": "brandName",
+        "passed": true,
+        "provenance": "controlled-test-reference"
+      },
+      {
+        "id": "location",
+        "passed": true,
+        "provenance": "controlled-test-reference"
+      },
+      {
+        "id": "services",
+        "passed": true,
+        "provenance": "controlled-test-reference"
+      },
+      {
+        "id": "noInventedPhone",
+        "passed": true,
+        "provenance": "controlled-test-reference"
+      }
+    ],
+    "providerRequests": 1,
+    "fallbackUsed": false,
+    "reasoningTokensIncludedInOutput": 272
+  },
+  "invalidAttempts": [
+    {
+      "caseId": "review-wrong-price",
+      "arm": "old",
+      "step": "post_editorial",
+      "requestOrdinal": 1,
+      "errors": [
+        "Editorial issue must cite exact draft text",
+        "Editorial issue must cite exact draft text",
+        "Editorial issue must cite exact draft text"
+      ]
+    }
+  ],
+  "nativeTotalsForMatchedExperiment": {
+    "old": {
+      "inputTokens": 35561,
+      "outputTokens": 4707,
+      "cacheReadTokens": 3279,
+      "cacheWriteTokens": 31424,
+      "reasoningTokensIncludedInOutput": 795
+    },
+    "new": {
+      "inputTokens": 33487,
+      "outputTokens": 5043,
+      "cacheReadTokens": 2229,
+      "cacheWriteTokens": 30403,
+      "reasoningTokensIncludedInOutput": 276
+    }
+  },
+  "qualitativeObservations": {
+    "author": "assistant",
+    "independentHumanRating": null,
+    "blinded": false,
+    "planner": {
+      "old": {
+        "uniqueJobs": 2,
+        "totalChannelPlacements": 4,
+        "directions": [
+          "d1",
+          "d2"
+        ],
+        "formats": [
+          "carousel",
+          "carousel"
+        ],
+        "outputTokens": 1225
+      },
+      "new": {
+        "uniqueJobs": 3,
+        "totalChannelPlacements": 4,
+        "directions": [
+          "d1",
+          "d2",
+          "d3"
+        ],
+        "formats": [
+          "carousel",
+          "text",
+          "carousel"
+        ],
+        "outputTokens": 2035
+      }
+    },
+    "writerPrice": "Both retain the confirmed 50 GEL. New caption distinguishes assessment from repair; old caption describes the scope of confirmed information.",
+    "writerVoice": "Both use Georgian and the supplied political voice. New caption develops opposing arguments more explicitly and is longer. This observation does not establish general superiority.",
+    "review": "Both accept the valid price and identify the wrong price. The old editorial response needed one schema/quotation repair, included in time and cost."
+  },
+  "combinedPaidExperiment": {
+    "requests": 22,
+    "requestBytes": 413396,
+    "outputTokens": 10506,
+    "unknownOutputReservation": 0,
+    "upperCostBudgetConsumedUsd": 0.26935439999999994,
+    "elapsedExecutionMs": 219686.7557,
+    "limits": {
+      "requests": 32,
+      "requestBytes": 2000000,
+      "outputTokens": 80000,
+      "minutes": 15,
+      "estimatedUsd": 3
+    },
+    "estimatedCostUsd": 0.2693544,
+    "inputTokens": 69876
+  },
+  "pricing": {
+    "capturedAt": "2026-10-09",
+    "tier": "standard",
+    "maxInputTokens": 272000,
+    "ratesPerMillion": {
+      "gpt-5.6-terra": {
+        "input": 2,
+        "cached": 0.2,
+        "write": 2.5,
+        "output": 12
+      },
+      "gpt-5.6-sol": {
+        "input": 4,
+        "cached": 0.4,
+        "write": 5,
+        "output": 20
+      },
+      "gpt-5.4-nano": {
+        "input": 0.2,
+        "cached": 0.02,
+        "write": 0.2,
+        "output": 1.25
+      },
+      "gpt-6.1-sol": {
+        "input": 2,
+        "cached": 0.1,
+        "write": 2.5,
+        "output": 10
+      },
+      "gpt-6-luna": {
+        "input": 0.1,
+        "cached": 0.01,
+        "write": 0.125,
+        "output": 0.5
+      }
+    },
+    "sources": [
+      "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+      "https://developers.openai.com/api/docs/models/gpt-5.4-nano",
+      "https://developers.openai.com/api/docs/guides/prompt-caching"
+    ]
+  },
+  "verification": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "domainTestsPassed": 311,
+    "appTestsPassed": 219,
+    "testsSkipped": 0,
+    "lintErrors": 0,
+    "existingLintWarnings": 6,
+    "productionBuildSucceeded": true,
+    "buildId": "BUh3SLqpR6XtjeHSvN2Z_",
+    "log": ".local/model-comparison-verify.log",
+    "logSha256": "ab00a279955474918a36411576ade343e872a997d5c6c9439af35ee86bb113d2"
+  },
+  "limits": [
+    "One observation per case and arm; no statistical latency or quality conclusion.",
+    "Controlled fixtures, not representative live customer traffic.",
+    "Twenty named requirements are not a holistic writing-quality score; no independent human score was collected.",
+    "Notes, schedule, writing, review and website extraction only; brand discovery reasoning, strategy generation, selected-post revision, fallback and images are not covered.",
+    "Stage sums exclude production queue, database, media generation, publishing and human confirmation.",
+    "Native usage includes cache read/write and the invalid response. Costs use documented standard short-context rates and exclude tax/account adjustments; no invoice was checked."
+  ],
+  "productionWrites": false,
+  "automaticActivation": false,
+  "actualInvoiceCostUsd": null,
+  "fullWorkflowTime": null
+}

@@ -56,7 +56,8 @@ export function validateStrategyProposal(p: SocialStrategyProposal, sources: Rec
     seen.add(r.channel)
     const source = sources.find((s) => s.channel === r.channel)
     if (!source || source.availability === "unknown") {
-      if (r.status !== "unknown" || r.excerpt !== null) errors.push("Missing or inaccessible input must remain unknown")
+      if (r.status !== "unknown") errors.push(`${r.channel}: missing or inaccessible input requires status unknown`)
+      if (r.excerpt !== null) errors.push(`${r.channel}: missing or inaccessible input requires excerpt null; describe access limitations only in observation`)
     } else if (source.availability === "notFound") {
       if (r.status !== "notFound") errors.push("Search absence is not evidence of nonexistence")
     } else if (r.status === "notFound") errors.push("An accessible account cannot be labeled not-found")
