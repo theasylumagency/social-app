@@ -174,7 +174,7 @@ export async function failDiscoveryStep(pool: Pool, session: DiscoverySession, t
 }
 
 export async function recordDiscoveryModelRun(pool: Pool, session: DiscoverySession, run: BrandModelRun) {
-  await pool.query("INSERT INTO brand_discovery_model_runs(id,session_id,revision,step,prompt_version,model,input_hash,duration_ms,usage,validation_errors) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb)", [run.id, session.id, session.revision, run.step, run.promptVersion, run.model, run.inputHash, run.durationMs, JSON.stringify(run.usage), JSON.stringify(run.validationErrors)])
+  await pool.query("INSERT INTO brand_discovery_model_runs(id,session_id,revision,step,prompt_version,model,input_hash,duration_ms,usage,validation_errors,telemetry) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11::jsonb)", [run.id, session.id, session.revision, run.step, run.promptVersion, run.model, run.inputHash, run.durationMs, JSON.stringify(run.usage), JSON.stringify(run.validationErrors), JSON.stringify(run.telemetry ?? null)])
 }
 
 function sourceGraphs(session: DiscoverySession, brandId: BrandId, now: IsoDateTime): PersistedSourceGraph[] {

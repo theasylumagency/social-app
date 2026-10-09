@@ -12,7 +12,7 @@ import { POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePostSchedule, validatePo
 import { POST_SCHEDULE_PROMPT, POST_WRITER_PROMPT, POSTS_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/posts"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
-import { compilePostGenerationContext, compilePostEditorialContext, validateVariantOperatingRules } from "../../blueprints/social/weekly-planning/post-context"
+import { compilePostGenerationContext, postEditorialContext, validateVariantOperatingRules } from "../../blueprints/social/weekly-planning/post-context"
 import { POST_EDITORIAL_PROMPT, POST_EDITORIAL_SCHEMA, validatePostEditorialReview, consolidatePostReviews, type PostEditorialReview } from "../../blueprints/social/weekly-planning/post-editorial"
 
 export function postsContext(run: PlanningRun) {
@@ -48,11 +48,12 @@ export async function writePost(run: PlanningRun, payload: PostsPayload, key: st
 export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reason: BrandReasoner, observeSafety?: (review: PostsReview) => void) {
   const executionRun = payload.operatingRules ? { ...run, payload: { ...run.payload, operatingRules: payload.operatingRules } } : run
   const postKeys = payload.outline!.posts.map((_, i) => `p${i + 1}`)
-  const editorialPosts = payload.outline!.posts.map((post, i) => ({ postKey: postKeys[i]!, ...compilePostEditorialContext(executionRun, post), draft: payload.copies[postKeys[i]!]! }))
+  const postContexts = payload.outline!.posts.map((post, i) => ({ postKey: postKeys[i]!, ...compilePostGenerationContext(executionRun, post) }))
+  const editorialPosts = postContexts.map(context => ({ postKey: context.postKey, ...postEditorialContext(context), draft: payload.copies[context.postKey]! }))
   if (editorialPosts.some((p) => !p.draft)) throw Error("Cannot review incomplete post copies")
   // Independent calls share the existing worker stage/lease budget and one repair pass.
   const results = await Promise.allSettled([
-    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v4", prompt: POSTS_REVIEW_PROMPT, input: { postContexts: payload.outline!.posts.map((p, i) => ({ postKey: postKeys[i], ...compilePostGenerationContext(executionRun, p) })), weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v4", prompt: POSTS_REVIEW_PROMPT, input: { postContexts, weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
     reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v2", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
   ])
   const [safety, editorial] = results

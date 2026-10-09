@@ -1,0 +1,311 @@
+{
+  "stage": "T12.1",
+  "status": "complete-in-workspace",
+  "overallT12Complete": false,
+  "checkedAt": "2026-10-09T02:49:40.285Z",
+  "head": "161ce7ca202f778c5ddaa894b90ccfb7cd0343a6",
+  "tests": {
+    "domain": 311,
+    "offlineApp": 205,
+    "postgreSQL": 118,
+    "total": 634,
+    "skipped": 0,
+    "errors": 0,
+    "lintWarnings": 6,
+    "empiricalCurrentQualityBenchmark": false
+  },
+  "validation": {
+    "fullVerify": {
+      "passed": true,
+      "log": ".local/t12/verify.log"
+    },
+    "integration": {
+      "passed": true,
+      "log": ".local/t12/integration.log"
+    },
+    "finalTypecheck": {
+      "passed": true,
+      "log": ".local/t12/final-check.log"
+    },
+    "finalScriptsLint": {
+      "passed": true,
+      "log": ".local/t12/final-script-lint.log"
+    },
+    "finalBuild": {
+      "passed": true,
+      "id": "A3VcNNzIYU2SyLPJFJiBe",
+      "log": ".local/t12/final-build.log"
+    }
+  },
+  "measurement": {
+    "readOnly": true,
+    "databaseReceiptSetHash": "cfd1ce23c742a0ba2374a461d26c64946edeaba6ffcf0807960ce6287cda4cb7",
+    "databaseSnapshotRepeatedUnchanged": true,
+    "realStoredRequests": 19,
+    "invalidOrFailedRequests": 5,
+    "frozenJevReplayRepeatable": true,
+    "jevDistinctCases": 5,
+    "jevRequiredFieldFailures": 0,
+    "jevEngineeringNegativeFailures": 8,
+    "identicalReviewerInputHash": "36830bfcbe947f491e4cd647eb2709f1007cd45b10170699a084a5017a546e76",
+    "generationCompilations": {
+      "before": 6,
+      "after": 3
+    },
+    "fullPipelineBenefitMeasured": false,
+    "monetaryCostMeasured": false
+  },
+  "safety": {
+    "productionDeployed": false,
+    "sharedDatabaseMigrated": false,
+    "realOperatorJobsRun": false,
+    "externalProviderCalled": false,
+    "newPaidModelCalls": 0,
+    "modelRoutingChanged": false,
+    "jevMode": "shadow-only",
+    "voiceSha256": "8a5657a22235bc46df2a75b9e7c4883565a49c9a73eff49a10416a6d73e07588",
+    "frozenExperimentFilesChanged": false
+  },
+  "rollout": {
+    "requiredNewMigration": "0026_model_attempt_telemetry.sql",
+    "pendingSharedMigrations": "0020–0026",
+    "coordinatedApiWorkerUpdateRequired": true
+  },
+  "preservedT10T11": [
+    {
+      "path": "db/migrations/0024_contextual_note_jobs.sql",
+      "preserved": true
+    },
+    {
+      "path": "db/migrations/0025_post_revisions.sql",
+      "preserved": true
+    },
+    {
+      "path": "src/app/api/contextual-notes/route.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/app/api/post-revisions/route.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/app/api/social/schedules/route.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/contextual-notes.tsx",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/note-draft.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/social-schedule-controls.tsx",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/social-schedule-model.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/post-revision-panel.tsx",
+      "preserved": true
+    },
+    {
+      "path": "src/app/workspace/weekly-posts.css",
+      "preserved": true
+    },
+    {
+      "path": "src/application/contextual-notes/model.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/contextual-notes/identity.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/contextual-notes/workflow.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/contextual-notes/mutation.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/post-revisions/model.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/post-revisions/scope.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/post-revisions/review.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/publication-bundle-codec.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/weekly-publication-bundle.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/materialize-post-revision.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/publication-store.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/application/publishing/schedule-approved-post.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/infrastructure/postgres/contextual-notes-store.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/infrastructure/postgres/post-revisions-store.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/infrastructure/postgres/social-publication-store.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/worker/contextual-notes.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/worker/post-revisions.ts",
+      "preserved": true
+    },
+    {
+      "path": "src/worker/operator-queues.ts",
+      "preserved": true
+    },
+    {
+      "path": "tests/contextual-note-jobs.integration.test.mts",
+      "preserved": true
+    },
+    {
+      "path": "tests/contextual-note-workflow.test.mts",
+      "preserved": true
+    },
+    {
+      "path": "tests/post-revisions.integration.test.mts",
+      "preserved": true
+    },
+    {
+      "path": "tests/post-revision-ui.test.mts",
+      "preserved": true
+    },
+    {
+      "path": "tests/note-draft.test.mts",
+      "preserved": true
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "db/migrations/0026_model_attempt_telemetry.sql",
+      "sha256": "25c3c2dc226b480aa4f15375b5583105dba714e0083debf0f179cd66c15382f5"
+    },
+    {
+      "path": "docs/plans/2026-10-06-implementation-plan.md",
+      "sha256": "a2a41c2d3d3d6537246d10ed49ae8658ce45f9743b0bfc9e24eeea8f6631ad08"
+    },
+    {
+      "path": "docs/plans/2026-10-09-jev-evidence.json",
+      "sha256": "df1b3c206cf97efd90d7cd2c5e06f9b21396a93adb84d4b709b9b8014bd34303"
+    },
+    {
+      "path": "docs/plans/2026-10-09-performance-baseline.json",
+      "sha256": "d1a803932d12af05940e68efef4a4c134062769fbddc7c510ecd2eab6d00124f"
+    },
+    {
+      "path": "docs/plans/2026-10-09-performance-implementation.md",
+      "sha256": "7377f9edb437cd66a3b22141607cffc0504ec434f28a74dc92de86e16d750635"
+    },
+    {
+      "path": "docs/plans/2026-10-09-review-context-benchmark.json",
+      "sha256": "2a74f9d94d3a5c8cc71afa111809baa0b79ffe9981f756e68d88dcc508e9592e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9482293482fd1560267da6c6e264516fb6a18a6bd46a3eb80e601172f0cea860"
+    },
+    {
+      "path": "scripts/evaluation-report-path.mts",
+      "sha256": "b5542e54c2c7d4ac6ce5d64b1db413f7727248af7bf4b32366f2ee7c3ea31aee"
+    },
+    {
+      "path": "scripts/jev-evidence-audit.mts",
+      "sha256": "f6e8148f5db7296c24ce866598280b088fbfad8ea7aca214928f48d87fdbc171"
+    },
+    {
+      "path": "scripts/performance-audit.mts",
+      "sha256": "0d54645ec0ca30162c0421bc47d57f8d7835cf687f768ac0a9e2ec7fe4454c1f"
+    },
+    {
+      "path": "scripts/review-context-benchmark.mts",
+      "sha256": "34d42bfc5e8ed4d8ce16bef432004cf35ab7525b7a7645822df3c59514d283e1"
+    },
+    {
+      "path": "src/application/evaluation/optimization-gate.ts",
+      "sha256": "1557a6c0ab47ad695d84f5aed1900b98329629e3d64ee899ca1b0decef3dc51c"
+    },
+    {
+      "path": "src/application/evaluation/performance-report.ts",
+      "sha256": "921eeb39c0bdea9b8a008569d9e51203770ad18fe8faeaaf09797ed5933f8468"
+    },
+    {
+      "path": "src/application/weekly-planning/posts.ts",
+      "sha256": "4c1196ca38d46d5990180e7533b43407d4ad286fea373794f96ef42e29c37ee4"
+    },
+    {
+      "path": "src/blueprints/social/weekly-planning/post-context.ts",
+      "sha256": "e1bca85fa138ad237e621df855d6b9988e6c49c8db265909a7b6d0be6539514b"
+    },
+    {
+      "path": "src/infrastructure/models/attempt-telemetry.ts",
+      "sha256": "bc586e933210c0ea3095f6db25445ab0da6a135d2e9974a2c7b9499deac4d9fe"
+    },
+    {
+      "path": "src/infrastructure/models/brand-reasoning.ts",
+      "sha256": "885afead907fe87e9f06ab9aab582cd416689e7f91dc05d7b7538ba88acbe18e"
+    },
+    {
+      "path": "src/infrastructure/postgres/brand-discovery-store.ts",
+      "sha256": "c023d3b6a2c37be99cb55da982ead005c64808206147195d60a51753659f8560"
+    },
+    {
+      "path": "src/infrastructure/postgres/weekly-planning-store.ts",
+      "sha256": "d15c0387bb453ceaba89185a0c84dcb6d742d99257f7607cbaa0e9be07c57f12"
+    },
+    {
+      "path": "tests/model-attempt-telemetry.integration.test.mts",
+      "sha256": "f294b3338d6bc27aafa97f9b4498910d33832a94a227e3b0642f7f972fd57193"
+    },
+    {
+      "path": "tests/model-attempt-telemetry.test.mts",
+      "sha256": "fd62f7ebc22582058e2df5d23d93ae10564534b3fb8e4d97d0b909fde57c7b76"
+    },
+    {
+      "path": "tests/optimization-gate.test.mts",
+      "sha256": "0b3f4039edcccc0d5273bac9e6b28e480dd518eccd4ec6e83bd23e058973aa3b"
+    },
+    {
+      "path": "tests/performance-report.test.mts",
+      "sha256": "5e5cf0d3854c8c8f686e3d85443f5daa2447301bd49ba48febeb554737e98c08"
+    },
+    {
+      "path": "tests/review-context-reuse.test.mts",
+      "sha256": "b361c4a6863189595e4ebb010c813c110012e0aaf6738560098ac623d4858b7c"
+    }
+  ],
+  "next": "T12.2 frozen current-context paired quality and full-time evaluation"
+}

@@ -1,0 +1,748 @@
+{
+  "version": 1,
+  "capturedAt": "2026-10-09T02:44:05.550Z",
+  "source": "bounded-local-read-only-snapshot",
+  "readOnly": true,
+  "receiptSetHash": "cfd1ce23c742a0ba2374a461d26c64946edeaba6ffcf0807960ce6287cda4cb7",
+  "collection": [
+    {
+      "workflow": "discovery",
+      "available": true,
+      "selected": 4,
+      "excludedMock": 0,
+      "truncated": false
+    },
+    {
+      "workflow": "weekly",
+      "available": true,
+      "selected": 11,
+      "excludedMock": 0,
+      "truncated": false
+    },
+    {
+      "workflow": "strategy",
+      "available": true,
+      "selected": 1,
+      "excludedMock": 0,
+      "truncated": false
+    },
+    {
+      "workflow": "notes",
+      "available": true,
+      "selected": 3,
+      "excludedMock": 0,
+      "truncated": false
+    },
+    {
+      "workflow": "revision",
+      "available": false,
+      "selected": 0,
+      "truncated": false
+    }
+  ],
+  "groups": [
+    {
+      "workflow": "discovery",
+      "step": "audiences",
+      "promptVersion": "audience-hypothesis-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 44683,
+        "p95": 44683,
+        "mean": 44683,
+        "maximum": 44683,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 44683,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 2788,
+        "knownOutputTokens": 1323,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 58,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "discovery",
+      "step": "envelope",
+      "promptVersion": "communication-envelope-v2",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 54646,
+        "p95": 54646,
+        "mean": 54646,
+        "maximum": 54646,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 54646,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 6772,
+        "knownOutputTokens": 1556,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 52,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "discovery",
+      "step": "profiles",
+      "promptVersion": "communication-profile-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 54070,
+        "p95": 54070,
+        "mean": 54070,
+        "maximum": 54070,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 54070,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 4519,
+        "knownOutputTokens": 1562,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 29,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "discovery",
+      "step": "understanding",
+      "promptVersion": "business-understanding-v3",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 64789,
+        "p95": 64789,
+        "mean": 64789,
+        "maximum": 64789,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 64789,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 2060,
+        "knownOutputTokens": 2219,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 34,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "notes",
+      "step": "contextual_notes",
+      "promptVersion": "contextual-notes-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 2,
+      "workflows": 2,
+      "requestAndValidationMs": {
+        "n": 2,
+        "p50": 108,
+        "p95": 6784,
+        "mean": 3446,
+        "maximum": 6784,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 6892,
+      "failedOrInvalidRequests": 1,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 9189,
+        "knownOutputTokens": 167,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 40,
+        "missingTokenReceipts": 1,
+        "missingCacheReceipts": 1,
+        "missingReasoningReceipts": 1
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 2,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "notes",
+      "step": "contextual_post_revision",
+      "promptVersion": "contextual-post-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 7710,
+        "p95": 7710,
+        "mean": 7710,
+        "maximum": 7710,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 7710,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 849,
+        "knownOutputTokens": 187,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 81,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "strategy",
+      "step": "social_strategy",
+      "promptVersion": "social-strategy-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 69632,
+        "p95": 69632,
+        "mean": 69632,
+        "maximum": 69632,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 69632,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 7000,
+        "knownOutputTokens": 1976,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 0,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_editorial",
+      "promptVersion": "founder-post-editorial-v1",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 2,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 2,
+        "p50": 31744,
+        "p95": 33194,
+        "mean": 32469,
+        "maximum": 33194,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 64938,
+      "failedOrInvalidRequests": 1,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 12095,
+        "knownOutputTokens": 2306,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 313,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 2,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_review",
+      "promptVersion": "founder-post-review-v2",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 7747,
+        "p95": 7747,
+        "mean": 7747,
+        "maximum": 7747,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 7747,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 8924,
+        "knownOutputTokens": 261,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 198,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_schedule",
+      "promptVersion": "founder-post-schedule-v4",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 56885,
+        "p95": 56885,
+        "mean": 56885,
+        "maximum": 56885,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 56885,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 10158,
+        "knownOutputTokens": 1762,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 71,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_writer_p1",
+      "promptVersion": "founder-post-writer-v2",
+      "model": "gpt-5.6-sol",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 19426,
+        "p95": 19426,
+        "mean": 19426,
+        "maximum": 19426,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 19426,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 2936,
+        "knownOutputTokens": 421,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 0,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_writer_p2",
+      "promptVersion": "founder-post-writer-v2",
+      "model": "gpt-5.6-sol",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 20504,
+        "p95": 20504,
+        "mean": 20504,
+        "maximum": 20504,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 20504,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 2941,
+        "knownOutputTokens": 447,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 30,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "post_writer_p3",
+      "promptVersion": "founder-post-writer-v2",
+      "model": "gpt-5.6-sol",
+      "reasoningEffort": "unrecorded",
+      "requests": 4,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 4,
+        "p50": 13761,
+        "p95": 15427,
+        "mean": 13790.25,
+        "maximum": 15427,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 55161,
+      "failedOrInvalidRequests": 3,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 12848,
+        "knownOutputTokens": 1128,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 122,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 4,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    },
+    {
+      "workflow": "weekly",
+      "step": "weekly_strategy",
+      "promptVersion": "current-week-v3",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "unrecorded",
+      "requests": 1,
+      "workflows": 1,
+      "requestAndValidationMs": {
+        "n": 1,
+        "p50": 49425,
+        "p95": 49425,
+        "mean": 49425,
+        "maximum": 49425,
+        "quantileMethod": "nearestRank"
+      },
+      "summedAttemptMs": 49425,
+      "failedOrInvalidRequests": 0,
+      "missingValidationReceipts": 0,
+      "usage": {
+        "knownInputTokens": 10487,
+        "knownOutputTokens": 1359,
+        "knownCachedInputTokens": 0,
+        "knownReasoningTokens": 52,
+        "missingTokenReceipts": 0,
+        "missingCacheReceipts": 0,
+        "missingReasoningReceipts": 0
+      },
+      "telemetry": {
+        "instrumentedRequests": 0,
+        "legacyRequests": 1,
+        "observedLogicalCalls": null,
+        "completeSuccessfulLogicalCalls": null,
+        "logicalCallElapsedMs": null,
+        "providerRequestMs": null,
+        "transportRetries": null,
+        "validationRepairs": null,
+        "backoffMs": null,
+        "inputBytes": null
+      },
+      "monetaryCostUsd": null,
+      "endToEndMs": null,
+      "qualityScore": null,
+      "evidenceLimits": [
+        "Summed attempt time includes concurrent work; it is not end-to-end latency.",
+        "Legacy receipts cannot establish logical-call, retry, context-size or reasoning-effort metrics.",
+        "Missing native usage is unknown, not zero billing. No confirmed rates or invoice supplied.",
+        "Stored model receipts do not establish current-pipeline quality or a representative population."
+      ]
+    }
+  ],
+  "currentPipelineQualityMeasured": false,
+  "productionModelChanged": false,
+  "databaseWritten": false
+}

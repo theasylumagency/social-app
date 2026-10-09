@@ -62,6 +62,11 @@ export function compilePostGenerationContext(run: PlanningRun, post: PostOutline
 }
 
 export function compilePostEditorialContext(run: PlanningRun, post: PostOutline) {
-  const { task, internalGuidance, voice, communication, operatingRules, contentLanguage } = compilePostGenerationContext(run, post)
+  return postEditorialContext(compilePostGenerationContext(run, post))
+}
+
+/** Project the existing context without compiling voice, facts and audience selection twice. */
+export function postEditorialContext(context: ReturnType<typeof compilePostGenerationContext>) {
+  const { task, internalGuidance, voice, communication, operatingRules, contentLanguage } = context
   return { task, voice, communication, operatingRules, contentLanguage, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
 }

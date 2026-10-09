@@ -1,0 +1,36 @@
+{
+  "scope": "controlled-context-preparation-only",
+  "fixturePosts": 3,
+  "rounds": 20,
+  "iterationsPerRound": 500,
+  "warmupIterations": 200,
+  "order": "alternating",
+  "previousMsPerWeek": {
+    "n": 20,
+    "p50": 0.01431860000000006,
+    "p95": 0.02461279999999988,
+    "mean": 0.015889400000000012,
+    "maximum": 0.03086999999999989,
+    "quantileMethod": "nearestRank"
+  },
+  "currentMsPerWeek": {
+    "n": 20,
+    "p50": 0.007800400000000081,
+    "p95": 0.017660399999999982,
+    "mean": 0.009913690000000008,
+    "maximum": 0.021769800000000034,
+    "quantileMethod": "nearestRank"
+  },
+  "generationCompilationsPerWeek": {
+    "previous": 6,
+    "current": 3
+  },
+  "inputBytes": 26979,
+  "inputHash": "36830bfcbe947f491e4cd647eb2709f1007cd45b10170699a084a5017a546e76",
+  "byteIdenticalReviewerInputs": true,
+  "callsRemoved": 0,
+  "providerTokenReduction": 0,
+  "fullPipelineSpeedupMeasured": false,
+  "qualityModelEvaluated": false,
+  "checksum": 40000
+}

@@ -1,0 +1,1344 @@
+{
+  "version": 1,
+  "mode": "offline-frozen-receipt-revalidation",
+  "providerCalled": false,
+  "sourceHashes": {
+    "sample": "4184eb9670e23b0f64903fbedfdbbb4aff7775d8dd0e46a3af8bfbf6bfddcb71",
+    "reference": "34b996ef93200c5972e245595d1261274405047c0f392c02b90ed2e4f34ebff9",
+    "receipts": "febaa51d0294e2287624d8b86b6af2a42f1a3acec8bb71d7ef185e4f34417a98"
+  },
+  "historicalSourceChanges": [
+    {
+      "path": "src/infrastructure/models/brand-reasoning.ts",
+      "frozenHash": "4b35a84ff6317f5d5424569e36ab95d7b8aeb4c4f10812e2a73afa12de4bf1cf",
+      "currentHash": "885afead907fe87e9f06ab9aab582cd416689e7f91dc05d7b7538ba88acbe18e"
+    },
+    {
+      "path": "src/application/contextual-notes/model.ts",
+      "frozenHash": "3715b235e8a5cc28227e13bd801c52b91711137e6a2f031a179510cd68bd7d4f",
+      "currentHash": "baf843f034119c17adb2a95c7b9f53b60d30b3ddd1b163b3dcae34a078a9e5e2"
+    },
+    {
+      "path": "src/infrastructure/postgres/contextual-notes-store.ts",
+      "frozenHash": "08b63155994f864224d72135f5df42b5db8f1032e7f864ab7d3ec8eabb78f40d",
+      "currentHash": "40d1c5871d7c205ac935dcc8e4ce1495e510295e203e5ce078c387a8400f41c2"
+    }
+  ],
+  "distinctUserTasks": 5,
+  "jevRequests": 15,
+  "requiredFieldFailures": 0,
+  "engineeringNegativeFailures": 8,
+  "cases": [
+    {
+      "caseId": "U01",
+      "latencyMs": {
+        "n": 3,
+        "p50": 300.0206000000003,
+        "p95": 441.14630000000005,
+        "mean": 341.77983333333344,
+        "maximum": 441.14630000000005,
+        "quantileMethod": "nearestRank"
+      },
+      "passes": [
+        {
+          "pass": 1,
+          "latencyMs": 441.14630000000005,
+          "humanConfirmedFields": [
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 2,
+          "latencyMs": 300.0206000000003,
+          "humanConfirmedFields": [
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 3,
+          "latencyMs": 284.1725999999999,
+          "humanConfirmedFields": [
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        }
+      ]
+    },
+    {
+      "caseId": "U02",
+      "latencyMs": {
+        "n": 3,
+        "p50": 314.9431000000001,
+        "p95": 321.0695000000005,
+        "mean": 312.32566666666696,
+        "maximum": 321.0695000000005,
+        "quantileMethod": "nearestRank"
+      },
+      "passes": [
+        {
+          "pass": 1,
+          "latencyMs": 314.9431000000001,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "strategy",
+              "actual": "strategy",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "reconsider",
+              "actual": "reconsider",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "facebook",
+              "actual": "facebook",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 2,
+          "latencyMs": 300.9644000000003,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "strategy",
+              "actual": "strategy",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "reconsider",
+              "actual": "reconsider",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "facebook",
+              "actual": "facebook",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 3,
+          "latencyMs": 321.0695000000005,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "strategy",
+              "actual": "strategy",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "reconsider",
+              "actual": "reconsider",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "facebook",
+              "actual": "facebook",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        }
+      ]
+    },
+    {
+      "caseId": "U03",
+      "latencyMs": {
+        "n": 3,
+        "p50": 313.75049999999965,
+        "p95": 317.6107000000002,
+        "mean": 304.99209999999994,
+        "maximum": 317.6107000000002,
+        "quantileMethod": "nearestRank"
+      },
+      "passes": [
+        {
+          "pass": 1,
+          "latencyMs": 283.6151,
+          "humanConfirmedFields": [
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "delegate",
+              "actual": "delegate",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "upcomingWeeksRange",
+              "actual": "upcomingWeeksRange",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "perWeekAcrossRange",
+            "actual": "perWeekAcrossRange"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 2,
+          "latencyMs": 313.75049999999965,
+          "humanConfirmedFields": [
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "delegate",
+              "actual": "delegate",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "upcomingWeeksRange",
+              "actual": "upcomingWeeksRange",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "perWeekAcrossRange",
+            "actual": "perWeekAcrossRange"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 3,
+          "latencyMs": 317.6107000000002,
+          "humanConfirmedFields": [
+            {
+              "field": "instagramMode",
+              "expected": "set",
+              "actual": "set",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n2",
+              "actual": "n2",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "delegate",
+              "actual": "delegate",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "upcomingWeeksRange",
+              "actual": "upcomingWeeksRange",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "perWeekAcrossRange",
+            "actual": "perWeekAcrossRange"
+          },
+          "consistencyIssues": []
+        }
+      ]
+    },
+    {
+      "caseId": "U04",
+      "latencyMs": {
+        "n": 3,
+        "p50": 296.12159999999994,
+        "p95": 332.3602000000001,
+        "mean": 304.95029999999997,
+        "maximum": 332.3602000000001,
+        "quantileMethod": "nearestRank"
+      },
+      "passes": [
+        {
+          "pass": 1,
+          "latencyMs": 286.3690999999999,
+          "humanConfirmedFields": [
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "currentWeek",
+              "passed": false
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 2,
+          "latencyMs": 296.12159999999994,
+          "humanConfirmedFields": [
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "currentWeek",
+              "passed": false
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 3,
+          "latencyMs": 332.3602000000001,
+          "humanConfirmedFields": [
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n1",
+              "actual": "n1",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "action",
+              "expected": "cadence",
+              "actual": "cadence",
+              "passed": true
+            },
+            {
+              "field": "direction",
+              "expected": "keep",
+              "actual": "keep",
+              "passed": true
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "notSpecified",
+              "actual": "currentWeek",
+              "passed": false
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "notSpecified",
+            "actual": "notSpecified"
+          },
+          "consistencyIssues": []
+        }
+      ]
+    },
+    {
+      "caseId": "U05",
+      "latencyMs": {
+        "n": 3,
+        "p50": 326.2435999999998,
+        "p95": 789.691,
+        "mean": 465.77039999999994,
+        "maximum": 789.691,
+        "quantileMethod": "nearestRank"
+      },
+      "passes": [
+        {
+          "pass": 1,
+          "latencyMs": 789.691,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "cadenceAndFormat",
+              "actual": "cadenceAndFormat",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n3",
+              "actual": "n3",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "decrease",
+              "actual": "decrease",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n4",
+              "actual": "n4",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "videoToCarousel",
+              "actual": "videoToCarousel",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "possibleUnresolved",
+              "actual": "possibleUnresolved",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "reconsider",
+              "passed": false
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 2,
+          "latencyMs": 281.37660000000005,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "cadenceAndFormat",
+              "actual": "cadenceAndFormat",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n3",
+              "actual": "n3",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "decrease",
+              "actual": "decrease",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n4",
+              "actual": "n4",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "videoToCarousel",
+              "actual": "videoToCarousel",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "possibleUnresolved",
+              "actual": "possibleUnresolved",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "reconsider",
+              "passed": false
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "unresolved",
+              "passed": false
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        },
+        {
+          "pass": 3,
+          "latencyMs": 326.2435999999998,
+          "humanConfirmedFields": [
+            {
+              "field": "action",
+              "expected": "cadenceAndFormat",
+              "actual": "cadenceAndFormat",
+              "passed": true
+            },
+            {
+              "field": "facebookMode",
+              "expected": "increase",
+              "actual": "increase",
+              "passed": true
+            },
+            {
+              "field": "facebookQuantity",
+              "expected": "n3",
+              "actual": "n3",
+              "passed": true
+            },
+            {
+              "field": "instagramMode",
+              "expected": "decrease",
+              "actual": "decrease",
+              "passed": true
+            },
+            {
+              "field": "instagramQuantity",
+              "expected": "n4",
+              "actual": "n4",
+              "passed": true
+            },
+            {
+              "field": "horizon",
+              "expected": "currentWeek",
+              "actual": "currentWeek",
+              "passed": true
+            },
+            {
+              "field": "format",
+              "expected": "videoToCarousel",
+              "actual": "videoToCarousel",
+              "passed": true
+            },
+            {
+              "field": "futureVideo",
+              "expected": "possibleUnresolved",
+              "actual": "possibleUnresolved",
+              "passed": true
+            }
+          ],
+          "engineeringNegatives": [
+            {
+              "field": "direction",
+              "expected": "notSpecified",
+              "actual": "reconsider",
+              "passed": false
+            },
+            {
+              "field": "emphasis",
+              "expected": "notSpecified",
+              "actual": "notSpecified",
+              "passed": true
+            },
+            {
+              "field": "duration",
+              "expected": "notSpecified",
+              "actual": "unresolved",
+              "passed": false
+            }
+          ],
+          "cadenceBasisEngineeringControl": {
+            "expected": "currentWeekTotal",
+            "actual": "currentWeekTotal"
+          },
+          "consistencyIssues": []
+        }
+      ]
+    }
+  ],
+  "recordedInterpretationStage": {
+    "baseline": {
+      "n": 5,
+      "min": 5371.7078,
+      "mean": 11646.45982,
+      "p50": 9234.575399999998,
+      "p95": 23278.371700000003,
+      "max": 23278.371700000003,
+      "quantileMethod": "nearestRank"
+    },
+    "jev": {
+      "n": 15,
+      "p50": 313.75049999999965,
+      "p95": 789.691,
+      "mean": 345.96366000000006,
+      "maximum": 789.691,
+      "quantileMethod": "nearestRank"
+    },
+    "comparableResponsibilities": false,
+    "fullPipelineBenefit": null,
+    "monetaryCostUsd": null
+  },
+  "admission": {
+    "decision": "shadowOnly",
+    "reasons": [
+      "insufficientDistinctCases",
+      "differentInputsOrContext",
+      "historicalPipeline",
+      "differentResponsibilities",
+      "missingIndependentQualityReference",
+      "criticalSafetyNotEstablished",
+      "meaningFidelityNotEstablished",
+      "languageOrVoiceNotEstablished",
+      "falseBlockersNotEstablished",
+      "firstPassQualityNotEstablished",
+      "fullBenefitNotMeasured"
+    ],
+    "thresholds": {
+      "minimumDistinctCases": 30,
+      "minimumBenefit": 0.15,
+      "maximumVoiceLoss": 0.2,
+      "maximumFalseBlockerIncrease": 0.02,
+      "maximumFirstPassLoss": 0.02
+    },
+    "automaticActivation": false,
+    "statisticalEquivalenceEstablished": false
+  },
+  "semanticQualityEvidence": {
+    "realPosts": 3,
+    "materialPositives": 0,
+    "realJevObservations": 0,
+    "recall": null,
+    "reviewerAdmission": false
+  },
+  "limits": [
+    "Five distinct tasks and three repeats are not fifteen independent tasks.",
+    "Human-confirmed semantic fields are not blind final-content quality labels.",
+    "Baseline and Jev have different responsibilities, context and recording periods.",
+    "The wider interpreter and downstream planner/review/queue/fallback costs were not replaced or measured.",
+    "Phase 7D has no material-positive denominator; zero missed positives does not establish recall."
+  ]
+}

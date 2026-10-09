@@ -279,7 +279,7 @@ export async function failPlanningStep(pool: Pool, run: PlanningRun, token: stri
   await pool.query("UPDATE weekly_planning_runs SET status='failed',error=$4,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=$1 AND version=$2 AND lease_token=$3", [run.id, run.version, token, error])
 }
 export async function recordPlanningModelRun(pool: Pool, id: string, run: BrandModelRun) {
-  await pool.query("INSERT INTO weekly_planning_model_runs(id,run_id,step,prompt_version,model,input_hash,duration_ms,usage,validation_errors) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)", [run.id, id, run.step, run.promptVersion, run.model, run.inputHash, run.durationMs, JSON.stringify(run.usage), JSON.stringify(run.validationErrors)])
+  await pool.query("INSERT INTO weekly_planning_model_runs(id,run_id,step,prompt_version,model,input_hash,duration_ms,usage,validation_errors,telemetry) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb)", [run.id, id, run.step, run.promptVersion, run.model, run.inputHash, run.durationMs, JSON.stringify(run.usage), JSON.stringify(run.validationErrors), JSON.stringify(run.telemetry ?? null)])
 }
 export async function retryPlanningRun(pool: Pool, ownerId: string, id: string, version: number) {
   return transaction(pool, async (c) => {
