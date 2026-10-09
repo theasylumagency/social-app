@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "stage": "T12.2",
+  "status": "real-diagnostic-and-repairs-complete-in-workspace",
+  "checkedAt": "2026-10-09T04:29:18.896Z",
+  "overallT12Complete": false,
+  "currentCorpus": {
+    "path": ".local/t12-2/corpus-v6.json",
+    "hash": "23f8d896dc069389f9be1ac054bf408f46536e14723958cf2d8eec90decec8cc",
+    "cases": 30,
+    "sourceAndConfigurationRechecked": true
+  },
+  "initialDiagnostic": {
+    "path": ".local/t12-2/live-diagnostic-01",
+    "corpusHash": "84cf64bfa6845de5a3991cf66fc02d2e911961bde10cd50a713057d6ffd25158",
+    "receiptsHash": "0a893ce4f4932f8765ea6588a3dff1e9cf766a5fa863692f27dbfadcc392446a",
+    "distinctCompletePairs": 6,
+    "beforeRepairs": true,
+    "pairs": [
+      {
+        "caseId": "U04",
+        "complete": true,
+        "baselineMs": 10492.2535,
+        "candidateMs": 8126.256999999998,
+        "baselineStatus": "proposed",
+        "candidateStatus": "proposed",
+        "baselineFailures": [],
+        "candidateFailures": [],
+        "pairedApplicationReduction": 0.22549936484092792
+      },
+      {
+        "caseId": "U05",
+        "complete": true,
+        "baselineMs": 13604.0023,
+        "candidateMs": 12747.4012,
+        "baselineStatus": "proposed",
+        "candidateStatus": "proposed",
+        "baselineFailures": [],
+        "candidateFailures": [],
+        "pairedApplicationReduction": 0.06296684469099212
+      },
+      {
+        "caseId": "C01",
+        "complete": true,
+        "baselineMs": 8512.385699999999,
+        "candidateMs": 7389.949699999997,
+        "baselineStatus": "answered",
+        "candidateStatus": "answered",
+        "baselineFailures": [],
+        "candidateFailures": [],
+        "pairedApplicationReduction": 0.1318591567109091
+      },
+      {
+        "caseId": "C04",
+        "complete": true,
+        "baselineMs": 10723.641799999998,
+        "candidateMs": 7579.907099999997,
+        "baselineStatus": "proposed",
+        "candidateStatus": "proposed",
+        "baselineFailures": [
+          "expectedMode"
+        ],
+        "candidateFailures": [
+          "expectedMode"
+        ],
+        "pairedApplicationReduction": 0.29315924185382636
+      },
+      {
+        "caseId": "E01",
+        "complete": true,
+        "baselineMs": 6740.6492,
+        "candidateMs": 6810.479099999997,
+        "baselineStatus": "clarification",
+        "candidateStatus": "clarification",
+        "baselineFailures": [
+          "expectedAction",
+          "shorter"
+        ],
+        "candidateFailures": [
+          "expectedAction",
+          "shorter"
+        ],
+        "pairedApplicationReduction": -0.010359521453808584
+      },
+      {
+        "caseId": "E06",
+        "complete": true,
+        "baselineMs": 49237.606499999994,
+        "candidateMs": 59712.5949,
+        "baselineStatus": "contract",
+        "candidateStatus": "contract",
+        "baselineFailures": null,
+        "candidateFailures": null,
+        "pairedApplicationReduction": -0.21274365560397412
+      }
+    ],
+    "notesMeanMs": {
+      "baseline": 9409.5,
+      "low": 8079.666666666667,
+      "reduction": 0.14132879890890404
+    },
+    "pairedSummedApplicationReduction": -0.030772665527472265,
+    "independentHumanQuality": "pending",
+    "fullWorkflowBenefit": null,
+    "monetaryCostBenefit": null
+  },
+  "deterministicReplay": {
+    "path": ".local/t12-2/correction-replay.json",
+    "sourceReceiptsHash": "0a893ce4f4932f8765ea6588a3dff1e9cf766a5fa863692f27dbfadcc392446a",
+    "checks": 4,
+    "passed": 4,
+    "paidCalls": 0
+  },
+  "followup": {
+    "path": ".local/t12-2/live-followup-01",
+    "corpusHash": "4e613368bef3f44db996012a1fe19ffdd0ac1c8c4a7fcf0101a09d526ca58382",
+    "receiptsHash": "6943316588fcdd7bcdfae80f4c8e0cd555dd54af669fd3ad0122bb3421ce2d10",
+    "distinctCompletePairs": 2,
+    "repeatedCaseIds": [
+      "E01",
+      "E06"
+    ],
+    "pairs": [
+      {
+        "caseId": "E01",
+        "complete": true,
+        "baselineMs": 60103.8963,
+        "candidateMs": 58931.8785,
+        "baselineStatus": "contract",
+        "candidateStatus": "needsChanges",
+        "baselineFailures": null,
+        "candidateFailures": [],
+        "pairedApplicationReduction": 0.019499863938105433
+      },
+      {
+        "caseId": "E06",
+        "complete": true,
+        "baselineMs": 30502.31149999998,
+        "candidateMs": 28205.63609999999,
+        "baselineStatus": "needsChanges",
+        "candidateStatus": "needsChanges",
+        "baselineFailures": [
+          "shorter"
+        ],
+        "candidateFailures": [],
+        "pairedApplicationReduction": 0.07529512640378067
+      }
+    ],
+    "editorialLogicalCalls": 4,
+    "editorialFirstAttemptAccepted": 4
+  },
+  "reviewContractCheck": {
+    "path": ".local/t12-2/live-review-check-01",
+    "corpusHash": "3e86e7206bcb04e43d81a4c85f6de10fdfd58886defd5829e282293f3241786c",
+    "resultHash": "629574c9c860df62c81cf046894b2cf8940d341a9ce96fd5248f84e59e4ea6f2",
+    "sourceDraftDigest": "d6bfe242c208d8870e44886ac42105a67a69534bc410c65a6c90df3eca0b2cbb",
+    "failure": null,
+    "status": "needsChanges",
+    "requests": 2
+  },
+  "finalFormatCheck": {
+    "path": ".local/t12-2/live-format-check-01",
+    "corpusHash": "23f8d896dc069389f9be1ac054bf408f46536e14723958cf2d8eec90decec8cc",
+    "resultHash": "82fd3e7a735908df12df0d2f69357f2949362b46f069d3f5838f584e748863da",
+    "executorContentDigest": "086138fca6051e3f36b0c14633c89299eca77467c26ef0c89155cbb4ed4f78c0",
+    "sourceDraftDigest": "d6bfe242c208d8870e44886ac42105a67a69534bc410c65a6c90df3eca0b2cbb",
+    "sourceDraftUnchanged": true,
+    "failure": null,
+    "status": "needsChanges",
+    "requests": 2,
+    "firstAttemptAccepted": true,
+    "promptVersions": [
+      "founder-post-review-v5-single-channel-v2",
+      "founder-post-editorial-v4-single-channel-v2"
+    ],
+    "missingImageCopyFramesIssues": 0,
+    "approved": false
+  },
+  "sharedBudget": {
+    "limits": {
+      "maxRequests": 48,
+      "maxInputBytes": 4000000,
+      "maxOutputTokens": 80000,
+      "maxMinutes": 20
+    },
+    "requests": 43,
+    "serializedRequestBytes": 1195233,
+    "knownInputTokens": 202520,
+    "knownOutputTokens": 31696,
+    "knownUsageReceipts": 43,
+    "unknownOutputReservation": 0,
+    "pendingOutputReservation": 0,
+    "elapsedExecutionMs": 461961.97709999996,
+    "monetaryCostUsd": null
+  },
+  "attempts": {
+    "paid": 43,
+    "transportRetries": 0,
+    "validationRepairs": 5,
+    "validationFailures": 8,
+    "nativeUsageKnown": 43
+  },
+  "activation": {
+    "decision": "shadowOnly",
+    "modelRoutingChanged": false,
+    "lowInterpreterActivated": false,
+    "jevMode": "shadow-only",
+    "gate": {
+      "decision": "shadowOnly",
+      "reasons": [
+        "insufficientDistinctCases",
+        "missingIndependentQualityReference",
+        "criticalSafetyNotEstablished",
+        "meaningFidelityNotEstablished",
+        "languageOrVoiceNotEstablished",
+        "falseBlockersNotEstablished",
+        "firstPassQualityNotEstablished",
+        "fullBenefitNotMeasured"
+      ],
+      "thresholds": {
+        "minimumDistinctCases": 30,
+        "minimumBenefit": 0.15,
+        "maximumVoiceLoss": 0.2,
+        "maximumFalseBlockerIncrease": 0.02,
+        "maximumFirstPassLoss": 0.02
+      },
+      "automaticActivation": false,
+      "statisticalEquivalenceEstablished": false
+    }
+  },
+  "release": {
+    "productionDeployed": false,
+    "newMigrationRequired": false,
+    "sharedDatabaseMigrated": false,
+    "realOperatorJobsRun": false,
+    "updateWebAndRelevantWorkers": true
+  },
+  "evidenceLimits": [
+    "Six distinct controlled cases, not representative live traffic; repeated cases and reviewer-only checks add no distinct cases.",
+    "Initial timing is pre-repair and includes failed paths. It does not measure queue, database persistence, weekly replanning or human confirmation.",
+    "E06 is a composite of incomplete historical fragments; whole-caption shorter checks cannot independently grade first-paragraph shortening or brand voice.",
+    "Review contract acceptance is not text quality acceptance. Remaining factual and editorial blockers require complete context and independent human assessment; fact authority is unchanged.",
+    "All native usage is recorded; no confirmed price or invoice supplied. No full-workflow or monetary benefit is claimed."
+  ],
+  "nextStage": {
+    "id": "T12.3",
+    "minimumDistinctCases": 30,
+    "requires": [
+      "complete current context",
+      "independent human quality labels",
+      "false-blocker review",
+      "full time including queue and persistence or confirmed cost"
+    ]
+  }
+}

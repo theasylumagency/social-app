@@ -53,8 +53,8 @@ export async function reviewPosts(run: PlanningRun, payload: PostsPayload, reaso
   if (editorialPosts.some((p) => !p.draft)) throw Error("Cannot review incomplete post copies")
   // Independent calls share the existing worker stage/lease budget and one repair pass.
   const results = await Promise.allSettled([
-    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v4", prompt: POSTS_REVIEW_PROMPT, input: { postContexts, weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
-    reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v2", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostsReview>({ step: "post_review", version: "founder-post-review-v5", prompt: POSTS_REVIEW_PROMPT, input: { postContexts, weeklyOutline: payload.outline, drafts: payload.copies }, schema: POSTS_REVIEW_SCHEMA, validate: (v) => [...((v as PostsReview).issues.some((i) => !postKeys.includes(i.postKey)) ? ["Unknown post key"] : []), ...validatePlanningProse(v, keys(run))] }),
+    reason<PostEditorialReview>({ step: "post_editorial", version: "founder-post-editorial-v4", prompt: POST_EDITORIAL_PROMPT, input: { posts: editorialPosts }, schema: POST_EDITORIAL_SCHEMA, validate: (v) => [...validatePostEditorialReview(v as PostEditorialReview, editorialPosts), ...validatePlanningProse(v, keys(run))] }),
   ])
   const [safety, editorial] = results
   if (safety.status === "rejected") throw safety.reason

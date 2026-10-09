@@ -36,7 +36,13 @@ export function interpretOperatingRule(value: Interpretation): OperatingRuleDraf
   const statement = value.statements.find(s => s.kind === "standing_rule" && s.actionable)
   if (!statement) return null
   const text = normalized(`${statement.quote} ${statement.meaning} ${value.instruction}`)
-  const channel: SocialChannel | "all" = /instagram|ინსტაგრამ/u.test(text) ? "instagram" : /facebook|ფეისბუქ/u.test(text) ? "facebook" : "all"
+  // An explicit scope in the current rule quote outranks channels mentioned in another instruction.
+  const quote = normalized(statement.quote)
+  const quotedChannel = /instagram|ინსტაგრამ/u.test(quote) ? "instagram" : /facebook|ფეისბუქ|ფეისბუკ/u.test(quote) ? "facebook" : null
+  const allChannels = /(?:ყველა|ორივე)\s+არხ|(?:all|both)\s+channels/u.test(quote)
+  // Exceptions need a typed selector; never broaden them to every channel from a partial parse.
+  if (allChannels && /გარდა|except|excluding/u.test(quote)) return null
+  const channel: SocialChannel | "all" = allChannels ? "all" : quotedChannel ?? (/instagram|ინსტაგრამ/u.test(text) ? "instagram" : /facebook|ფეისბუქ|ფეისბუკ/u.test(text) ? "facebook" : "all")
   const contentType: OperatingContentType | "all" = /სარეკლამო|რეკლამ/u.test(text) ? "advertising" : /ორგანულ/u.test(text) ? "organic" : "all"
   const communicationElement: CommunicationElement | "all" = /ქეფშენ|caption/u.test(text) ? "caption" : /სცენარ|script/u.test(text) ? "script" : /ეკრან(?:ზე|ის).*ტექსტ|on.?screen/u.test(text) ? "on_screen_text" : /(?:კადრ|სლაიდ).*ტექსტ|frame.?text/u.test(text) ? "frame_text" : "all"
   const campaign = statement.quote.match(/[„"]([^“”"]+)[“”"]\s*კამპანი/u)?.[1]?.trim() ?? null
@@ -68,16 +74,20 @@ export function decideNote(value: Interpretation, context: NoteContext): Decisio
   const clarify = (message: string): Decision => ({ mode: "clarify", action: "none", message })
   if (value.ambiguous || value.clarification) return clarify(value.clarification || "კონკრეტულად რის შეცვლას გულისხმობთ ამ გვერდზე?")
   if (!actionable.length || actionable.every(s => inert.has(s.kind))) return { mode: "explain", action: "none", message: value.response }
+  const commands = actionable.filter(s => !inert.has(s.kind))
+  if (new Set(commands.map(s => s.scope)).size > 1) return clarify("აქ რამდენიმე განსხვავებული ცვლილებაა. პირველად რომელს მივხედოთ?")
+  if (commands.some(s => s.kind === "standing_rule") && commands.some(s => s.kind !== "standing_rule")
+    || commands.some(s => s.kind === "channel_policy") && commands.some(s => s.kind !== "channel_policy")) return clarify("აქ რამდენიმე განსხვავებული ცვლილებაა. პირველად რომელს მივხედოთ?")
   const rule = interpretOperatingRule(value)
   if (actionable.some(s => s.kind === "standing_rule")) return rule ? { mode: "confirm", action: "set_operating_rule", message: `გავიგე ასე: ${rule.directive} მოქმედების არე: ${operatingRuleScopeLabel(rule.scope)}. წესი იმოქმედებს მომავალ შესაბამის კონტენტზე; უკვე არსებული პოსტები არ შეიცვლება. სწორია?` } : clarify("რომელი ზუსტი წესი უნდა იმოქმედოს მომავალ კონტენტზე და რომელ არხზე?")
   const channelPolicy = interpretChannelPolicy(value)
   if (actionable.some(s => s.kind === "channel_policy")) return channelPolicy ? { mode: "confirm", action: "set_channel_policy", message: `${channelPolicy.channel === "instagram" ? "Instagram" : "Facebook"} ${channelPolicy.active ? "კვლავ გახდება აქტიური სამუშაო არხი და მომავალ გეგმებში დაბრუნდება" : "აღარ იქნება აქტიური სამუშაო არხი; ახალი კონტენტი აღარ დაიგეგმება და მიმდინარე გეგმა დარჩენილ არხებზე თავიდან შეფასდება"}. კავშირი, ისტორია და ანალიტიკა შენარჩუნდება. დასადასტურებლად გაჩვენებთ დაგეგმილ მასალებზეც ზუსტ გავლენას.` } : { mode: "explain", action: "none", message: `${value.response}\nანგარიშის კავშირის წაშლა ცალკე მოქმედებაა და ამ შენიშვნიდან არ სრულდება.` }
   if (actionable.some(s => s.kind === "strategy" || s.scope === "strategy")) return { mode: "explain", action: "none", message: value.response }
   if (value.action === "none" || value.action === "unsupported") return { mode: "explain", action: "none", message: value.response }
-  const commands = actionable.filter(s => !inert.has(s.kind))
-  if (new Set(commands.map(s => s.scope)).size > 1) return clarify("აქ რამდენიმე განსხვავებული ცვლილებაა. პირველად რომელს მივხედოთ?")
   if (value.instruction.trim().length < 10) return clarify("რა შედეგი გსურთ მიიღოთ ამ ცვლილებით?")
-  if (value.action === "revise_post" && context.section === "content" && context.postKey && context.channel && actionable.every(s => s.scope === "post" && ["instruction", "draft_correction", "correction"].includes(s.kind))) {
+  if (value.action === "revise_post" && context.section === "content" && context.postKey && context.channel
+    && commands.some(s => ["instruction", "draft_correction", "correction"].includes(s.kind))
+    && commands.every(s => s.scope === "post" && ["instruction", "draft_correction", "correction", "constraint"].includes(s.kind))) {
     return { mode: "apply", action: value.action, message: "არჩეული პოსტის ტექსტს თქვენი შენიშვნის მიხედვით შევასწორებ." }
   }
   if (value.action === "revise_plan" && context.section === "week" && commands.length && commands.every(s => s.scope === "week" && ["instruction", "constraint", "temporary_instruction"].includes(s.kind))) {

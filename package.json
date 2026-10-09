@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "audit:performance": "node --env-file=.env.local --import tsx scripts/performance-audit.mts",
+    "eval:performance:paired": "node --env-file=.env.local --import tsx scripts/performance-paired.mts",
     "test:semantic": "node --import tsx --test tests/semantic-middleware.test.mts",
     "test:semantic:shadow": "node --import tsx --test tests/semantic-middleware-shadow.test.mts",
     "semantic:shadow:fixtures": "node --import tsx scripts/semantic-middleware-shadow.mts --fixtures",

@@ -38,6 +38,39 @@ test("short and tone feedback resolve to the selected post and channel, never a 
   for (const quote of ["მოკლე.", "ძალიან ოფიციალურია."]) assert.equal(decideNote(interpreted("draft_correction", "post", "revise_post", quote), selected).mode, "apply")
   assert.equal(decideNote(interpreted("draft_correction", "post", "revise_post"), { ...selected, postKey: null }).mode, "clarify")
 })
+test("mixed post/rule and rule/channel mutations clarify before either priority branch can discard a request", () => {
+  const selected: NoteContext = { ...noteContext, section: "content", postKey: "p1", channel: "facebook", runId: "run" }
+  const mixed = interpreted("draft_correction", "post", "set_operating_rule", "ეს პოსტი შეამოკლე.")
+  mixed.statements.push({ quote: "ამიერიდან ყველა არხზე ემოჯი აკრძალულია.", meaning: "ყველა არხისთვის მუდმივი წესი", kind: "standing_rule", scope: "ongoing", actionable: true })
+  mixed.instruction = "მუდმივი წესი Facebook-სა და Instagram-ზე დაამატე; არჩეული პოსტიც შეამოკლე."
+  assert.deepEqual({ action: decideNote(mixed, selected).action, mode: decideNote(mixed, selected).mode }, { action: "none", mode: "clarify" })
+  const channel = interpreted("channel_policy", "channel", "set_channel_policy", "Instagram აღარ გამოიყენოთ.")
+  channel.statements.push({ ...mixed.statements[1]!, scope: "channel" })
+  assert.equal(decideNote(channel, noteContext).mode, "clarify")
+})
+test("explicit rule scope outranks unrelated channel mentions without expanding an exception", () => {
+  const global = interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან ყველა არხზე ემოჯი აკრძალულია.")
+  global.instruction = "Facebook-სა და Instagram-ზე ემოჯი არ გამოიყენოთ."
+  assert.equal(interpretOperatingRule(global)!.scope.channels.include, "all")
+  const facebook = interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან Facebook-ზე ემოჯი არ გამოიყენოთ.")
+  facebook.instruction = "Facebook-ზე ემოჯი აკრძალეთ; Instagram-ზე ცალკე პოსტი შეამოკლეთ."
+  assert.deepEqual(interpretOperatingRule(facebook)!.scope.channels.include, ["facebook"])
+  const except = interpreted("standing_rule", "ongoing", "set_operating_rule", "ამიერიდან ყველა არხზე ემოჯი აკრძალულია Instagram-ის გარდა.")
+  assert.equal(interpretOperatingRule(except), null)
+  assert.equal(decideNote(except, noteContext).mode, "clarify")
+})
+test("an explicit local edit may preserve a factual constraint and coexist with an inert question", () => {
+  const selected: NoteContext = { ...noteContext, section: "content", postKey: "p1", channel: "facebook", runId: "run" }
+  const edit = interpreted("draft_correction", "post", "revise_post", "ეს პოსტი შეამოკლე")
+  edit.statements.push({ quote: "ფოტოთი შეფასების ზღვარი შეინარჩუნე", meaning: "ფოტო საბოლოო შედეგს არ გვპირდება", kind: "constraint", scope: "post", actionable: true })
+  edit.statements.push({ quote: "რატომ სამი პოსტი?", meaning: "დაგეგმვის მიზეზის კითხვა", kind: "question", scope: "week", actionable: true })
+  assert.equal(decideNote(edit, selected).mode, "apply")
+  assert.equal(decideNote(edit, selected).action, "revise_post")
+  const constraintOnly = { ...edit, statements: [edit.statements[1]!] }
+  assert.equal(decideNote(constraintOnly, selected).action, "none", "a preservation boundary alone does not authorize writing")
+  const factChange = { ...edit, statements: [...edit.statements.slice(0, 2), { quote: "ბრენდის ფასიც შეცვალე", meaning: "ფასის შეცვლა", kind: "correction" as const, scope: "brand" as const, actionable: true }] }
+  assert.equal(decideNote(factChange, selected).mode, "clarify")
+})
 test("vague requests ask one question; independent challenge does not block a clear weekly constraint", () => {
   const value = interpreted("instruction", "unclear", "revise_plan", "მოდი ეს ცოტა სხვანაირად გავაკეთოთ.")
   value.ambiguous = true; value.clarification = "რაოდენობა გსურთ შეიცვალოს თუ მიმართულება?"

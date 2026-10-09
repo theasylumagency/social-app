@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { readFileSync } from "node:fs"
-import { compileBrandVoice } from "../src/blueprints/social/brand-voice"
+import { compileBrandVoice, voiceCriteria } from "../src/blueprints/social/brand-voice"
 import { BUSINESS_UNDERSTANDING_SCHEMA } from "../src/blueprints/social/brand-discovery/schemas"
 import { validateSchema, validateUnderstanding } from "../src/blueprints/social/brand-discovery/validation"
 import { compilePostGenerationContext, compilePostEditorialContext } from "../src/blueprints/social/weekly-planning/post-context"
@@ -80,6 +80,7 @@ test("post scope excludes unrelated goals/audiences and global communication job
   assert.equal(postsContext(run).audiences.length, 1)
   assert.equal(postsContext(run).communicationProfiles.length, 1)
   const editorial = compilePostEditorialContext(run, almostAnotherPost)
+  assert.deepEqual(editorial.voiceCriteria, voiceCriteria(scoped.voice))
   for (const key of ["publicFacts", "eligibleProof", "evidenceSummary", "sources", "selectedBrandGoals", "constraints"]) assert.ok(!(key in editorial))
 })
 
@@ -92,6 +93,10 @@ test("semantic flattening feedback needs actual draft text and a supplied brand 
   const bad = structuredClone(review)
   bad.posts[0]!.issues[0]!.basis = "Invent a confrontational identity"
   assert.ok(validatePostEditorialReview(bad, inputs).some((e) => e.includes("voice criterion")))
+  bad.posts[0]!.issues[0]!.basis = `${review.posts[0]!.issues[0]!.basis} — დამატებული ახსნა`
+  const errors = validatePostEditorialReview(bad, inputs)
+  assert.ok(errors.some(error => error.includes("entire basis field")))
+  assert.ok(errors.some(error => error.includes(JSON.stringify(voiceCriteria(inputs[0]!.voice)))))
   bad.posts[0]!.issues[0]!.observedText = "This passage was never written"
   assert.ok(validatePostEditorialReview(bad, inputs).some((e) => e.includes("exact draft")))
   const missing = structuredClone(review); missing.posts[0]!.issues = []

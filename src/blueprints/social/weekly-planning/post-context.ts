@@ -1,4 +1,4 @@
-import { compileBrandVoice } from "../brand-voice"
+import { compileBrandVoice, voiceCriteria } from "../brand-voice"
 import type { PlanningRun } from "./model"
 import type { PostOutline, PostVariant } from "./posts"
 import { publicKnowledgeContext } from "../public-knowledge"
@@ -68,5 +68,5 @@ export function compilePostEditorialContext(run: PlanningRun, post: PostOutline)
 /** Project the existing context without compiling voice, facts and audience selection twice. */
 export function postEditorialContext(context: ReturnType<typeof compilePostGenerationContext>) {
   const { task, internalGuidance, voice, communication, operatingRules, contentLanguage } = context
-  return { task, voice, communication, operatingRules, contentLanguage, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
+  return { task, voice, voiceCriteria: voiceCriteria(voice), communication, operatingRules, contentLanguage, audience: internalGuidance.audiences, positioning: internalGuidance.positioning, contentDirection: internalGuidance.contentDirection }
 }

@@ -144,6 +144,7 @@ export type NoteWorkContext = {
 export type NoteInterpretationPort=(input:Record<string,unknown>&{message:string;context:NoteContext})=>Promise<Interpretation>;
 export async function prepareContextualNote(input: NoteWorkInput, data: NoteWorkContext, ports: {
     reason: BrandReasoner;
+    currentWeek?: () => string;
     interpret?:NoteInterpretationPort;
     channelImpact: (brandId: string, channel: SocialChannel) => Promise<{
         affectedFuture: number;
@@ -185,7 +186,7 @@ ${WEEKLY_DIRECTIVE_PROMPT}`, schema: INTERPRETATION_V2_SCHEMA,
       if(failures.length)throw Error('შენიშვნის გაგება დასაზუსტებელია. ცვლილება არ შესრულდა.')
     }
     let decision = decideNote(interpretation, context);
-    if (decision.action === "revise_plan" && (!planning.run || planning.stale || !["ready", "approved"].includes(planning.run.status) || context.week !== currentWeek()))
+    if (decision.action === "revise_plan" && (!planning.run || planning.stale || !["ready", "approved"].includes(planning.run.status) || context.week !== (ports.currentWeek ?? currentWeek)()))
         decision = { mode: "clarify", action: "none", message: "გეგმა ჯერ მზადდება, მოძველებულია ან სხვა კვირას ეკუთვნის. მიმდინარე გეგმის დასრულების შემდეგ გავაგრძელოთ; შენიშვნა შენახულია." };
     if (decision.action === "revise_brand" && !dossier)
         decision = { mode: "clarify", action: "none", message: "ჯერ ბრენდის გაცნობა დაასრულეთ, შემდეგ მის ინფორმაციას დავაზუსტებთ." };
@@ -225,7 +226,7 @@ ${WEEKLY_DIRECTIVE_PROMPT}`, schema: INTERPRETATION_V2_SCHEMA,
         }
     }
     if (decision.action === "revise_post") {
-        if (!planning.run || planning.stale || planning.posts?.status !== "ready" || !["ready", "approved"].includes(planning.run.status) || context.week !== currentWeek())
+        if (!planning.run || planning.stale || planning.posts?.status !== "ready" || !["ready", "approved"].includes(planning.run.status) || context.week !== (ports.currentWeek ?? currentWeek)())
             decision = { mode: "explain", action: "none", message: "შესწორება მხოლოდ მიმდინარე, დასრულებული პოსტისთვის არის შესაძლებელი. განაახლეთ გვერდი და აირჩიეთ მიმდინარე ტექსტი." };
         else {
             const postRules = applicablePostOperatingRules(activeRules, post!.channels);
