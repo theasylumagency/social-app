@@ -1,14 +1,14 @@
 import { WEEKLY_EXECUTION_CAPABILITIES, validateExecutionCapabilities } from "../../blueprints/social/weekly-planning/execution-capabilities"
 import { validateDirectiveSchedule } from "./instruction-contract"
 import { validateFactualReferences } from "../../blueprints/social/public-knowledge"
-import { POST_SCHEDULE_V3_SCHEMA, POST_COPY_V2_SCHEMA } from "../../blueprints/social/weekly-planning/posts"
+import { postScheduleSchemaForChannels, POST_COPY_V2_SCHEMA } from "../../blueprints/social/weekly-planning/posts"
 import { deterministicPostReviewIssues } from "./review-policy"
 import { validatePostContentMode } from "../../blueprints/social/weekly-planning/post-mode"
 import { operatingChannels } from "../../blueprints/social/strategy/model"
 import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { compilePlanningContext } from "./advance"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
-import { POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview } from "../../blueprints/social/weekly-planning/posts"
+import { POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview, type PostChannel } from "../../blueprints/social/weekly-planning/posts"
 import { POST_SCHEDULE_PROMPT, POST_WRITER_PROMPT, POSTS_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/posts"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
 import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
@@ -23,20 +23,31 @@ export function postsContext(run: PlanningRun) {
     selectedBrandGoals: context.selectedBrandGoals.filter((g) => !run.payload.review || run.payload.review.brandGoalKeys.includes(g.goalKey)),
     audiences: context.audiences.filter((a) => audienceKeys.includes(a.audienceKey)),
     communicationProfiles: context.communicationProfiles.filter((p) => audienceKeys.includes(p.audienceKey)),
+    allowedPostChannels: (run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"] as const).filter(channel => run.payload.channelPolicies?.find(policy => policy.channel === channel)?.active !== false),
     requestedCadence: run.payload.cadence ?? null, contentAudienceDirections: run.payload.adaptation, executionPolicy: WEEKLY_EXECUTION_CAPABILITIES }
+}
+function channelViolations(posts: PostSchedule["posts"], allowed: readonly PostChannel[]) {
+  return posts.flatMap((post, i) => post.channels.filter(({ channel }) => !allowed.includes(channel)).map(({ channel }) =>
+    `posts[${i}]: ${channel} is not permitted for this schedule. Allowed post channels: ${allowed.join(", ")}. Use only these channels.`))
 }
 function keys(run: PlanningRun) {
   const c = compilePlanningContext(run)
   return [...c.audiences.map((a) => a.audienceKey), ...c.selectedBrandGoals.map((g) => g.goalKey), ...c.contentDirections.map((d) => d.contentDirectionKey), ...Array.from({ length: 10 }, (_, i) => `p${i + 1}`)]
 }
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
-  const allowed = (run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"] as const).filter(channel => run.payload.channelPolicies?.find(policy => policy.channel === channel)?.active !== false)
+  const context = postsContext(run)
+  const allowed = context.allowedPostChannels
   if (!allowed.length) throw Error("რეკომენდებული არხებისთვის კონტენტის შესრულება ჯერ ცალკე გამართვას საჭიროებს.")
+  const cadence = run.payload.cadence
+  if (cadence && (["facebook", "instagram"] as const).some(channel => cadence[channel] > 0 && !allowed.includes(channel))) throw Error("პოსტების რაოდენობა მოითხოვს არხს, რომელიც მიმდინარე გეგმით არ არის დაშვებული.")
+  const selected = allowed.filter(channel => !cadence || cadence[channel] > 0)
+  if (!selected.length) throw Error("პოსტების დასაგეგმად ერთ არხზე მაინც მიუთითეთ დადებითი რაოდენობა.")
   const kept = existing?.outline?.posts ?? []
+  if (channelViolations(kept, selected).length) throw Error("შენარჩუნებულ პოსტებში დაუშვებელი არხია; ჯერ გეგმის არხები და პოსტების რაოდენობა შეათანხმეთ.")
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
-  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v7", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept }, schema: POST_SCHEDULE_V3_SCHEMA, validate: (v) => {
+  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v8", prompt: POST_SCHEDULE_PROMPT, input: { ...context, allowedPostChannels: selected, retainedPosts: kept }, schema: postScheduleSchemaForChannels(selected), validate: (v) => {
     const value = combine(v as PostSchedule)
-    return [...value.posts.flatMap(p => validatePostContentMode(p, run.payload.publicKnowledge)), ...value.posts.flatMap(p => validateFactualReferences(run.payload.publicKnowledge, p.factKeys ?? [], { factKeys: [], proofKeys: [] })), ...validateExecutionCapabilities(value), ...validateDirectiveSchedule(value, run.payload.weeklyDirectives), ...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(value.posts.some((p) => p.channels.some((c) => !allowed.includes(c.channel))) ? ["Use only channels permitted by the approved social strategy"] : []), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
+    return [...value.posts.flatMap(p => validatePostContentMode(p, run.payload.publicKnowledge)), ...value.posts.flatMap(p => validateFactualReferences(run.payload.publicKnowledge, p.factKeys ?? [], { factKeys: [], proofKeys: [] })), ...validateExecutionCapabilities(value), ...validateDirectiveSchedule(value, run.payload.weeklyDirectives), ...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...channelViolations(value.posts, selected), ...(cadence ? validateCadence(value.posts, cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
   } })
   return combine(result)
 }

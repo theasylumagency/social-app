@@ -73,9 +73,10 @@ const str = (maxLength = 1000, minLength = 1) => ({ type: "string", minLength, m
 const list = (items: JsonSchema, minItems = 0, maxItems = 6) => ({ type: "array", items, minItems, maxItems })
 const obj = (properties: Record<string, JsonSchema>): JsonSchema => ({ type: "object", additionalProperties: false, properties, required: Object.keys(properties) })
 const enumeration = (...values: string[]) => ({ type: "string", enum: values })
+const scheduleChannels = (channels: readonly PostChannel[]) => list(obj({ channel: enumeration(...channels), reason: str(350) }), 1, channels.length)
 export const POST_SCHEDULE_SCHEMA = obj({ summary: str(250), cadenceReason: str(650), channelReason: str(650), posts: list(obj({
   directionKey: str(10), dayOffset: { type: "integer", minimum: 0, maximum: 6 }, title: str(130), why: str(500), format: enumeration("text", "image", "carousel", "story", "reel"),
-  channels: list(obj({ channel: enumeration("facebook", "instagram"), reason: str(350) }), 1, 2),
+  channels: scheduleChannels(["facebook", "instagram"]),
   brief: obj({ job: str(400), takeaway: str(400), points: list(str(400), 2, 5), mustNotSay: list(str(350), 1, 6) }),
   visual: obj({ kind: enumeration("none", "graphic", "photo", "slides", "video"), description: str(900), aspectRatio: enumeration("none", "1:1", "4:5", "9:16"), frames: list(str(400), 0, 6) }),
 }), 1, 10) })
@@ -84,7 +85,13 @@ const scheduleProperties = POST_SCHEDULE_SCHEMA.properties as Record<string, Jso
 const schedulePost = scheduleProperties.posts!.items as JsonSchema
 export const POST_SCHEDULE_V2_SCHEMA = obj({ ...scheduleProperties, posts: list(obj({ ...schedulePost.properties as Record<string, JsonSchema>, factKeys: list(str(160), 0, 12) }), 1, 10) })
 export const POST_COPY_V2_SCHEMA = obj({ ...POST_COPY_SCHEMA.properties as Record<string, JsonSchema>, factualReferences: obj({ factKeys: list(str(160), 0, 12), proofKeys: list(str(200), 0, 12) }) })
-export const POST_SCHEDULE_V3_SCHEMA = obj({ ...scheduleProperties, posts: list(obj({ ...schedulePost.properties as Record<string, JsonSchema>, factKeys: list(str(160), 0, 12), contentMode: enumeration("social.brandStory", "social.educational", "social.serviceExplainer", "social.trustBuilder", "social.proofLed", "social.directOffer") }), 1, 10) })
+const scheduleV3PostProperties = { ...schedulePost.properties as Record<string, JsonSchema>, factKeys: list(str(160), 0, 12), contentMode: enumeration("social.brandStory", "social.educational", "social.serviceExplainer", "social.trustBuilder", "social.proofLed", "social.directOffer") }
+export const POST_SCHEDULE_V3_SCHEMA = obj({ ...scheduleProperties, posts: list(obj(scheduleV3PostProperties), 1, 10) })
+/** Constrain generation without changing the general schema used for stored plans. */
+export function postScheduleSchemaForChannels(channels: readonly PostChannel[]): JsonSchema {
+  if (!channels.length) throw Error("POST_SCHEDULE_CHANNEL_REQUIRED")
+  return obj({ ...scheduleProperties, posts: list(obj({ ...scheduleV3PostProperties, channels: scheduleChannels(channels) }), 1, 10) })
+}
 export const POSTS_REVIEW_SCHEMA = obj({ summary: str(600), issues: list(obj({ postKey: str(10), severity: enumeration("blocking", "advisory"), message: str(650) }), 0, 10) })
 
 export function validatePostSchedule(value: PostSchedule, directions: string[]): string[] {

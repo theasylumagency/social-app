@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-11T05:02:11.394Z",
+  "runId": "c7979442-689f-46ac-aee8-9794dd03aa53",
+  "suppliedEvidence": {
+    "diagnosticsSha256": "092d7461b14843711f255367c7b9828aa5c444134eff8a82198406c95f12d346",
+    "capturedAt": "2026-10-11T04:52:11.377Z",
+    "postsStatus": "failed",
+    "postsStep": "outline",
+    "attempts": 8,
+    "channelFailureAttempts": 8,
+    "imageFailureAttempts": 2,
+    "observedModels": [
+      "gpt-5.6-terra"
+    ],
+    "observedEfforts": [
+      "medium"
+    ],
+    "cliPostConfiguration": {
+      "outline": {
+        "model": "gpt-6.1-sol",
+        "reasoningEffort": "medium"
+      },
+      "writing": {
+        "model": "gpt-6.1-sol",
+        "reasoningEffort": "medium"
+      },
+      "review": {
+        "model": "gpt-6.1-sol",
+        "reasoningEffort": "low"
+      }
+    },
+    "exactExcludedChannelKnown": false,
+    "pm2ConfigurationDifferenceObserved": true,
+    "preciseEnvironmentOverrideSourceKnown": false
+  },
+  "implementation": {
+    "promptVersion": "founder-post-schedule-v8",
+    "exactAllowedChannelsInInput": true,
+    "generationSchemaRestrictedToAllowedChannels": true,
+    "zeroCadenceChannelsExcluded": true,
+    "impossibleRequestPreflight": true,
+    "storedSchemaPreserved": true,
+    "sourceHashes": {
+      "src/application/weekly-planning/posts.ts": "802cd7b73e7854fb9236bca120c80b1854b3212d1bcf15404230720ab2d4fed5",
+      "src/blueprints/social/weekly-planning/posts.ts": "2cb261603ee87e3d20b8b28c4306377d6dd9b13bd1673a0388ff2bfed7819327",
+      "src/blueprints/social/weekly-planning/prompts/posts.ts": "739291532a062ba3aaf57adaf7412d4af2de2768b975fe4978478765ee941da5",
+      "tests/weekly-post-channels.test.mts": "263beb4d2d9011996cec431628ee463a407a66396f705e6d66ba7aac9e226778",
+      "docs/plans/2026-10-11-post-channel-recovery.md": "cdfeeeddbd041cb4dadc2b367c797337ebd6d621e03bbac672f4544eb9cb338e"
+    },
+    "validationRelaxed": false,
+    "retryAllowanceIncreased": false,
+    "modelDefaultsChanged": false,
+    "migrationAdded": false
+  },
+  "validation": {
+    "fullVerifyExitCode": 0,
+    "domainTestsPassed": 311,
+    "offlineAppTestsPassed": 234,
+    "fullVerifyTestsPassed": 545,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "newRegressionTests": 5,
+    "productionBuild": "passed",
+    "buildId": "XjqGB_Y7v0z63IDzEU6Ko",
+    "lintErrors": 0,
+    "lintWarnings": 6,
+    "verifyLogPath": ".local/2026-10-11-post-channel-verify.log",
+    "verifyLogSha256": "4a8b995c4155912cf5b0e28e24f5f36122eb5228434f3b275ca9dceb98e44115",
+    "providerTransport": "controlled offline responses; no real model request",
+    "fullIntegrationSuiteRepeated": false
+  },
+  "production": {
+    "deployedByAgent": false,
+    "writes": 0,
+    "providerRequests": 0,
+    "liveCompletionConfirmed": false
+  },
+  "remaining": [
+    "Deploy this patch",
+    "Refresh PM2 post settings and verify the new startup configuration",
+    "Retry the existing plan once and verify current v8 receipts and eventual ready state"
+  ]
+}
