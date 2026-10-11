@@ -24,6 +24,13 @@ export function postStageEffort(step: "outline" | "writing" | "review" | "ready"
   return configuredReasoningEffort(step === "outline" ? "OPENAI_POST_PLANNER_REASONING_EFFORT" : step === "writing" ? "OPENAI_POST_WRITER_REASONING_EFFORT" : "OPENAI_POST_REVIEW_REASONING_EFFORT", env)
 }
 
+/** The exact post-stage routing, excluding all unrelated environment values. */
+export function postModelConfiguration(env: ModelEnvironment = process.env) {
+  return Object.fromEntries((["outline", "writing", "review"] as const).map(step => [step, {
+    model: postStageModel(step, env), reasoningEffort: postStageEffort(step, env),
+  }]))
+}
+
 const networkCodes = new Set(["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH", "EPIPE", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"])
 const transientStatuses = new Set([429, 500, 502, 503, 504])
 /** Only allowlisted metadata goes to logs/audits; never error.message or cause wholesale. */

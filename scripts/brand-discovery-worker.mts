@@ -1,4 +1,6 @@
-import { Pool } from "pg"
+import type { Pool } from "pg"
+import { createPostgresPool } from "../src/infrastructure/postgres/pool"
+import { postModelConfiguration } from "../src/infrastructure/models/runtime-policy"
 import { runVisualGenerationTick } from "../src/worker/visuals"
 import { socialPublishingTasks } from "../src/worker/social-publishing"
 import { runSocialWebhookTick } from "../src/worker/social-webhooks"
@@ -20,8 +22,8 @@ const options = { signal: controller.signal, once: process.argv.includes("--once
 const concurrency = workerInteger(process.env.OPERATOR_QUEUE_CONCURRENCY, 2, 8)
 const socialEnvironment = readZernioEnvironment()
 const pools: Pool[] = []
-const pool = (max: number) => {
-  const value = new Pool({ connectionString: process.env.DATABASE_URL, max })
+const pool = (max: number, role: "ai" | "delivery" | "analytics") => {
+  const value = createPostgresPool({ connectionString: process.env.DATABASE_URL, max, role, idleTimeoutMillis: 10_000 })
   pools.push(value)
   return value
 }
@@ -31,13 +33,14 @@ const delivery = role === "all" || role === "delivery"
 const analytics = role === "all" || role === "analytics"
 try {
   if (ai) {
-    const aiPool = pool(workerInteger(process.env.OPERATOR_AI_DATABASE_POOL_MAX, 10, 64))
+    console.info("Operator AI configuration", { at: new Date().toISOString(), pid: process.pid, posts: postModelConfiguration() })
+    const aiPool = pool(workerInteger(process.env.OPERATOR_AI_DATABASE_POOL_MAX, 10, 64), "ai")
     for (const queue of operatorQueues(aiPool, concurrency)) loops.push(runWorkerQueue(queue, { ...options,
       onEvent: event => console.info("Operator job", event) }))
     loops.push(runWorkerTicks("visuals", () => runVisualGenerationTick(aiPool), options))
   }
   // AI cannot exhaust delivery connections; analytics also has its own bounded pool.
-  const analyticsPool = delivery || analytics ? pool(workerInteger(process.env.OPERATOR_ANALYTICS_DATABASE_POOL_MAX, 2, 16)) : null
+  const analyticsPool = delivery || analytics ? pool(workerInteger(process.env.OPERATOR_ANALYTICS_DATABASE_POOL_MAX, 2, 16), "analytics") : null
   let analyticsFlight: ReturnType<typeof runSocialAnalyticsTick> | null = null
   const refreshAnalytics = async (triggered = false): ReturnType<typeof runSocialAnalyticsTick> => {
     if (analyticsFlight) {
@@ -50,7 +53,7 @@ try {
     try { return await current } finally { if (analyticsFlight === current) analyticsFlight = null }
   }
   if (delivery) {
-    const deliveryPool = pool(workerInteger(process.env.OPERATOR_DELIVERY_DATABASE_POOL_MAX, 4, 32))
+    const deliveryPool = pool(workerInteger(process.env.OPERATOR_DELIVERY_DATABASE_POOL_MAX, 4, 32), "delivery")
     const tasks = socialPublishingTasks(deliveryPool, socialEnvironment)
     loops.push(runWorkerTicks("publishing", tasks.publish, options))
     loops.push(runWorkerTicks("publish-recovery", tasks.recover, options))

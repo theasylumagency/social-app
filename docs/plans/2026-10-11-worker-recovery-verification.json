@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-11T04:45:24.106Z",
+  "runId": "c7979442-689f-46ac-aee8-9794dd03aa53",
+  "suppliedEvidence": {
+    "errorLogSha256": "9914de97a47078c5d93230a6a384981415e5807672bd5184471999b0dafb624e",
+    "planSha256": "3bc07f5b1a2c5a4d7acd7cab9d8fa3cb2dd377e766ae2d7b1a2a5cb8b75d7a6b",
+    "containsAttemptTimestamps": false,
+    "reportedModels": [
+      "gpt-5.6-terra"
+    ],
+    "failedPostStage": "outline",
+    "reportedFailureKind": "contract",
+    "postgresIdleErrorCode": "57P01",
+    "serverEnvFileConfirmedByUser": ".env.local"
+  },
+  "implementation": {
+    "idlePoolErrorHandled": true,
+    "workerUsesSharedPool": true,
+    "workerStartupPostRoutingLogged": true,
+    "boundedReadOnlyDiagnosticsAdded": true,
+    "modelDefaultsChanged": false,
+    "validationRelaxed": false,
+    "newMigration": false,
+    "sourceHashes": {
+      "scripts/brand-discovery-worker.mts": "83035cd9537cb567497dbdb28466fd480cbfdd12c3c73d98764d14be907b6735",
+      "scripts/weekly-posts-diagnostics.mts": "8651e383c9146988c6ec097133dd7865fce5a5ce58d20f6db4b7bfef650c54f5",
+      "src/infrastructure/postgres/pool.ts": "2f5498cc6134df756b874aa027b6b000b72a2779569475fb5cd786b49b96a70f",
+      "src/infrastructure/models/runtime-policy.ts": "ca3e40d6d20955535bd9a107f90e190c4c961acd9e323566bac0608125378d31",
+      "src/application/evaluation/weekly-posts-diagnostics.ts": "cf87b1a4e5e5a89816a88360712dbe39f00d27ca995506f6a0c012996ccc516d",
+      "tests/postgres-pool.test.mts": "f8702c7eb970953430f5ed8474445ea665145ee4b525b739e26b9781d20d555a",
+      "tests/weekly-posts-diagnostics.test.mts": "403be927f4c7237a1e3eda5d9c1d429f551de7fed9b4b0938be5222d84017f4d",
+      "tests/postgres-pool-recovery.integration.test.mts": "2e380a29bd692fa029e93a76b9fa8f13b5ee9d11b3f0cca66b94dd6e1509d5a2"
+    }
+  },
+  "validation": {
+    "fullVerifyExitCode": 0,
+    "domainTestsPassed": 311,
+    "offlineAppTestsPassed": 229,
+    "fullVerifyTestsPassed": 540,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "productionBuild": "passed",
+    "buildId": "DGdiQ2FiUyGYaSPZNT0hi",
+    "lintErrors": 0,
+    "lintWarnings": 6,
+    "verifyLogPath": ".local/2026-10-11-worker-recovery-verify.log",
+    "verifyLogSha256": "84f380fbe7ac663f465934de23572d6eb657b24ec51e07aa3a5795f68327f988",
+    "targetedIntegration": {
+      "testsPassed": 2,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "evidence": "Observed exec output; terminated only the test-created idle local connection, then reconnected. Also queried an isolated schema with the real diagnostic SQL and removed it afterwards."
+    },
+    "fullIntegrationSuiteRepeated": false
+  },
+  "externalActions": {
+    "providerRequests": 0,
+    "productionDatabaseWritten": false,
+    "productionDeployed": false
+  },
+  "unresolved": [
+    "The exact contract violations require this run's persisted validation_errors; the supplied log reports only kind=contract.",
+    "Active PM2 model/effort configuration must be verified after deployment. A CLI environment snapshot alone is insufficient.",
+    "The final successful generation of this live plan has not yet been observed."
+  ]
+}
