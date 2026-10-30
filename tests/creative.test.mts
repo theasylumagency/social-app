@@ -75,15 +75,18 @@ test("concept contracts reject duplicates, unknown platforms and incomplete revi
 test("planner selects real compatible concepts; Writer receives selected idea with normal constraints", async () => {
   const run = await completePlanningFixture(await planningFixture()), payload = payloadFixture()
   const pool = payload.creative!
+  const separate = structuredClone(payload.outline!)
+  separate.posts.forEach((post, i) => { post.channels = [post.channels[i % 2]!] })
+  const channelPlan = { channels: [{ channel: "facebook" as const, count: 2, role: "ამბავი", reason: "ორი სხვადასხვა კითხვა", omissionReason: null }, { channel: "instagram" as const, count: 1, role: "ვიზუალური მაგალითი", reason: "ერთი თვალსაჩინო მაგალითი", omissionReason: null }] }
   const scheduled = await createPostSchedule(run, mockReasoner(call => {
     assert.equal((call.input as { creativeDirections: unknown[] }).creativeDirections.length, 4)
-    const invalid = structuredClone(payload.outline!); invalid.posts[0]!.creativeDirectionKey = "unknown"
+    const invalid = structuredClone(separate); invalid.posts[0]!.creativeDirectionKey = "unknown"
     assert.ok(call.validate!(invalid).length)
-    pool.directions[0]!.platforms = ["facebook"]
-    assert.ok(call.validate!(payload.outline).some(e => e.includes("channel")))
+    pool.directions[0]!.platforms = ["instagram"]
+    assert.ok(call.validate!(separate).some(e => e.includes("channel")))
     pool.directions[0]!.platforms = ["facebook", "instagram"]
-    return payload.outline
-  }), { ...payload, outline: null })
+    return separate
+  }), { ...payload, channelPlan, outline: null })
   assert.equal(scheduled.posts[0]!.creativeDirectionKey, "c1")
   assert.deepEqual(validateSchema(scheduleFixture(), POST_SCHEDULE_SCHEMA), [])
   assert.ok(validateSchema(scheduleFixture(), creativePostScheduleSchema(pool.directions)).length)

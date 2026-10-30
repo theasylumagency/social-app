@@ -4,6 +4,8 @@ import type { Pool } from "pg"
 import { createPostSchedule, writePost, reviewPosts, postChannels } from "../application/weekly-planning/posts"
 import { exploreCreativeDirections } from "../application/weekly-planning/creative"
 import { compileCreativeInput } from "../blueprints/social/creative/context"
+import { createChannelPlan } from "../application/weekly-planning/channel-plan"
+import { channelPlanCadence } from "../blueprints/social/weekly-planning/channel-plan"
 import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
 import { readPlanningRun, recordPlanningModelRun } from "../infrastructure/postgres/weekly-planning-store"
@@ -15,7 +17,8 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
     if (!await hasSubscription(pool, ownerId)) return
     const claim = await claimWeeklyPosts(pool, ownerId, id)
     if (!claim) return
-    const exploring = claim.batch.step === "outline" && claim.batch.payload.creative === undefined && creativeExplorationEnabled()
+    const channelPlan = claim.batch.payload.channelPlan
+    const exploring = claim.batch.step === "outline" && !!channelPlan?.channels.some(c => c.count > 0) && claim.batch.payload.creative === undefined && creativeExplorationEnabled()
     const model = exploring ? creativeStageModel("exploration") : postStageModel(claim.batch.step)
     try {
       const run = await readPlanningRun(pool, ownerId, id)
@@ -24,16 +27,23 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
       const reason = createBrandReasoner((r) => recordPlanningModelRun(pool, id, r), { model, reasoningEffort: "low" })
       let step = claim.batch.step
       if (step === "outline") {
+        if (!payload.channelPlan) {
+          payload.channelPlan = await createChannelPlan(run, reason, payload)
+          if (!await saveWeeklyPosts(pool, id, claim.token, payload, "outline")) throw Error("MODEL_LOST_LEASE")
+          continue
+        }
         if (exploring) {
           payload.creative = await exploreCreativeDirections(compileCreativeInput(run.payload.basis, postChannels(run, true)), reason)
           // A durable checkpoint and a fresh claim before the next paid call: no lease/budget doubling.
           if (!await saveWeeklyPosts(pool, id, claim.token, payload, "outline")) throw Error("MODEL_LOST_LEASE")
           continue
         }
-        payload.creative ??= null
+        if (!creativeExplorationEnabled()) payload.creative ??= null
         payload.outline = await createPostSchedule(run, reason, payload)
         delete payload.sequenceReview
-        step = "writing"
+        const cadence = channelPlanCadence(payload.channelPlan)
+        step = cadence.facebook + cadence.instagram ? "writing" : "ready"
+        if (step === "ready") payload.review = { summary: "ამ კვირაში პოსტები არ იგეგმება. თითოეული არხის მიზეზი გეგმაშია მითითებული.", issues: [] }
       }
       else if (step === "writing") {
         const pending = payload.outline!.posts.map((_, i) => `p${i + 1}`).filter((key) => !payload.copies[key]).slice(0, 3)

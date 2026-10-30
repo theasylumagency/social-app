@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:channels": "node --import tsx --test tests/channel-planning.test.mts tests/weekly-posts-ux.test.mts",
     "test:creative": "node --import tsx --test tests/creative.test.mts tests/creative-eval.test.mts",
     "eval:creative": "node --env-file=.env.local --import tsx evals/creative/cli.ts",
     "test:notes": "node --import tsx --test tests/contextual-notes.test.mts tests/voice-silence.test.mts",
@@ -50,7 +51,7 @@
     "eval:golden:execution-spec": "node --env-file=.env.local --import tsx evals/golden/content-execution-spec-cli.ts",
     "eval:golden:writer": "node --env-file=.env.local --import tsx evals/golden/content-writer-cli.ts",
     "eval:golden:repair": "node --env-file=.env.local --import tsx evals/golden/content-repair-cli.ts",
-    "verify": "npm run lint && npm test && npm run test:creative && npm run build"
+    "verify": "npm run lint && npm test && npm run test:creative && npm run test:channels && npm run build"
   },
   "dependencies": {
     "better-auth": "^1.7.2",

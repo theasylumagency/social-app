@@ -3,6 +3,7 @@ import type { PostEditorialReview } from "./post-editorial"
 import type { SequenceReview } from "./sequence"
 import type { OperatingRule } from "../../../core/domain/operating-policy"
 import { needsCreativeRepair, type CreativeExploration, type CreativeReview } from "../creative/model"
+import type { WeeklyChannelPlan } from "./channel-plan"
 
 export type PostChannel = "facebook" | "instagram"
 export type PostCadence = Record<PostChannel, number>
@@ -29,6 +30,8 @@ export type PostSchedule = { summary: string; cadenceReason: string; channelReas
 export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview; creative?: CreativeReview }
 export type PostRepairFeedback = { issues: PostsReview["issues"]; instructions: string[] }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  /** A durable channel decision, made before formats and individual post briefs. */
+  channelPlan?: WeeklyChannelPlan
   /** Undefined: not explored; null: disabled for this batch. Stored outside factual knowledge. */
   creative?: CreativeExploration | null
   /** Current rules captured whenever an existing batch is directly revised. */
@@ -91,6 +94,13 @@ export function creativePostScheduleSchema(directions: CreativeExploration["dire
   post.required.push("creativeDirectionKey")
   return schema
 }
+export function independentPostScheduleSchema(creative?: CreativeExploration | null): JsonSchema {
+  const schema = creative ? creativePostScheduleSchema(creative.directions) : structuredClone(POST_SCHEDULE_SCHEMA)
+  const properties = schema.properties as Record<string, JsonSchema>
+  const post = properties.posts!.items as { properties: Record<string, JsonSchema> }
+  post.properties.channels = { ...post.properties.channels, minItems: 1, maxItems: 1 }
+  return schema
+}
 export const POSTS_REVIEW_SCHEMA = obj({ summary: str(600), issues: list(obj({ postKey: str(10), severity: enumeration("blocking", "advisory"), message: str(650) }), 0, 10) })
 
 export function validatePostSchedule(value: PostSchedule, directions: string[]): string[] {
@@ -105,10 +115,12 @@ export function validatePostSchedule(value: PostSchedule, directions: string[]):
     if (p.format === "story" && (p.visual.kind !== "slides" || p.visual.frames.length < 1 || p.visual.frames.length > 3 || p.visual.aspectRatio !== "9:16")) errors.push("Story requires 1–3 vertical frame briefs")
     if (p.format === "reel" && (p.visual.kind !== "video" || p.visual.aspectRatio !== "9:16" || !p.visual.frames.length)) errors.push("Reel requires vertical footage / scene briefs")
   })
-  if (new Set(value.posts.map((p) => p.title.trim().toLowerCase())).size !== value.posts.length) errors.push("Posts must have distinct titles and communication jobs")
   const normalize = (v: string) => v.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ")
-  const jobs = value.posts.map((p) => JSON.stringify([normalize(p.brief.job), normalize(p.brief.takeaway)]))
-  if (new Set(jobs).size !== jobs.length) errors.push("Duplicate post job and takeaway; change reader value, not the title or format")
+  value.posts.forEach((post, i) => {
+    const sameChannel = value.posts.slice(0, i).filter(other => other.channels.some(c => post.channels.some(p => p.channel === c.channel)))
+    if (sameChannel.some(other => normalize(other.title) === normalize(post.title))) errors.push("Posts on the same channel must have distinct titles")
+    if (sameChannel.some(other => normalize(other.brief.job) === normalize(post.brief.job) && normalize(other.brief.takeaway) === normalize(post.brief.takeaway))) errors.push("Duplicate post job and takeaway on the same channel; change reader value, not the title or format")
+  })
   return errors
 }
 export function validatePostCopy(value: PostCopy, post: PostOutline): string[] {

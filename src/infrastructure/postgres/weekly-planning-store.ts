@@ -18,6 +18,7 @@ import { isDiscoveryId } from "./brand-discovery-store"
 import { emptyPosts, isPostCadence, countPostChannels, type PostsPayload, type PostCadence } from "../../blueprints/social/weekly-planning/posts"
 import { resizePostSchedule, spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
 import { assemblePlanningRun } from "../../application/weekly-planning/advance"
+import { fixedChannelPlan, permittedPostChannels } from "../../application/weekly-planning/channel-plan"
 import { readWeeklyPosts, listPostAssets } from "./weekly-posts-store"
 import { listChannelPolicies, listOperatingRules } from "./operating-policy-store"
 
@@ -180,7 +181,7 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
     const previous = latest.rows[0] ? fromRow(latest.rows[0]) : null
     if (!previous || previous.id !== parentId || previous.version !== version || !["ready", "approved"].includes(previous.status) || !previous.payload.plan || !previous.payload.review || previous.payload.review.concerns.some((v) => v.severity === "blocking")) throw new PlanningConflict("გეგმა შეიცვალა ან ჯერ დასაზუსტებელია. განაახლეთ გვერდი.")
     if ((await readStrategyView(c, ownerId, previous.brandId)).active?.id !== previous.payload.socialStrategy?.id || !previous.payload.socialStrategy) throw new PlanningConflict("ჯერ კვირის გეგმა მოქმედ სოციალურ სტრატეგიას მოარგეთ.")
-    const allowed = operatingChannels(previous.payload.socialStrategy.payload.proposal)
+    const allowed = permittedPostChannels(previous)
     if ((["facebook", "instagram"] as const).some((channel) => cadence[channel] > 0 && !allowed.includes(channel))) throw new PlanningConflict("ეს არხი მოქმედ სტრატეგიაში გამოსაყენებელი არ არის. ჯერ სტრატეგიული რეკომენდაცია დააზუსტეთ.")
     const foundation = await basis(c, ownerId, previous.brandId)
     if (!foundation || foundation.sessionId !== previous.payload.basis.sessionId || foundation.revision !== previous.payload.basis.revision) throw new PlanningConflict("ბრენდის საფუძველი განახლდა. ჯერ კვირის გეგმა განაახლეთ.")
@@ -197,6 +198,7 @@ export async function changeWeeklyCadence(pool: Pool, ownerId: string, id: strin
     payload.previousVersion = summarizePlan(previous.payload.plan)
     payload.plannedOn = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tbilisi" })
     const next: PlanningRun = { ...previous, id, version: version + 1, status: "ready", step: "ready", payload, error: null, leaseUntil: null, createdAt: now, updatedAt: now }
+    resized.payload.channelPlan ??= fixedChannelPlan(next)!
     payload.plan = assemblePlanningRun(next, now)
     resized.payload.outline!.posts = spreadPostDays(resized.payload.outline!.posts, next.week, payload.plannedOn)
     if (previous.status !== "approved") {
@@ -235,7 +237,7 @@ export async function finishPlanningStep(pool: Pool, run: PlanningRun, token: st
     const changed = await c.query("UPDATE weekly_planning_runs SET payload=$4::jsonb,step=$5,status=$6,lease_token=NULL,lease_until=NULL,error=NULL,updated_at=now() WHERE id=$1 AND version=$2 AND lease_token=$3 RETURNING id", [run.id, run.version, token, JSON.stringify(payload), step, step === "ready" ? "ready" : "queued"])
     if (!changed.rowCount) return false
     if (step === "ready" && payload.founderPosts && !payload.review?.concerns.some((c) => c.severity === "blocking")) await c.query("INSERT INTO weekly_post_batches(run_id,status,step,payload) VALUES($1,'queued','outline',$2::jsonb) ON CONFLICT(run_id) DO NOTHING", [run.id, JSON.stringify(emptyPosts())])
-    if (step === "ready" && payload.cadence?.facebook === 0 && payload.cadence?.instagram === 0) await c.query("UPDATE weekly_post_batches SET status='ready',step='ready',payload=$2::jsonb WHERE run_id=$1", [run.id, JSON.stringify({ ...emptyPosts(), cadence: payload.cadence, outline: { summary: "ამ კვირაში პოსტები არჩეული არ არის.", cadenceReason: "მოქმედი სტრატეგიისა და შენახული რაოდენობის მიხედვით, ამ კვირაში ამ არხებზე პოსტები არ მზადდება.", channelReason: "რაოდენობის შეცვლა კვირის ტაბში შეგიძლიათ.", posts: [] }, review: { summary: "ტექსტები მოსამზადებელი არ არის.", issues: [] } })])
+    if (step === "ready" && payload.cadence?.facebook === 0 && payload.cadence?.instagram === 0) await c.query("UPDATE weekly_post_batches SET status='ready',step='ready',payload=$2::jsonb WHERE run_id=$1", [run.id, JSON.stringify({ ...emptyPosts(), cadence: payload.cadence, channelPlan: fixedChannelPlan({ ...run, payload }), outline: { summary: "ამ კვირაში პოსტები არჩეული არ არის.", cadenceReason: "მოქმედი სტრატეგიისა და შენახული რაოდენობის მიხედვით, ამ კვირაში ამ არხებზე პოსტები არ მზადდება.", channelReason: "რაოდენობის შეცვლა კვირის ტაბში შეგიძლიათ.", posts: [] }, review: { summary: "ტექსტები მოსამზადებელი არ არის.", issues: [] } })])
     await event(c, run.id, `completed:${run.step}`, { step, ...(step === "ready" ? { plan: payload.plan, review: payload.review } : {}) })
     return true
   })

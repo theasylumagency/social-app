@@ -72,6 +72,26 @@ test("progress follows writing and combined review without a phantom novelty sta
   assert.match(postsPresentation(batch).title, /ბრენდის ხმას.*ფაქტებს/)
 })
 
+test("Week and Content explain each channel, including a deliberate zero before posts are generated", () => {
+  const batch = batchFixture()
+  batch.step = "outline"; batch.payload.outline = null
+  batch.payload.channelPlan = { channels: [
+    { channel: "facebook", count: 0, role: "კლიენტის კითხვების განხილვა", reason: "ამ კვირის პრიორიტეტი", omissionReason: "თქვენი მითითებით კამპანია ამ კვირაში მხოლოდ Instagram-ზე ტარდება." },
+    { channel: "instagram", count: 2, role: "ნივთის დეტალების ვიზუალურად ჩვენება", reason: "ორი სხვადასხვა კითხვა", omissionReason: null },
+  ] }
+  const initial = { run, approved: null, history: [], basis: run.payload.basis, stale: false, posts: batch }
+  for (const mode of ["week", "content"] as const) {
+    const html = renderToStaticMarkup(createElement(WeeklyPlanningClient, { initial, initialPriority: "", brandId: run.brandId, ownerId: run.ownerId, week: run.week, mode }))
+    const doc = new JSDOM(html).window.document
+    const summary = doc.querySelector('[aria-label="თითოეული არხის კვირის გეგმა"]')
+    assert.ok(summary)
+    assert.match(summary.textContent!, /Facebook · 0 პოსტი/)
+    assert.match(summary.textContent!, /Instagram · 2 პოსტი/)
+    assert.match(summary.textContent!, /რატომ არ ვაქვეყნებთ:/)
+    assert.ok(summary.textContent!.includes(batch.payload.channelPlan.channels[0]!.omissionReason!))
+  }
+})
+
 test("written copy is provisional and a single repair preserves work without implying all posts were repaired", () => {
   const batch = batchFixture()
   batch.payload.copies.p1 = copyFixture()

@@ -1,4 +1,5 @@
 import { countPostChannels, postRepairFeedback, type PostCadence, type PostOutline, type PostsPayload } from "./posts"
+import { resizeChannelPlan } from "./channel-plan"
 
 /** Keep existing communication jobs and channel copies; a day change needs no writer. */
 export function resizePostSchedule(previous: PostsPayload, cadence: PostCadence) {
@@ -6,6 +7,7 @@ export function resizePostSchedule(previous: PostsPayload, cadence: PostCadence)
   const payload: PostsPayload = { outline: { ...previous.outline, summary: `ამ კვირაში: Facebook — ${cadence.facebook}, Instagram — ${cadence.instagram} პოსტი.`, posts: [], cadenceReason: "რაოდენობა თქვენი არჩევანით განახლდა. დარჩენილი პოსტები და მათი საკომუნიკაციო როლები შენარჩუნებულია.", channelReason: "არხებზე განაწილება თქვენს მიერ მითითებულ რაოდენობას მიჰყვება; თითოეული პოსტის არხის დასაბუთება მის ბარათშია." }, copies: {}, repairDrafts: {}, review: null, repairs: 0, cadence }
   const remaining = { ...cadence }
   if (previous.creative !== undefined) payload.creative = structuredClone(previous.creative)
+  if (previous.channelPlan) payload.channelPlan = resizeChannelPlan(previous.channelPlan, cadence)
   const mapping: { from: string; to: string }[] = []
   const issues: NonNullable<PostsPayload["review"]>["issues"] = []
   previous.outline.posts.forEach((post, i) => {

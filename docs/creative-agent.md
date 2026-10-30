@@ -6,6 +6,10 @@ Writer receives that idea alongside its existing brand, task, voice and factual
 boundaries. A separate Creative Critic checks whether the mechanism survives in
 each channel's caption, frames or script, considering planned visuals as plans.
 
+[Channel planning](channel-planning.md) first saves each channel's role and count.
+New briefs are independent per channel; they can share a creative concept while
+choosing different formats. Fully paused weeks skip creative generation.
+
 ## Boundaries and choices
 
 - `src/blueprints/social/creative` owns the social contracts, minimal input

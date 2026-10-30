@@ -1,19 +1,20 @@
 import { duplicateCopyIssues } from "../../blueprints/social/weekly-planning/duplicate-hygiene"
-import { operatingChannels } from "../../blueprints/social/strategy/model"
 import type { PlanningRun } from "../../blueprints/social/weekly-planning/model"
 import { compilePlanningContext } from "./advance"
 import type { BrandReasoner } from "../../infrastructure/models/brand-reasoning"
-import { POST_SCHEDULE_SCHEMA, POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, creativePostScheduleSchema, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview } from "../../blueprints/social/weekly-planning/posts"
+import { POST_COPY_SCHEMA, POSTS_REVIEW_SCHEMA, independentPostScheduleSchema, validatePostSchedule, validatePostCopy, type PostSchedule, type PostCopy, type PostsPayload, type PostsReview } from "../../blueprints/social/weekly-planning/posts"
 import { POST_SCHEDULE_PROMPT, POST_WRITER_PROMPT, POSTS_REVIEW_PROMPT } from "../../blueprints/social/weekly-planning/prompts/posts"
 import { validatePlanningProse } from "../../blueprints/social/weekly-planning/validation"
-import { spreadPostDays, validateCadence } from "../../blueprints/social/weekly-planning/cadence"
+import { spreadPostDays } from "../../blueprints/social/weekly-planning/cadence"
 import { compilePostGenerationContext, compilePostEditorialContext, validateVariantOperatingRules } from "../../blueprints/social/weekly-planning/post-context"
 import { POST_EDITORIAL_PROMPT, POST_EDITORIAL_SCHEMA, validatePostEditorialReview, consolidatePostReviews, type PostEditorialReview } from "../../blueprints/social/weekly-planning/post-editorial"
 import { CREATIVE_REVIEW_SCHEMA, consolidateCreativeReview, selectedCreativeDirection, validateCreativeReview, validateCreativeSelection, type CreativeReview, type CreativeReviewInput } from "../../blueprints/social/creative/model"
 import { CREATIVE_CRITIC_PROMPT } from "../../blueprints/social/creative/prompts"
+import { channelPlanCadence, validateChannelExecutions, validateChannelPlan } from "../../blueprints/social/weekly-planning/channel-plan"
+import { channelPlanningContext, fixedChannelPlan, permittedPostChannels } from "./channel-plan"
 
 export function postChannels(run: PlanningRun, includePaused = false) {
-  return (run.payload.socialStrategy ? operatingChannels(run.payload.socialStrategy.payload.proposal) : ["facebook", "instagram"] as const).filter(channel => run.payload.channelPolicies?.find(policy => policy.channel === channel)?.active !== false && (includePaused || !run.payload.cadence || run.payload.cadence[channel] > 0))
+  return permittedPostChannels(run).filter(channel => includePaused || !run.payload.cadence || run.payload.cadence[channel] > 0)
 }
 
 export function postsContext(run: PlanningRun) {
@@ -31,13 +32,18 @@ function keys(run: PlanningRun) {
   return [...c.audiences.map((a) => a.audienceKey), ...c.selectedBrandGoals.map((g) => g.goalKey), ...c.contentDirections.map((d) => d.contentDirectionKey), ...Array.from({ length: 10 }, (_, i) => `p${i + 1}`)]
 }
 export async function createPostSchedule(run: PlanningRun, reason: BrandReasoner, existing?: PostsPayload) {
-  const allowed = postChannels(run)
-  if (!allowed.length) throw Error("რეკომენდებული არხებისთვის კონტენტის შესრულება ჯერ ცალკე გამართვას საჭიროებს.")
+  const channelPlan = existing?.channelPlan ?? fixedChannelPlan(run)
+  if (!channelPlan) throw Error("Plan channel roles and counts before creating posts")
+  const context = channelPlanningContext(run, existing)
+  const planErrors = validateChannelPlan(channelPlan, { allowed: permittedPostChannels(run), requested: run.payload.cadence ?? null, retained: context.retainedCounts })
+  if (planErrors.length) throw Error(`Invalid saved channel plan: ${planErrors.join("; ")}`)
+  const cadence = channelPlanCadence(channelPlan)
+  if (cadence.facebook + cadence.instagram === 0) return { summary: "ამ კვირაში პოსტების მომზადება შეჩერებულია.", cadenceReason: channelPlan.channels.map(c => c.omissionReason).join(" "), channelReason: channelPlan.channels.map(c => `${c.channel === "facebook" ? "Facebook" : "Instagram"}: ${c.omissionReason}`).join(" "), posts: [] }
   const kept = existing?.outline?.posts ?? []
   const combine = (v: PostSchedule): PostSchedule => ({ ...v, posts: spreadPostDays([...kept, ...v.posts], run.week, run.payload.plannedOn) })
-  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v6", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), retainedPosts: kept, ...(existing?.creative ? { creativeDirections: existing.creative.directions } : {}) }, schema: existing?.creative ? creativePostScheduleSchema(existing.creative.directions) : POST_SCHEDULE_SCHEMA, validate: (v) => {
+  const result = await reason<PostSchedule>({ step: "post_schedule", version: "founder-post-schedule-v7", prompt: POST_SCHEDULE_PROMPT, input: { ...postsContext(run), channelPlan, requestedCadence: cadence, retainedPosts: kept, ...(existing?.creative ? { creativeDirections: existing.creative.directions } : {}) }, schema: independentPostScheduleSchema(existing?.creative), validate: (v) => {
     const value = combine(v as PostSchedule)
-    return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...(existing?.creative ? validateCreativeSelection((v as PostSchedule).posts, existing.creative) : []), ...(value.posts.some((p) => p.channels.some((c) => !allowed.includes(c.channel))) ? ["Use only channels permitted by the approved social strategy"] : []), ...(run.payload.cadence ? validateCadence(value.posts, run.payload.cadence) : value.posts.length < 2 || value.posts.length > 5 ? ["Recommend 2–5 unique posts"] : []), ...validatePlanningProse(v, keys(run))]
+    return [...validatePostSchedule(value, run.payload.directions.map((_, i) => `d${i + 1}`)), ...validateChannelExecutions((v as PostSchedule).posts, value.posts, channelPlan), ...(existing?.creative ? validateCreativeSelection((v as PostSchedule).posts, existing.creative) : []), ...validatePlanningProse(v, [...keys(run), ...(existing?.creative?.directions.map(d => d.key) ?? [])])]
   } })
   return combine(result)
 }
@@ -45,7 +51,7 @@ export async function writePost(run: PlanningRun, payload: PostsPayload, key: st
   const post = payload.outline!.posts[Number(key.slice(1)) - 1]!
   const executionRun = payload.operatingRules ? { ...run, payload: { ...run.payload, operatingRules: payload.operatingRules } } : run
   const concept = selectedCreativeDirection(payload, post)
-  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v4", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(executionRun, post), ...(concept ? { creativeDirection: concept, plannedVisual: post.visual } : {}), siblingJobs: payload.outline!.posts.filter((p) => p !== post).map((p) => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [], repairInstructions: payload.repairFeedback?.[key]?.instructions ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...(v as PostCopy).variants.flatMap(variant => validateVariantOperatingRules(variant, executionRun.payload.operatingRules ?? [])), ...validatePlanningProse(v, [...keys(run), ...(payload.creative?.directions.map(d => d.key) ?? [])])] })
+  return reason<PostCopy>({ step: `post_writer_${key}`, version: "founder-post-writer-v5", prompt: POST_WRITER_PROMPT, input: { ...compilePostGenerationContext(executionRun, post), ...(concept ? { creativeDirection: concept, plannedVisual: post.visual } : {}), channelRoles: payload.channelPlan?.channels.filter(c => post.channels.some(p => p.channel === c.channel)) ?? [], siblingJobs: payload.outline!.posts.filter(p => p !== post && p.channels.some(c => post.channels.some(selected => selected.channel === c.channel))).map(p => ({ job: p.brief.job, takeaway: p.brief.takeaway })), previousDraft: payload.repairDrafts?.[key] ?? null, reviewFeedback: payload.review?.issues.filter((i) => i.postKey === key) ?? [], repairInstructions: payload.repairFeedback?.[key]?.instructions ?? [] }, schema: POST_COPY_SCHEMA, validate: (v) => [...validatePostCopy(v as PostCopy, post), ...(v as PostCopy).variants.flatMap(variant => validateVariantOperatingRules(variant, executionRun.payload.operatingRules ?? [])), ...validatePlanningProse(v, [...keys(run), ...(payload.creative?.directions.map(d => d.key) ?? [])])] })
 }
 export function creativeReviewInput(run: PlanningRun, payload: PostsPayload): CreativeReviewInput[] {
   return payload.outline!.posts.flatMap((post, i) => {

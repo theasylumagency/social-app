@@ -181,6 +181,8 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const pauseBatch = (await readWeeklyPosts(pool, "owner", paused.id))!
   assert.equal(pauseBatch.status, "ready")
   assert.deepEqual(pauseBatch.payload.outline!.posts, [])
+  assert.deepEqual(pauseBatch.payload.channelPlan?.channels.map(c => c.count), [0, 0])
+  assert.ok(pauseBatch.payload.channelPlan?.channels.every(c => c.omissionReason))
   assert.equal(await claimWeeklyPosts(pool, "owner", paused.id), null)
   await approvePlanningRun(pool, "owner", paused.id, 4)
   assert.equal((await pool.query("SELECT count(*)::int n FROM weekly_planning_model_runs WHERE run_id IN ($1,$2,$3)", [reduced.id, grown.id, paused.id])).rows[0].n, 0)
@@ -214,15 +216,22 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const requests: { step: string; model: string }[] = []
   let providerDown = true
   let plannerDown = true
+  let pauseChannels = false
   t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
     assert.equal(url, "https://api.openai.com/v1/responses")
     const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
     requests.push({ step, model: body.model })
     if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
     if (step === "post_schedule" && plannerDown) return new Response("planner unavailable", { status: 400 })
-    const schedule = scheduleFixture(); schedule.posts.forEach((p, i) => { p.creativeDirectionKey = `c${i + 1}` })
-    const result = step === "creative_exploration" ? creativeProposal() : step === "creative_critic" ? creativeReviewFixture() : step === "post_schedule" ? schedule : step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
-    if (step.startsWith("post_writer_") && "variants" in result) for (const v of result.variants) v.caption = step === "post_writer_p2" ? "რა გამოგვიგზავნოთ? გადაიღეთ ნივთის სრული ხედი და დაზიანება ახლოდან." : "რომელი კვალი უნდა შევინარჩუნოთ? წინასწარ გამიჯნეთ ძველი ფაქტურა და ახალი დაზიანება."
+    const schedule = scheduleFixture(); schedule.posts.forEach((p, i) => { p.creativeDirectionKey = `c${i + 1}`; p.channels = [p.channels[i % 2]!] })
+    const channelPlan = { channels: [{ channel: "facebook", count: 2, role: "სამუშაო პროცესის ამბები", reason: "ორი განსხვავებული საკითხი", omissionReason: null }, { channel: "instagram", count: 1, role: "თვალსაჩინო მაგალითი", reason: "ერთი ვიზუალური კითხვა", omissionReason: null }] }
+    const critic = creativeReviewFixture(); critic.posts = critic.posts.filter(p => schedule.posts[Number(p.postKey.slice(1)) - 1]!.channels.some(c => c.channel === p.channel))
+    const result = step === "post_channel_plan" ? pauseChannels ? { channels: channelPlan.channels.map(c => ({ ...c, count: 0, omissionReason: "თქვენი მითითებით ამ კვირაში მასალების მომზადებას ვუთმობთ დროს." })) } : channelPlan : step === "creative_exploration" ? creativeProposal() : step === "creative_critic" ? critic : step === "post_schedule" ? schedule : step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
+    if (step.startsWith("post_writer_") && "variants" in result) {
+      const input = JSON.parse(body.input)
+      result.variants = result.variants.filter(v => input.task.channels.includes(v.channel))
+      for (const v of result.variants) v.caption = step === "post_writer_p1" ? "რა ჩანს ფოტოზე და რა უნდა შეფასდეს ადგილზე? დაზიანების დეტალი შეფასებაში გვეხმარება." : step === "post_writer_p2" ? "რა გამოგვიგზავნოთ? გადაიღეთ ნივთის სრული ხედი და დაზიანება ახლოდან." : "რომელი კვალი უნდა შევინარჩუნოთ? წინასწარ გამიჯნეთ ძველი ფაქტურა და ახალი დაზიანება."
+    }
     return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
   })
   await runWeeklyPosts(pool, "owner", runtime.id)
@@ -256,6 +265,7 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal(checkpoint.status, "failed")
   assert.equal(checkpoint.step, "outline")
   assert.equal(checkpoint.payload.creative?.directions.length, 4)
+  assert.deepEqual(checkpoint.payload.channelPlan?.channels.map(c => c.count), [2, 1])
   assert.equal(checkpoint.payload.outline, null)
   assert.deepEqual(requests.filter(r => r.step === "creative_exploration"), [{ step: "creative_exploration", model: "test-creative" }])
   plannerDown = false
@@ -267,8 +277,12 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   const creativeReady = (await readWeeklyPosts(pool, "owner", creativeRun.id))!
   assert.equal(creativeReady.status, "ready")
   assert.deepEqual(creativeReady.payload.creative, checkpoint.payload.creative)
+  assert.deepEqual(creativeReady.payload.channelPlan, checkpoint.payload.channelPlan)
+  assert.ok(creativeReady.payload.outline!.posts.every(p => p.channels.length === 1))
   assert.equal(creativeReady.payload.outline!.posts[0]!.creativeDirectionKey, "c1")
-  assert.equal(creativeReady.payload.review?.creative?.posts.length, 6)
+  assert.equal(creativeReady.payload.review?.creative?.posts.length, 3)
+  assert.equal(requests.filter(r => r.step === "post_channel_plan").length, 1)
+  assert.ok(requests.findIndex(r => r.step === "post_channel_plan") < requests.findIndex(r => r.step === "creative_exploration"))
   assert.equal(requests.filter(r => r.step === "creative_exploration").length, 1)
   assert.ok(requests.filter(r => r.step === "creative_critic").every(r => r.model === "test-critic"))
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
@@ -277,4 +291,24 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   await assert.rejects(() => approvePlanningRun(pool, "owner", runtime.id, 1))
   await assert.rejects(() => changeWeeklyCadence(pool, "owner", randomUUID(), restart.id, restart.version, { facebook: 1, instagram: 1 }), /საფუძველი/)
   assert.equal((await readPlanningRun(pool, "owner", runtime.id))?.payload.basis.revision, 1)
+  // A deliberate full pause must finish without buying concepts/copy, but allow later additions.
+  pauseChannels = true
+  const pauseStart = requests.length
+  const pauseBrand = await strategicBrandFixture(pool)
+  const automaticPause = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), brandId: pauseBrand, priority: "ამ კვირაში მხოლოდ მასალები მოვამზადოთ; პოსტები შემდეგ კვირას." })
+  const automaticPauseClaim = (await claimPlanningRun(pool, "owner", automaticPause.id))!
+  const automaticPausePlan = await completePlanningFixture(automaticPauseClaim.run)
+  await finishPlanningStep(pool, automaticPauseClaim.run, automaticPauseClaim.token, automaticPausePlan.payload, "ready")
+  await runWeeklyPosts(pool, "owner", automaticPause.id)
+  const automaticPauseBatch = (await readWeeklyPosts(pool, "owner", automaticPause.id))!
+  assert.equal(automaticPauseBatch.status, "ready")
+  assert.deepEqual(automaticPauseBatch.payload.outline!.posts, [])
+  assert.equal(automaticPauseBatch.payload.creative, undefined)
+  assert.deepEqual(requests.slice(pauseStart).map(r => r.step), ["post_channel_plan"])
+  pauseChannels = false
+  const resumedPause = await changeWeeklyCadence(pool, "owner", randomUUID(), automaticPause.id, 1, { facebook: 2, instagram: 1 })
+  await runWeeklyPosts(pool, "owner", resumedPause.id)
+  assert.equal((await readWeeklyPosts(pool, "owner", resumedPause.id))?.status, "ready")
+  assert.equal(requests.slice(pauseStart).filter(r => r.step === "creative_exploration").length, 1)
+  assert.equal(requests.slice(pauseStart).filter(r => r.step === "post_channel_plan").length, 1)
 })
