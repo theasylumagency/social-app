@@ -18,6 +18,7 @@ import sharp from "sharp"
 import { repairWeeklyPosts } from "../src/infrastructure/postgres/weekly-posts-repair"
 import { MODEL_CALL_MAX_MS, OPERATOR_LEASE_MS, MODEL_STAGE_RESERVE_MS } from "../src/infrastructure/models/runtime-policy"
 import { runWeeklyPosts } from "../src/worker/weekly-posts"
+import { creativeProposal, creativeReviewFixture } from "./creative-fixture"
 
 test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and atomically approved", { skip: !process.env.DATABASE_URL }, async (t) => {
   const admin = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -201,20 +202,26 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.status, "queued", "insufficient execution budget must not claim")
   const runtimePosts = (await claimWeeklyPosts(pool, "owner", runtime.id))!
   await saveWeeklyPosts(pool, runtime.id, runtimePosts.token, { ...runtimePosts.batch.payload, outline: scheduleFixture(), copies: { p1: copyFixture() } }, "writing")
-  const envKeys = ["OPENAI_API_KEY", "OPENAI_POST_WRITER_MODEL", "OPENAI_POST_REVIEW_MODEL"]
+  const envKeys = ["OPENAI_API_KEY", "OPENAI_POST_WRITER_MODEL", "OPENAI_POST_REVIEW_MODEL", "OPENAI_CREATIVE_MODEL", "OPENAI_CREATIVE_CRITIC_MODEL", "SOCIAL_CREATIVE_ENABLED"]
   const savedEnv = envKeys.map((key) => process.env[key])
   t.after(() => { envKeys.forEach((key, i) => { if (savedEnv[i] === undefined) delete process.env[key]; else process.env[key] = savedEnv[i] }) })
   process.env.OPENAI_API_KEY = "test-only"
   process.env.OPENAI_POST_WRITER_MODEL = "test-writer"
   process.env.OPENAI_POST_REVIEW_MODEL = "test-reviewer"
+  process.env.OPENAI_CREATIVE_MODEL = "test-creative"
+  process.env.OPENAI_CREATIVE_CRITIC_MODEL = "test-critic"
+  process.env.SOCIAL_CREATIVE_ENABLED = "true"
   const requests: { step: string; model: string }[] = []
   let providerDown = true
+  let plannerDown = true
   t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
     assert.equal(url, "https://api.openai.com/v1/responses")
     const body = JSON.parse(String(init.body)); const step = body.text.format.name.replace(/^brand_/, "")
     requests.push({ step, model: body.model })
     if (providerDown && step === "post_writer_p3") return new Response("temporary provider failure", { status: 503 })
-    const result = step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
+    if (step === "post_schedule" && plannerDown) return new Response("planner unavailable", { status: 400 })
+    const schedule = scheduleFixture(); schedule.posts.forEach((p, i) => { p.creativeDirectionKey = `c${i + 1}` })
+    const result = step === "creative_exploration" ? creativeProposal() : step === "creative_critic" ? creativeReviewFixture() : step === "post_schedule" ? schedule : step === "post_review" ? { summary: "ტექსტები შემოწმებულია", issues: [] } : step === "post_editorial" ? editorialFixture() : copyFixture()
     if (step.startsWith("post_writer_") && "variants" in result) for (const v of result.variants) v.caption = step === "post_writer_p2" ? "რა გამოგვიგზავნოთ? გადაიღეთ ნივთის სრული ხედი და დაზიანება ახლოდან." : "რომელი კვალი უნდა შევინარჩუნოთ? წინასწარ გამიჯნეთ ძველი ფაქტურა და ახალი დაზიანება."
     return new Response(JSON.stringify({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }))
   })
@@ -235,6 +242,35 @@ test("weekly planning is owner-scoped, durable, revisioned, foundation-bound and
   assert.deepEqual(requests.filter((r) => r.step === "post_editorial"), [{ step: "post_editorial", model: "test-reviewer" }])
   assert.equal((await readWeeklyPosts(pool, "owner", runtime.id))?.payload.review?.editorial?.posts.length, 3)
   assert.deepEqual(requests.filter((r) => r.step === "post_sequence"), [], "semantic sequence review is removed")
+  // Exploration has its own durable checkpoint: a planner outage must not buy it twice.
+  const creativeBrand = await strategicBrandFixture(pool)
+  const creativeRun = await beginWeeklyPlanning(pool, "owner", { ...input, id: randomUUID(), brandId: creativeBrand })
+  const creativeClaim = (await claimPlanningRun(pool, "owner", creativeRun.id))!
+  const creativePlan = await completePlanningFixture(creativeClaim.run)
+  await finishPlanningStep(pool, creativeClaim.run, creativeClaim.token, creativePlan.payload, "ready")
+  for (let i = 0; i < 5; i++) {
+    await runWeeklyPosts(pool, "owner", creativeRun.id)
+    if ((await readWeeklyPosts(pool, "owner", creativeRun.id))?.status === "failed") break
+  }
+  const checkpoint = (await readWeeklyPosts(pool, "owner", creativeRun.id))!
+  assert.equal(checkpoint.status, "failed")
+  assert.equal(checkpoint.step, "outline")
+  assert.equal(checkpoint.payload.creative?.directions.length, 4)
+  assert.equal(checkpoint.payload.outline, null)
+  assert.deepEqual(requests.filter(r => r.step === "creative_exploration"), [{ step: "creative_exploration", model: "test-creative" }])
+  plannerDown = false
+  await beginWeeklyPosts(pool, "owner", creativeRun.id, 1, true)
+  for (let i = 0; i < 6; i++) {
+    await runWeeklyPosts(pool, "owner", creativeRun.id)
+    if ((await readWeeklyPosts(pool, "owner", creativeRun.id))?.status === "ready") break
+  }
+  const creativeReady = (await readWeeklyPosts(pool, "owner", creativeRun.id))!
+  assert.equal(creativeReady.status, "ready")
+  assert.deepEqual(creativeReady.payload.creative, checkpoint.payload.creative)
+  assert.equal(creativeReady.payload.outline!.posts[0]!.creativeDirectionKey, "c1")
+  assert.equal(creativeReady.payload.review?.creative?.posts.length, 6)
+  assert.equal(requests.filter(r => r.step === "creative_exploration").length, 1)
+  assert.ok(requests.filter(r => r.step === "creative_critic").every(r => r.model === "test-critic"))
   // Simulate a new confirmed foundation version, leaving the run's captured basis untouched.
   await pool.query("UPDATE brand_dossiers SET revision=revision+1 WHERE brand_id=ANY($1::text[])", [[runtimeBrand, cadenceBrand]])
   assert.equal((await readPlanningView(pool, "owner", runtimeBrand, input.week)).stale, true)

@@ -1,7 +1,9 @@
 import { hasSubscription } from "../infrastructure/postgres/subscription-store"
-import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel } from "../infrastructure/models/runtime-policy"
+import { MODEL_STAGE_RESERVE_MS, OPERATOR_WORKER_BUDGET_MS, modelFailure, postStageModel, creativeExplorationEnabled, creativeStageModel } from "../infrastructure/models/runtime-policy"
 import type { Pool } from "pg"
-import { createPostSchedule, writePost, reviewPosts } from "../application/weekly-planning/posts"
+import { createPostSchedule, writePost, reviewPosts, postChannels } from "../application/weekly-planning/posts"
+import { exploreCreativeDirections } from "../application/weekly-planning/creative"
+import { compileCreativeInput } from "../blueprints/social/creative/context"
 import { applyPostReview } from "../blueprints/social/weekly-planning/posts"
 import { createBrandReasoner } from "../infrastructure/models/brand-reasoning"
 import { readPlanningRun, recordPlanningModelRun } from "../infrastructure/postgres/weekly-planning-store"
@@ -13,7 +15,8 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
     if (!await hasSubscription(pool, ownerId)) return
     const claim = await claimWeeklyPosts(pool, ownerId, id)
     if (!claim) return
-    const model = postStageModel(claim.batch.step)
+    const exploring = claim.batch.step === "outline" && claim.batch.payload.creative === undefined && creativeExplorationEnabled()
+    const model = exploring ? creativeStageModel("exploration") : postStageModel(claim.batch.step)
     try {
       const run = await readPlanningRun(pool, ownerId, id)
       if (!run) throw Error("Missing owned plan")
@@ -21,6 +24,13 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
       const reason = createBrandReasoner((r) => recordPlanningModelRun(pool, id, r), { model, reasoningEffort: "low" })
       let step = claim.batch.step
       if (step === "outline") {
+        if (exploring) {
+          payload.creative = await exploreCreativeDirections(compileCreativeInput(run.payload.basis, postChannels(run, true)), reason)
+          // A durable checkpoint and a fresh claim before the next paid call: no lease/budget doubling.
+          if (!await saveWeeklyPosts(pool, id, claim.token, payload, "outline")) throw Error("MODEL_LOST_LEASE")
+          continue
+        }
+        payload.creative ??= null
         payload.outline = await createPostSchedule(run, reason, payload)
         delete payload.sequenceReview
         step = "writing"
@@ -37,7 +47,8 @@ export async function runWeeklyPosts(pool: Pool, ownerId: string, id: string, bu
         payload.copies = latest!.payload.copies
         if (Object.keys(payload.copies).length === payload.outline!.posts.length) step = "review"
       } else if (step === "review") {
-        step = applyPostReview(payload, await reviewPosts(run, payload, reason))
+        const critic = createBrandReasoner((r) => recordPlanningModelRun(pool, id, r), { model: creativeStageModel("critic"), reasoningEffort: "low" })
+        step = applyPostReview(payload, await reviewPosts(run, payload, reason, critic))
       }
       if (!await saveWeeklyPosts(pool, id, claim.token, payload, step)) throw Error("MODEL_LOST_LEASE")
       if (step === "ready") return

@@ -8,6 +8,10 @@ export const OPERATOR_LEASE_MS = 600_000
 
 type ModelEnvironment = Record<string, string | undefined>
 const configured = (env: ModelEnvironment, key: string) => env[key]?.trim() || undefined
+export const creativeExplorationEnabled = (env: ModelEnvironment = process.env) => configured(env, "SOCIAL_CREATIVE_ENABLED")?.toLowerCase() !== "false"
+export function creativeStageModel(stage: "exploration" | "critic", env: ModelEnvironment = process.env) {
+  return configured(env, stage === "exploration" ? "OPENAI_CREATIVE_MODEL" : "OPENAI_CREATIVE_CRITIC_MODEL") ?? postStageModel(stage === "exploration" ? "writing" : "review", env)
+}
 export function postStageModel(step: "outline" | "writing" | "review" | "ready", env: ModelEnvironment = process.env) {
   if (step === "writing") return configured(env, "OPENAI_POST_WRITER_MODEL") ?? "gpt-5.6-sol"
   return configured(env, step === "outline" ? "OPENAI_POST_PLANNER_MODEL" : "OPENAI_POST_REVIEW_MODEL") ?? configured(env, "OPENAI_PLANNING_MODEL") ?? "gpt-5.6-terra"

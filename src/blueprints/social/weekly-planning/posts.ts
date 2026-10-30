@@ -2,6 +2,7 @@ import type { JsonSchema } from "../brand-discovery/schemas"
 import type { PostEditorialReview } from "./post-editorial"
 import type { SequenceReview } from "./sequence"
 import type { OperatingRule } from "../../../core/domain/operating-policy"
+import { needsCreativeRepair, type CreativeExploration, type CreativeReview } from "../creative/model"
 
 export type PostChannel = "facebook" | "instagram"
 export type PostCadence = Record<PostChannel, number>
@@ -16,6 +17,7 @@ export function countPostChannels(posts: PostOutline[]): PostCadence {
 }
 export type PostFormat = "text" | "image" | "carousel" | "story" | "reel"
 export type PostOutline = {
+  creativeDirectionKey?: string
   directionKey: string; dayOffset: number; title: string; why: string; format: PostFormat
   channels: { channel: PostChannel; reason: string }[]
   brief: { job: string; takeaway: string; points: string[]; mustNotSay: string[] }
@@ -24,9 +26,11 @@ export type PostOutline = {
 export type PostVariant = { channel: PostChannel; caption: string; frames: { heading: string; body: string }[]; script: string; onScreenText: string[] }
 export type PostCopy = { variants: PostVariant[] }
 export type PostSchedule = { summary: string; cadenceReason: string; channelReason: string; posts: PostOutline[] }
-export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview }
+export type PostsReview = { summary: string; issues: { postKey: string; severity: "blocking" | "advisory"; message: string }[]; editorial?: PostEditorialReview; creative?: CreativeReview }
 export type PostRepairFeedback = { issues: PostsReview["issues"]; instructions: string[] }
 export type PostsPayload = { outline: PostSchedule | null; copies: Record<string, PostCopy>; repairDrafts?: Record<string, PostCopy>; review: PostsReview | null; repairs: number; cadence?: PostCadence
+  /** Undefined: not explored; null: disabled for this batch. Stored outside factual knowledge. */
+  creative?: CreativeExploration | null
   /** Current rules captured whenever an existing batch is directly revised. */
   operatingRules?: OperatingRule[]
   /** Decision evidence paired with repairDrafts; final review replaces review. */
@@ -42,18 +46,18 @@ export const emptyPosts = (): PostsPayload => ({ outline: null, copies: {}, revi
 
 export function postRepairFeedback(review: PostsReview, postKey: string): PostRepairFeedback {
   return {
-    issues: review.issues.filter((issue) => issue.postKey === postKey && issue.severity === "blocking").map((issue) => ({ ...issue })),
-    instructions: review.editorial?.posts.find((post) => post.postKey === postKey)?.issues.map((issue) => issue.repairInstruction) ?? [],
+    issues: review.issues.filter((issue) => issue.postKey === postKey).map((issue) => ({ ...issue })),
+    instructions: [...(review.editorial?.posts.find((post) => post.postKey === postKey)?.issues.map((issue) => issue.repairInstruction) ?? []), ...(review.creative?.posts.filter(post => post.postKey === postKey && needsCreativeRepair(post)).map(post => post.repairDirection) ?? [])],
   }
 }
 
 /** One consolidated automatic Writer repair; unresolved issues remain approval blockers. */
 export function applyPostReview(payload: PostsPayload, review: PostsReview): "writing" | "ready" {
   payload.review = review
-  const blocked = review.issues.filter((i) => i.severity === "blocking")
-  if (!blocked.length || payload.repairs >= 1) return "ready"
+  const repairKeys = new Set([...review.issues.filter(i => i.severity === "blocking").map(i => i.postKey), ...(review.creative?.posts.filter(needsCreativeRepair).map(p => p.postKey) ?? [])])
+  if (!repairKeys.size || payload.repairs >= 1) return "ready"
   payload.repairDrafts ??= {}
-  for (const key of new Set(blocked.map((i) => i.postKey))) {
+  for (const key of repairKeys) {
     const previous = payload.copies[key]
     if (previous) {
       payload.repairDrafts[key] = previous
@@ -77,6 +81,16 @@ export const POST_SCHEDULE_SCHEMA = obj({ summary: str(250), cadenceReason: str(
   visual: obj({ kind: enumeration("none", "graphic", "photo", "slides", "video"), description: str(900), aspectRatio: enumeration("none", "1:1", "4:5", "9:16"), frames: list(str(400), 0, 6) }),
 }), 1, 10) })
 export const POST_COPY_SCHEMA = obj({ variants: list(obj({ channel: enumeration("facebook", "instagram"), caption: str(3000, 0), frames: list(obj({ heading: str(160, 0), body: str(500) }), 0, 6), script: str(1800, 0), onScreenText: list(str(180), 0, 6) }), 1, 2) })
+
+/** Legacy schedules keep their contract; new creative batches require an explicit selection. */
+export function creativePostScheduleSchema(directions: CreativeExploration["directions"]): JsonSchema {
+  const schema = structuredClone(POST_SCHEDULE_SCHEMA)
+  const properties = schema.properties as Record<string, JsonSchema>
+  const post = properties.posts!.items as { properties: Record<string, JsonSchema>; required: string[] }
+  post.properties.creativeDirectionKey = enumeration(...directions.map(d => d.key))
+  post.required.push("creativeDirectionKey")
+  return schema
+}
 export const POSTS_REVIEW_SCHEMA = obj({ summary: str(600), issues: list(obj({ postKey: str(10), severity: enumeration("blocking", "advisory"), message: str(650) }), 0, 10) })
 
 export function validatePostSchedule(value: PostSchedule, directions: string[]): string[] {

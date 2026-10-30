@@ -5,6 +5,7 @@ export function resizePostSchedule(previous: PostsPayload, cadence: PostCadence)
   if (!previous.outline) throw Error("Post outline is required")
   const payload: PostsPayload = { outline: { ...previous.outline, summary: `ამ კვირაში: Facebook — ${cadence.facebook}, Instagram — ${cadence.instagram} პოსტი.`, posts: [], cadenceReason: "რაოდენობა თქვენი არჩევანით განახლდა. დარჩენილი პოსტები და მათი საკომუნიკაციო როლები შენარჩუნებულია.", channelReason: "არხებზე განაწილება თქვენს მიერ მითითებულ რაოდენობას მიჰყვება; თითოეული პოსტის არხის დასაბუთება მის ბარათშია." }, copies: {}, repairDrafts: {}, review: null, repairs: 0, cadence }
   const remaining = { ...cadence }
+  if (previous.creative !== undefined) payload.creative = structuredClone(previous.creative)
   const mapping: { from: string; to: string }[] = []
   const issues: NonNullable<PostsPayload["review"]>["issues"] = []
   previous.outline.posts.forEach((post, i) => {
